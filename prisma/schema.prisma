@@ -12,3 +12,126 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum SensorType {
+  HUMIDITY
+  TEMPERATURE
+  LIGHT
+  WATER_LEVEL
+  RAINFALL
+  SOIL_MOISTURE
+  SOIL_PH
+}
+
+model User {
+  id           Int            @id @default(autoincrement())
+  fullName     String
+  email        String         @unique
+  password     String
+  phoneNumber  String?
+  role         String // 'farmer' or 'admin'
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  farmLabs     FarmLab[] // for farmers
+  auditLogs    AuditLog[] // for admins
+  FarmActivity FarmActivity[]
+}
+
+model FarmLab {
+  id          Int            @id @default(autoincrement())
+  farmLabKey  String         @unique // UUID
+  name        String
+  address     String
+  district    String
+  city        String
+  ward        String
+  lat         Float?
+  lng         Float?
+  farmerId    Int
+  farmer      User           @relation(fields: [farmerId], references: [id])
+  sensors     Sensor[]
+  sensorData  SensorData[]
+  activities  FarmActivity[]
+  alerts      Alert[]
+  weatherData WeatherData[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model Sensor {
+  id         Int          @id @default(autoincrement())
+  sensorKey  String       @unique // UUID
+  type       SensorType
+  farmLabId  Int
+  farmLab    FarmLab      @relation(fields: [farmLabId], references: [id])
+  sensorData SensorData[]
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+}
+
+model SensorData {
+  id        Int      @id @default(autoincrement())
+  sensorId  Int
+  sensor    Sensor   @relation(fields: [sensorId], references: [id])
+  timestamp DateTime
+  value     Float
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  FarmLab   FarmLab? @relation(fields: [farmLabId], references: [id])
+  farmLabId Int?
+
+  @@index([sensorId, timestamp])
+}
+
+model FarmActivity {
+  id           Int      @id @default(autoincrement())
+  farmLabId    Int
+  farmLab      FarmLab  @relation(fields: [farmLabId], references: [id])
+  userId       Int
+  user         User     @relation(fields: [userId], references: [id])
+  activityType String
+  details      String?
+  timestamp    DateTime
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Alert {
+  id         Int      @id @default(autoincrement())
+  farmLabId  Int
+  farmLab    FarmLab  @relation(fields: [farmLabId], references: [id])
+  type       String
+  message    String
+  suggestion String?
+  timestamp  DateTime
+  status     String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model WeatherData {
+  id            Int      @id @default(autoincrement())
+  farmLabId     Int
+  farmLab       FarmLab  @relation(fields: [farmLabId], references: [id])
+  timestamp     DateTime
+  temperature   Float
+  humidity      Float
+  rainfall      Float
+  windSpeed     Float
+  windDirection String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([farmLabId, timestamp])
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  adminId   Int
+  admin     User     @relation(fields: [adminId], references: [id])
+  action    String
+  details   String?
+  timestamp DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
