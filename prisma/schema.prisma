@@ -38,24 +38,26 @@ model User {
 }
 
 model FarmLab {
-  id          Int            @id @default(autoincrement())
-  farmLabKey  String         @unique // UUID
-  name        String
-  address     String
-  district    String
-  city        String
-  ward        String
-  lat         Float?
-  lng         Float?
-  farmerId    Int
-  farmer      User           @relation(fields: [farmerId], references: [id])
-  sensors     Sensor[]
-  sensorData  SensorData[]
-  activities  FarmActivity[]
-  alerts      Alert[]
-  weatherData WeatherData[]
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  id             Int                  @id @default(autoincrement())
+  farmLabKey     String               @unique // UUID
+  name           String
+  address        String
+  district       String
+  city           String
+  ward           String
+  lat            Float?
+  lng            Float?
+  farmerId       Int
+  farmer         User                 @relation(fields: [farmerId], references: [id])
+  sensors        Sensor[]
+  sensorData     SensorData[]
+  activities     FarmActivity[]
+  alerts         Alert[]
+  weatherData    WeatherObservation[]
+  hourlyForecast HourlyForecast[]
+  dailyForecast  DailyForecast[]
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
 }
 
 model Sensor {
@@ -109,22 +111,6 @@ model Alert {
   updatedAt  DateTime @updatedAt
 }
 
-model WeatherData {
-  id            Int      @id @default(autoincrement())
-  farmLabId     Int
-  farmLab       FarmLab  @relation(fields: [farmLabId], references: [id])
-  timestamp     DateTime
-  temperature   Float
-  humidity      Float
-  rainfall      Float
-  windSpeed     Float
-  windDirection String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  @@index([farmLabId, timestamp])
-}
-
 model AuditLog {
   id        Int      @id @default(autoincrement())
   adminId   Int
@@ -134,4 +120,134 @@ model AuditLog {
   timestamp DateTime
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+/**
+ * ======================================
+ * Plant model to store information about different plants
+ * ======================================
+ */
+model PlantType {
+  id             Int           @id @default(autoincrement())
+  name           String        @unique // Plant name, e.g., "Tomato" (must be unique)
+  scientificName String? // Scientific name, e.g., "Solanum lycopersicum" (optional)
+  description    String? // Short description, e.g., "Likes sun, needs water" (optional)
+  family         String? // Plant family, e.g., "Solanaceae" (optional)
+  growthDuration Int? // Total growth time in days, e.g., 90 (optional)
+  createdAt      DateTime      @default(now()) // Creation timestamp
+  updatedAt      DateTime      @updatedAt // Last update timestamp
+  growthStages   GrowthStage[] // Links to growth stages
+}
+
+model GrowthStage {
+  id                    Int       @id @default(autoincrement()) // Unique ID, auto-incremented
+  plantTypeId           Int // Links to PlantType
+  stageName             String // Stage name, e.g., "Seeding"
+  order                 Int // Stage order, e.g., 1 for "Seeding"
+  duration              Int // Duration in days, e.g., 7
+  optimalTemperatureMin Float // Min ideal temp (°C), e.g., 20
+  optimalTemperatureMax Float // Max ideal temp (°C), e.g., 30
+  optimalHumidityMin    Float // Min ideal humidity (%), e.g., 60
+  optimalHumidityMax    Float // Max ideal humidity (%), e.g., 80
+  optimalPHMin          Float? // Min ideal soil pH, e.g., 5.5 (optional)
+  optimalPHMax          Float? // Max ideal soil pH, e.g., 6.5 (optional)
+  lightRequirement      String? // Light needs, e.g., "Full sun" (optional)
+  waterRequirement      String? // Water needs, e.g., "Moderate" (optional)
+  nutrientRequirement   String? // Nutrient needs, e.g., "NPK 10-10-10" (optional)
+  careInstructions      String? // Care tips, e.g., "Water twice daily" (optional)
+  pestSusceptibility    String? // Pests/diseases, e.g., "Aphids" (optional)
+  createdAt             DateTime  @default(now()) // Creation timestamp
+  updatedAt             DateTime  @updatedAt // Last update timestamp
+  plantType             PlantType @relation(fields: [plantTypeId], references: [id], onDelete: Cascade) // Links to PlantType
+  description           String? // Short description, e.g., "Likes sun, needs water" (optional)
+}
+
+/**
+ * ======================================
+ * Weather model to store weather data
+ * ======================================
+ */
+enum WeatherMain {
+  THUNDERSTORM
+  DRIZZLE
+  RAIN
+  SNOW
+  ATMOSPHERE
+  CLEAR
+  CLOUDS
+}
+
+model WeatherObservation {
+  id          Int         @id @default(autoincrement())
+  farmLabId   Int
+  observedAt  DateTime // Time of observation in UTC
+  temp        Float // Temperature in Celsius (°C)
+  feelsLike   Float // Feels-like temperature in Celsius (°C)
+  pressure    Int // Atmospheric pressure at sea level in hPa
+  humidity    Int // Humidity in percentage (%)
+  dewPoint    Float // Dew point temperature in Celsius (°C)
+  uvi         Float // UV index (no unit, dimensionless)
+  clouds      Int // Cloudiness in percentage (%)
+  visibility  Int // Average visibility in meters (m)
+  windSpeed   Float // Wind speed in meters per second (m/s)
+  windDeg     Int // Wind direction in degrees (°)
+  windGust    Float? // Wind gust speed in meters per second (m/s), if available
+  rain1h      Float? // Precipitation amount in the last hour in millimeters (mm), if available
+  snow1h      Float? // Snow amount in the last hour in millimeters (mm), if available
+  weatherMain WeatherMain // Main weather condition (enum)
+  weatherDesc String // Description of weather condition
+  iconCode    String // Weather icon code
+  farmLab     FarmLab     @relation(fields: [farmLabId], references: [id])
+}
+
+model HourlyForecast {
+  id           Int         @id @default(autoincrement())
+  farmLabId    Int
+  forecastFor  DateTime
+  forecastedAt DateTime
+  temp         Float
+  feelsLike    Float
+  pressure     Int
+  humidity     Int
+  dewPoint     Float
+  uvi          Float
+  clouds       Int
+  visibility   Int
+  windSpeed    Float
+  windDeg      Int
+  windGust     Float?
+  pop          Float
+  rain1h       Float?
+  snow1h       Float?
+  weatherMain  WeatherMain
+  weatherDesc  String
+  iconCode     String
+  farmLab      FarmLab     @relation(fields: [farmLabId], references: [id])
+}
+
+model DailyForecast {
+  id           Int         @id @default(autoincrement())
+  farmLabId    Int
+  forecastFor  DateTime
+  forecastedAt DateTime
+  tempDay      Float
+  tempMin      Float
+  tempMax      Float
+  tempNight    Float
+  feelsLikeDay Float
+  pressure     Int
+  humidity     Int
+  dewPoint     Float
+  windSpeed    Float
+  windDeg      Int
+  windGust     Float?
+  clouds       Int
+  pop          Float
+  rain         Float?
+  snow         Float?
+  uvi          Float
+  weatherMain  WeatherMain
+  weatherDesc  String
+  iconCode     String
+  farmLab      FarmLab     @relation(fields: [farmLabId], references: [id])
 }
