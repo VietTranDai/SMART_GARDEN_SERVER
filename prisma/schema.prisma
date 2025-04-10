@@ -13,102 +13,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum SensorType {
-  HUMIDITY
-  TEMPERATURE
-  LIGHT
-  WATER_LEVEL
-  RAINFALL
-  SOIL_MOISTURE
-  SOIL_PH
+model Role {
+  id          Int     @id @default(autoincrement()) // Unique identifier for the role
+  name        String  @unique // Name of the role, e.g., 'FARMER', 'ADMIN'
+  description String? // Optional description of the role
+  users       User[] // Users associated with this role
 }
 
-model User {
-  id           Int            @id @default(autoincrement())
-  fullName     String
-  email        String         @unique
-  password     String
-  phoneNumber  String?
-  role         String // 'farmer' or 'admin'
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
-  farmLabs     FarmLab[] // for farmers
-  auditLogs    AuditLog[] // for admins
-  FarmActivity FarmActivity[]
-}
-
-model FarmLab {
-  id             Int                  @id @default(autoincrement())
-  farmLabKey     String               @unique // UUID
-  name           String
-  address        String
-  district       String
-  city           String
-  ward           String
-  lat            Float?
-  lng            Float?
-  farmerId       Int
-  farmer         User                 @relation(fields: [farmerId], references: [id])
-  sensors        Sensor[]
-  sensorData     SensorData[]
-  activities     FarmActivity[]
-  alerts         Alert[]
-  weatherData    WeatherObservation[]
-  hourlyForecast HourlyForecast[]
-  dailyForecast  DailyForecast[]
-  createdAt      DateTime             @default(now())
-  updatedAt      DateTime             @updatedAt
-}
-
-model Sensor {
-  id         Int          @id @default(autoincrement())
-  sensorKey  String       @unique // UUID
-  type       SensorType
-  farmLabId  Int
-  farmLab    FarmLab      @relation(fields: [farmLabId], references: [id])
-  sensorData SensorData[]
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
-}
-
-model SensorData {
-  id        Int      @id @default(autoincrement())
-  sensorId  Int
-  sensor    Sensor   @relation(fields: [sensorId], references: [id])
-  timestamp DateTime
-  value     Float
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  FarmLab   FarmLab? @relation(fields: [farmLabId], references: [id])
-  farmLabId Int?
-
-  @@index([sensorId, timestamp])
-}
-
-model FarmActivity {
-  id           Int      @id @default(autoincrement())
-  farmLabId    Int
-  farmLab      FarmLab  @relation(fields: [farmLabId], references: [id])
-  userId       Int
-  user         User     @relation(fields: [userId], references: [id])
-  activityType String
-  details      String?
-  timestamp    DateTime
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-}
-
-model Alert {
-  id         Int      @id @default(autoincrement())
-  farmLabId  Int
-  farmLab    FarmLab  @relation(fields: [farmLabId], references: [id])
-  type       String
-  message    String
-  suggestion String?
-  timestamp  DateTime
-  status     String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+enum ExperienceLevel {
+  BEGINNER
+  INTERMEDIATE
+  EXPERT
 }
 
 model AuditLog {
@@ -122,132 +37,524 @@ model AuditLog {
   updatedAt DateTime @updatedAt
 }
 
-/**
- * ======================================
- * Plant model to store information about different plants
- * ======================================
- */
+model User {
+  // Basic information
+  id          Int       @id @default(autoincrement()) // Unique identifier for the user
+  firstName   String // The user's first name (e.g., "John" or "Nguyễn")
+  lastName    String // The user's last name (e.g., "Doe" or "Văn A")
+  email       String    @unique // The user's email address, must be unique
+  password    String // The user's password, should be hashed
+  phoneNumber String? // The user's phone number, optional
+  dateOfBirth DateTime? // The user's date of birth, optional  
+
+  // Role information
+  roleId Int // Foreign key to the Role model
+  role   Role @relation(fields: [roleId], references: [id]) // Relation to Role
+
+  // Authentication and session management
+  refreshToken String? // For managing long-term sessions
+  lastLogin    DateTime? // Timestamp of the user's last login
+
+  // Profile information
+  profilePicture String? // URL or path to the user's profile picture
+  address        String? // The user's address
+  bio            String? // A short description or bio of the user
+
+  // Farm-related information
+  experienceLevel   ExperienceLevel? // The user's experience level, e.g., BEGINNER, INTERMEDIATE, EXPERT
+  yearsOfExperience Int? // Number of years the user has been farming
+
+  // Timestamps
+  createdAt DateTime @default(now()) // Timestamp when the user was created
+  updatedAt DateTime @updatedAt // Timestamp when the user was last updated
+
+  // Relations to other models
+  farmLabs           FarmLab[] // Farms associated with the user
+  auditLogs          AuditLog[] // Audit logs for admins
+  farmActivities     FarmActivity[] // Activities performed by the user
+  ActivityEvaluation ActivityEvaluation[]
+}
+
+model FarmLab {
+  // Identification Group (Nhóm nhận diện)
+  id         Int    @id @default(autoincrement()) // Unique ID for the farm, auto-increases
+  farmLabKey String @unique // Unique UUID to identify the farm
+  name       String // Name of the farm
+
+  // Address Group (Nhóm địa chỉ)
+  street   String? // Street address (e.g., "123 Lang Street")
+  ward     String? // Ward or commune (e.g., "Lang Thuong Ward")
+  district String? // District or county (e.g., "Dong Da District")
+  city     String? // City or province (e.g., "Hanoi City")
+  lat      Float? // Latitude for farm location
+  lng      Float? // Longitude for farm location
+
+  // Farmer Group (Nhóm nông dân)
+  farmerId Int // ID of the farmer who owns the farm
+  farmer   User @relation(fields: [farmerId], references: [id]) // Link to the farmer (User model)
+
+  // Crop Information Group (Nhóm thông tin cây trồng)
+  cropName      String? // Name of the crop (e.g., "Tomato")
+  cropStage     String? // Current growth stage (e.g., "Seeding")
+  cropStartDate DateTime? // Date when the crop was planted
+  cropDuration  Int? // Expected growth duration in days (e.g., 90)
+
+  // Sensor and Monitoring Group (Nhóm cảm biến và giám sát)
+  sensors    Sensor[] // List of sensors on the farm
+  sensorData SensorData[] // Data collected from sensors
+  alerts     Alert[] // Alerts related to the farm
+
+  // Activity Group (Nhóm hoạt động)
+  activities FarmActivity[] // Activities happening on the farm
+
+  // Weather Group (Nhóm thời tiết)
+  weatherData    WeatherObservation[] // Real-time weather data for the farm
+  hourlyForecast HourlyForecast[] // Hourly weather forecast
+  dailyForecast  DailyForecast[] // Daily weather forecast
+
+  // Timestamp Group (Nhóm thời gian)
+  createdAt DateTime @default(now()) // When the farm record was created
+  updatedAt DateTime @updatedAt // When the farm record was last updated
+}
+
+enum SensorType {
+  HUMIDITY // Sensor for measuring humidity
+  TEMPERATURE // Sensor for measuring temperature
+  LIGHT // Sensor for measuring light intensity
+  WATER_LEVEL // Sensor for measuring water level
+  RAINFALL // Sensor for measuring rainfall
+  SOIL_MOISTURE // Sensor for measuring soil moisture
+  SOIL_PH // Sensor for measuring soil pH
+}
+
+model Sensor {
+  // Identification Group
+  id        Int        @id @default(autoincrement()) // Unique ID for the sensor
+  sensorKey String     @unique // Unique UUID for the sensor
+  type      SensorType // Type of sensor (e.g., HUMIDITY, TEMPERATURE)
+
+  // Relation Group
+  farmLabId  Int // ID of the related FarmLab
+  farmLab    FarmLab      @relation(fields: [farmLabId], references: [id]) // Relation to FarmLab
+  sensorData SensorData[] // Relation to sensor data collected by this sensor
+
+  // Timestamp Group
+  createdAt DateTime @default(now()) // Timestamp when the record was created
+  updatedAt DateTime @updatedAt // Timestamp when the record was last updated
+}
+
+model SensorData {
+  // Identification Group
+  id       Int    @id @default(autoincrement()) // Unique ID for the sensor data record
+  sensorId Int // ID of the related Sensor
+  sensor   Sensor @relation(fields: [sensorId], references: [id]) // Relation to Sensor
+
+  // Data Details Group
+  timestamp DateTime // Timestamp when the data was recorded
+  value     Float // Measured value from the sensor (e.g., 65.5 for humidity)
+
+  // Relation Group
+  farmLabId Int? // ID of the related FarmLab (optional)
+  FarmLab   FarmLab? @relation(fields: [farmLabId], references: [id]) // Relation to FarmLab (optional)
+
+  // Timestamp Group
+  createdAt DateTime @default(now()) // Timestamp when the record was created
+  updatedAt DateTime @updatedAt // Timestamp when the record was last updated
+
+  // Index for performance
+  @@index([sensorId, timestamp]) // Index on sensorId and timestamp for efficient querying
+}
+
+enum ActivityType {
+  PLANTING // Planting crops
+  WATERING // Watering crops
+  FERTILIZING // Applying fertilizer
+  PRUNING // Pruning branches
+  HARVESTING // Harvesting crops
+  PEST_CONTROL // Pest and disease control
+  SOIL_TESTING // Testing soil conditions
+  WEEDING // Removing weeds
+  OTHER // Other unspecified activities
+}
+
+model FarmActivity {
+  // Identification Group
+  id        Int     @id @default(autoincrement()) // Unique ID for the activity
+  farmLabId Int // ID of the related FarmLab
+  farmLab   FarmLab @relation(fields: [farmLabId], references: [id]) // Relation to FarmLab
+  userId    Int // ID of the user (farmer) who performed the activity
+  user      User    @relation(fields: [userId], references: [id]) // Relation to User
+
+  // Activity Details Group
+  name         String // Name of the activity (e.g., "Watering", "Fertilizing")
+  activityType ActivityType // Type of activity (using enum for standardization)
+  timestamp    DateTime // Timestamp when the activity was performed
+  cropName     String? // Name of the crop (optional, can be auto-filled from FarmLab)
+  growthStage  String? // Growth stage of the crop (optional, e.g., "Seeding", "Flowering")
+
+  // Environmental Conditions Group
+  weatherObservationId Int? // ID of the nearest WeatherObservation at the time of activity
+  weatherObservation   WeatherObservation? @relation(fields: [weatherObservationId], references: [id]) // Relation to WeatherObservation
+
+  // Sensor Data Group
+  humidity       Float? // Humidity level at the time of activity in percentage (%)
+  temperature    Float? // Temperature at the time of activity in Celsius (°C)
+  lightIntensity Float? // Light intensity at the time of activity (unit depends on sensor, e.g., lux)
+  waterLevel     Float? // Water level at the time of activity (unit depends on sensor, e.g., cm)
+  rainfall       Float? // Rainfall amount at the time of activity in millimeters (mm)
+  soilMoisture   Float? // Soil moisture level at the time of activity in percentage (%)
+  soilPH         Float? // Soil pH level at the time of activity (pH scale)
+
+  // Activity Execution Group
+  details String? // Detailed description of the activity (e.g., "Watered 10 liters")
+  reason  String? // Reason for the activity (e.g., "Routine maintenance")
+
+  // Notes and Observations Group
+  notes String? // Additional notes from the farmer (e.g., "Plants look healthy")
+
+  // Timestamp Group
+  createdAt DateTime @default(now()) // Timestamp when the record was created
+  updatedAt DateTime @updatedAt // Timestamp when the record was last updated
+
+  // Relations
+  evaluations ActivityEvaluation[] // Relation to activity evaluations
+}
+
+enum EvaluatorType {
+  USER // Evaluation performed by the farmer
+  SYSTEM // Evaluation performed automatically by the system
+}
+
+model ActivityEvaluation {
+  // Identification Group
+  id             Int          @id @default(autoincrement()) // Unique ID for the evaluation
+  farmActivityId Int // ID of the activity being evaluated
+  farmActivity   FarmActivity @relation(fields: [farmActivityId], references: [id]) // Relation to FarmActivity
+
+  // Evaluator Information Group
+  evaluatorType EvaluatorType // Type of evaluator (USER or SYSTEM)
+  userId        Int? // ID of the evaluator (if evaluatorType is USER)
+  user          User?         @relation(fields: [userId], references: [id]) // Relation to User (if applicable)
+
+  // Sensor Data Group
+  humidity       Float? // Humidity level at the time of activity in percentage (%)
+  temperature    Float? // Temperature at the time of activity in Celsius (°C)
+  lightIntensity Float? // Light intensity at the time of activity (unit depends on sensor, e.g., lux)
+  waterLevel     Float? // Water level at the time of activity (unit depends on sensor, e.g., cm)
+  rainfall       Float? // Rainfall amount at the time of activity in millimeters (mm)
+  soilMoisture   Float? // Soil moisture level at the time of activity in percentage (%)
+  soilPH         Float? // Soil pH level at the time of activity (pH scale)
+
+  // Evaluation Details Group
+  evaluatedAt DateTime // Timestamp when the evaluation was performed
+  outcome     String? // Qualitative result (e.g., "Good", "Ineffective")
+  rating      Int? // Rating score (e.g., 1-5)
+  metrics     Json? // Quantitative metrics (e.g., {"yield": "2 tons/ha", "growth": "10cm"})
+  comments    String? // Additional comments (e.g., "Plants grew stronger after fertilizing")
+
+  // Timestamp Group
+  createdAt DateTime @default(now()) // Timestamp when the record was created
+  updatedAt DateTime @updatedAt // Timestamp when the record was last updated
+}
+
 model PlantType {
-  id             Int           @id @default(autoincrement())
-  name           String        @unique // Plant name, e.g., "Tomato" (must be unique)
+  // Identification Group
+  id   Int    @id @default(autoincrement()) // Unique ID for the plant type
+  name String @unique // Plant name, e.g., "Tomato" (must be unique)
+
+  // Botanical Information Group
   scientificName String? // Scientific name, e.g., "Solanum lycopersicum" (optional)
-  description    String? // Short description, e.g., "Likes sun, needs water" (optional)
   family         String? // Plant family, e.g., "Solanaceae" (optional)
+
+  // Description Group
+  description    String? // Short description, e.g., "Likes sun, needs water" (optional)
   growthDuration Int? // Total growth time in days, e.g., 90 (optional)
-  createdAt      DateTime      @default(now()) // Creation timestamp
-  updatedAt      DateTime      @updatedAt // Last update timestamp
-  growthStages   GrowthStage[] // Links to growth stages
+
+  // Timestamp Group
+  createdAt DateTime @default(now()) // Timestamp when the record was created
+  updatedAt DateTime @updatedAt // Timestamp when the record was last updated
+
+  // Relations
+  growthStages GrowthStage[] // Relation to growth stages associated with this plant type
 }
 
 model GrowthStage {
-  id                    Int       @id @default(autoincrement()) // Unique ID, auto-incremented
-  plantTypeId           Int // Links to PlantType
-  stageName             String // Stage name, e.g., "Seeding"
-  order                 Int // Stage order, e.g., 1 for "Seeding"
-  duration              Int // Duration in days, e.g., 7
-  optimalTemperatureMin Float // Min ideal temp (°C), e.g., 20
-  optimalTemperatureMax Float // Max ideal temp (°C), e.g., 30
-  optimalHumidityMin    Float // Min ideal humidity (%), e.g., 60
-  optimalHumidityMax    Float // Max ideal humidity (%), e.g., 80
-  optimalPHMin          Float? // Min ideal soil pH, e.g., 5.5 (optional)
-  optimalPHMax          Float? // Max ideal soil pH, e.g., 6.5 (optional)
-  lightRequirement      String? // Light needs, e.g., "Full sun" (optional)
-  waterRequirement      String? // Water needs, e.g., "Moderate" (optional)
-  nutrientRequirement   String? // Nutrient needs, e.g., "NPK 10-10-10" (optional)
-  careInstructions      String? // Care tips, e.g., "Water twice daily" (optional)
-  pestSusceptibility    String? // Pests/diseases, e.g., "Aphids" (optional)
-  createdAt             DateTime  @default(now()) // Creation timestamp
-  updatedAt             DateTime  @updatedAt // Last update timestamp
-  plantType             PlantType @relation(fields: [plantTypeId], references: [id], onDelete: Cascade) // Links to PlantType
-  description           String? // Short description, e.g., "Likes sun, needs water" (optional)
+  // Identification Group
+  id          Int       @id @default(autoincrement()) // Unique ID for the growth stage
+  plantTypeId Int // ID of the related PlantType
+  plantType   PlantType @relation(fields: [plantTypeId], references: [id], onDelete: Cascade) // Relation to PlantType
+
+  // Stage Details Group
+  stageName   String // Stage name, e.g., "Seeding"
+  order       Int // Stage order, e.g., 1 for "Seeding"
+  duration    Int // Duration of the stage in days, e.g., 7
+  description String? // Short description, e.g., "Likes sun, needs water" (optional)
+
+  // Optimal Conditions Group
+  optimalTemperatureMin Float // Minimum ideal temperature in Celsius (°C), e.g., 20
+  optimalTemperatureMax Float // Maximum ideal temperature in Celsius (°C), e.g., 30
+  optimalHumidityMin    Float // Minimum ideal humidity in percentage (%), e.g., 60
+  optimalHumidityMax    Float // Maximum ideal humidity in percentage (%), e.g., 80
+  optimalPHMin          Float? // Minimum ideal soil pH, e.g., 5.5 (optional)
+  optimalPHMax          Float? // Maximum ideal soil pH, e.g., 6.5 (optional)
+
+  // Care Requirements Group
+  lightRequirement    String? // Light needs, e.g., "Full sun" (optional)
+  waterRequirement    String? // Water needs, e.g., "Moderate" (optional)
+  nutrientRequirement String? // Nutrient needs, e.g., "NPK 10-10-10" (optional)
+  careInstructions    String? // Care tips, e.g., "Water twice daily" (optional)
+  pestSusceptibility  String? // Pests or diseases susceptibility, e.g., "Aphids" (optional)
+
+  // Timestamp Group
+  createdAt DateTime @default(now()) // Timestamp when the record was created
+  updatedAt DateTime @updatedAt // Timestamp when the record was last updated
 }
 
-/**
- * ======================================
- * Weather model to store weather data
- * ======================================
- */
 enum WeatherMain {
-  THUNDERSTORM
-  DRIZZLE
-  RAIN
-  SNOW
-  ATMOSPHERE
-  CLEAR
-  CLOUDS
+  THUNDERSTORM // Thunderstorm weather condition
+  DRIZZLE // Drizzle weather condition
+  RAIN // Rain weather condition
+  SNOW // Snow weather condition
+  ATMOSPHERE // Atmospheric conditions (e.g., fog, mist)
+  CLEAR // Clear weather condition
+  CLOUDS // Cloudy weather condition
 }
 
 model WeatherObservation {
-  id          Int         @id @default(autoincrement())
-  farmLabId   Int
-  observedAt  DateTime // Time of observation in UTC
-  temp        Float // Temperature in Celsius (°C)
-  feelsLike   Float // Feels-like temperature in Celsius (°C)
-  pressure    Int // Atmospheric pressure at sea level in hPa
-  humidity    Int // Humidity in percentage (%)
-  dewPoint    Float // Dew point temperature in Celsius (°C)
-  uvi         Float // UV index (no unit, dimensionless)
-  clouds      Int // Cloudiness in percentage (%)
-  visibility  Int // Average visibility in meters (m)
-  windSpeed   Float // Wind speed in meters per second (m/s)
-  windDeg     Int // Wind direction in degrees (°)
-  windGust    Float? // Wind gust speed in meters per second (m/s), if available
-  rain1h      Float? // Precipitation amount in the last hour in millimeters (mm), if available
-  snow1h      Float? // Snow amount in the last hour in millimeters (mm), if available
+  // Identification Group
+  id        Int     @id @default(autoincrement()) // Unique ID for the weather observation
+  farmLabId Int // ID of the related FarmLab
+  farmLab   FarmLab @relation(fields: [farmLabId], references: [id]) // Relation to FarmLab
+
+  // Observation Timestamp Group
+  observedAt DateTime // Time of observation in UTC
+
+  // Temperature Group
+  temp      Float // Temperature in Celsius (°C)
+  feelsLike Float // Feels-like temperature in Celsius (°C)
+  dewPoint  Float // Dew point temperature in Celsius (°C)
+
+  // Atmospheric Conditions Group
+  pressure   Int // Atmospheric pressure at sea level in hPa
+  humidity   Int // Humidity in percentage (%)
+  clouds     Int // Cloudiness in percentage (%)
+  visibility Int // Average visibility in meters (m)
+  uvi        Float // UV index (no unit, dimensionless)
+
+  // Wind Group
+  windSpeed Float // Wind speed in meters per second (m/s)
+  windDeg   Int // Wind direction in degrees (°)
+  windGust  Float? // Wind gust speed in meters per second (m/s), if available
+
+  // Precipitation Group
+  rain1h Float? // Precipitation amount in the last hour in millimeters (mm), if available
+  snow1h Float? // Snow amount in the last hour in millimeters (mm), if available
+
+  // Weather Description Group
   weatherMain WeatherMain // Main weather condition (enum)
   weatherDesc String // Description of weather condition
   iconCode    String // Weather icon code
-  farmLab     FarmLab     @relation(fields: [farmLabId], references: [id])
+
+  // Relations
+  FarmActivity FarmActivity[] // Relation to FarmActivity (activities linked to this weather observation)
 }
 
 model HourlyForecast {
-  id           Int         @id @default(autoincrement())
-  farmLabId    Int
-  forecastFor  DateTime
-  forecastedAt DateTime
-  temp         Float
-  feelsLike    Float
-  pressure     Int
-  humidity     Int
-  dewPoint     Float
-  uvi          Float
-  clouds       Int
-  visibility   Int
-  windSpeed    Float
-  windDeg      Int
-  windGust     Float?
-  pop          Float
-  rain1h       Float?
-  snow1h       Float?
-  weatherMain  WeatherMain
-  weatherDesc  String
-  iconCode     String
-  farmLab      FarmLab     @relation(fields: [farmLabId], references: [id])
+  // Identification Group
+  id        Int     @id @default(autoincrement()) // Unique ID for the hourly forecast
+  farmLabId Int // ID of the related FarmLab
+  farmLab   FarmLab @relation(fields: [farmLabId], references: [id]) // Relation to FarmLab
+
+  // Forecast Timestamp Group
+  forecastFor  DateTime // Date and time for which the forecast is made
+  forecastedAt DateTime // Date and time when the forecast was generated
+
+  // Temperature Group
+  temp      Float // Forecasted temperature in Celsius (°C)
+  feelsLike Float // Forecasted feels-like temperature in Celsius (°C)
+  dewPoint  Float // Forecasted dew point temperature in Celsius (°C)
+
+  // Atmospheric Conditions Group
+  pressure   Int // Forecasted atmospheric pressure at sea level in hPa
+  humidity   Int // Forecasted humidity in percentage (%)
+  clouds     Int // Forecasted cloudiness in percentage (%)
+  visibility Int // Forecasted average visibility in meters (m)
+  uvi        Float // Forecasted UV index (no unit, dimensionless)
+  pop        Float // Probability of precipitation (0 to 1)
+
+  // Wind Group
+  windSpeed Float // Forecasted wind speed in meters per second (m/s)
+  windDeg   Int // Forecasted wind direction in degrees (°)
+  windGust  Float? // Forecasted wind gust speed in meters per second (m/s), if available
+
+  // Precipitation Group
+  rain1h Float? // Forecasted precipitation amount in the next hour in millimeters (mm), if available
+  snow1h Float? // Forecasted snow amount in the next hour in millimeters (mm), if available
+
+  // Weather Description Group
+  weatherMain WeatherMain // Main forecasted weather condition (enum)
+  weatherDesc String // Description of the forecasted weather condition
+  iconCode    String // Weather icon code for the forecast
 }
 
 model DailyForecast {
-  id           Int         @id @default(autoincrement())
-  farmLabId    Int
-  forecastFor  DateTime
-  forecastedAt DateTime
-  tempDay      Float
-  tempMin      Float
-  tempMax      Float
-  tempNight    Float
-  feelsLikeDay Float
-  pressure     Int
-  humidity     Int
-  dewPoint     Float
-  windSpeed    Float
-  windDeg      Int
-  windGust     Float?
-  clouds       Int
-  pop          Float
-  rain         Float?
-  snow         Float?
-  uvi          Float
-  weatherMain  WeatherMain
-  weatherDesc  String
-  iconCode     String
-  farmLab      FarmLab     @relation(fields: [farmLabId], references: [id])
+  // Identification Group
+  id        Int     @id @default(autoincrement()) // Unique ID for the daily forecast
+  farmLabId Int // ID of the related FarmLab
+  farmLab   FarmLab @relation(fields: [farmLabId], references: [id]) // Relation to FarmLab
+
+  // Forecast Timestamp Group
+  forecastFor  DateTime // Date for which the forecast is made
+  forecastedAt DateTime // Date and time when the forecast was generated
+
+  // Temperature Group
+  tempDay      Float // Forecasted daytime temperature in Celsius (°C)
+  tempMin      Float // Forecasted minimum temperature in Celsius (°C)
+  tempMax      Float // Forecasted maximum temperature in Celsius (°C)
+  tempNight    Float // Forecasted nighttime temperature in Celsius (°C)
+  feelsLikeDay Float // Forecasted daytime feels-like temperature in Celsius (°C)
+  dewPoint     Float // Forecasted dew point temperature in Celsius (°C)
+
+  // Atmospheric Conditions Group
+  pressure Int // Forecasted atmospheric pressure at sea level in hPa
+  humidity Int // Forecasted humidity in percentage (%)
+  clouds   Int // Forecasted cloudiness in percentage (%)
+  uvi      Float // Forecasted UV index (no unit, dimensionless)
+  pop      Float // Probability of precipitation (0 to 1)
+
+  // Wind Group
+  windSpeed Float // Forecasted wind speed in meters per second (m/s)
+  windDeg   Int // Forecasted wind direction in degrees (°)
+  windGust  Float? // Forecasted wind gust speed in meters per second (m/s), if available
+
+  // Precipitation Group
+  rain Float? // Forecasted daily precipitation amount in millimeters (mm), if available
+  snow Float? // Forecasted daily snow amount in millimeters (mm), if available
+
+  // Weather Description Group
+  weatherMain WeatherMain // Main forecasted weather condition (enum)
+  weatherDesc String // Description of the forecasted weather condition
+  iconCode    String // Weather icon code for the forecast
+}
+
+// Store information about different administrative regions
+model AdministrativeRegions {
+  id           Int         @id // Unique ID for the region (1 to 8, from North to South)
+  name         String // Region name in Vietnamese (e.g., "Đông Bắc Bộ")
+  name_en      String // Region name in English (e.g., "Northeast")
+  code_name    String // Code derived from Vietnamese name (e.g., "dong_bac_bo")
+  code_name_en String // Code derived from English name (e.g., "northeast")
+  provinces    Provinces[] // List of provinces in this region
+}
+
+// Store information about different Administrative Units
+model AdministrativeUnits {
+  id            Int         @id // Unique ID for the unit (1 to 10, from largest to smallest tier)
+  full_name     String // Full name in Vietnamese (e.g., "Thành phố trực thuộc trung ương")
+  full_name_en  String // Full name in English (e.g., "Municipality")
+  short_name    String // Short name in Vietnamese (e.g., "Thành phố")
+  short_name_en String // Short name in English (e.g., "City")
+  code_name     String // Code derived from Vietnamese full name (e.g., "thanh_pho_truc_thuoc_trung_uong")
+  code_name_en  String // Code derived from English full name (e.g., "municipality")
+  provinces     Provinces[] // List of provinces with this unit type
+  districts     Districts[] // List of districts with this unit type
+  wards         Wards[] // List of wards with this unit type
+}
+
+// Store information about different provinces
+// tỉnh/thành phố trực thuộc trung ương
+model Provinces {
+  code                     String                @id // Official code from government (e.g., "01" for Hanoi)
+  name                     String // Name in Vietnamese (e.g., "Hà Nội")
+  name_en                  String // Name in English (e.g., "Ha Noi")
+  full_name                String // Full name in Vietnamese (e.g., "Thành phố Hà Nội")
+  full_name_en             String // Full name in English (e.g., "Ha Noi City")
+  code_name                String // Code derived from name (e.g., "ha_noi")
+  administrative_unit_id   Int // ID of the administrative unit type (e.g., 1 for Municipality)
+  administrative_unit      AdministrativeUnits   @relation(fields: [administrative_unit_id], references: [id]) // Link to unit type
+  administrative_region_id Int // ID of the geographical region (e.g., 3 for Red River Delta)
+  administrative_region    AdministrativeRegions @relation(fields: [administrative_region_id], references: [id]) // Link to region
+  districts                Districts[] // List of districts in this province
+}
+
+// Store information about different districts
+// huyện/quận/thị xã/thành phố thuộc tỉnh
+model Districts {
+  code                   String              @id // Official code from government (e.g., "001" for Ba Dinh)
+  name                   String // Name in Vietnamese (e.g., "Ba Đình")
+  name_en                String // Name in English (e.g., "Ba Dinh")
+  full_name              String // Full name in Vietnamese (e.g., "Quận Ba Đình")
+  full_name_en           String // Full name in English (e.g., "Ba Dinh District")
+  code_name              String // Code derived from name (e.g., "ba_dinh")
+  province_code          String // Code of the province it belongs to (e.g., "01" for Hanoi)
+  province               Provinces           @relation(fields: [province_code], references: [code]) // Link to province
+  administrative_unit_id Int // ID of the administrative unit type (e.g., 5 for Urban District)
+  administrative_unit    AdministrativeUnits @relation(fields: [administrative_unit_id], references: [id]) // Link to unit type
+  wards                  Wards[] // List of wards in this district
+}
+
+// Store information about different wards
+// xã/phường/thị trấn
+model Wards {
+  code                   String              @id // Official code from government (e.g., "25942" for Di An)
+  name                   String // Name in Vietnamese (e.g., "Dĩ An")
+  name_en                String // Name in English (e.g., "Di An")
+  full_name              String // Full name in Vietnamese (e.g., "Phường Dĩ An")
+  full_name_en           String // Full name in English (e.g., "Di An Ward")
+  code_name              String // Code derived from name (e.g., "di_an")
+  district_code          String // Code of the district it belongs to (e.g., "724" for Di An)
+  district               Districts           @relation(fields: [district_code], references: [code]) // Link to district
+  administrative_unit_id Int // ID of the administrative unit type (e.g., 8 for Ward)
+  administrative_unit    AdministrativeUnits @relation(fields: [administrative_unit_id], references: [id]) // Link to unit type
+}
+
+// Enum for the type of alert
+enum AlertType {
+  WEATHER // Weather-related alerts (e.g., storms, heavy rain)
+  SENSOR_ERROR // Sensor malfunctions (e.g., failure, disconnection)
+  SYSTEM // System issues (e.g., power outage, software errors)
+  CROP_CONDITION // Crop health issues (e.g., pests, water deficiency)
+  ACTIVITY // Activity-related issues (e.g., overwatering, wrong fertilizing)
+  MAINTENANCE // Maintenance reminders (e.g., sensor or equipment check)
+  SECURITY // Security concerns (e.g., intrusion, anomalies)
+  OTHER // Miscellaneous alerts not covered by other types
+}
+
+// Enum for the status of an alert
+enum AlertStatus {
+  PENDING // Alert is awaiting action
+  IN_PROGRESS // Alert is being addressed
+  RESOLVED // Alert has been resolved
+  IGNORED // Alert has been dismissed
+  ESCALATED // Alert has been escalated to a higher level
+}
+
+// Enum for the notification method
+enum NotificationMethod {
+  EMAIL // Sent via email
+  SMS // Sent via SMS
+  PUSH // Sent as a push notification
+  IN_APP // Displayed in the app without notification
+  NONE // No notification sent, only logged
+}
+
+model Alert {
+  // Identification Group
+  id        Int     @id @default(autoincrement()) // Unique identifier for the alert
+  farmLabId Int // Foreign key linking to FarmLab
+  farmLab   FarmLab @relation(fields: [farmLabId], references: [id]) // Relation to the associated farm
+
+  // Alert Details Group
+  type       AlertType // Type of the alert (e.g., WEATHER, SENSOR_ERROR)
+  message    String // Detailed message describing the alert
+  suggestion String? // Optional suggestion for resolving the alert
+  timestamp  DateTime // Time when the alert event occurred
+
+  // Status and Notification Group
+  status             AlertStatus // Current status of the alert (e.g., PENDING, RESOLVED)
+  notificationMethod NotificationMethod? // Method used to notify users (e.g., EMAIL, SMS), optional
+
+  // Timestamp Group
+  createdAt DateTime @default(now()) // Time when the alert was created
+  updatedAt DateTime @updatedAt // Time when the alert was last updated
 }
