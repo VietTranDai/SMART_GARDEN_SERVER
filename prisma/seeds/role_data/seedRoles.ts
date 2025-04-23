@@ -4,8 +4,8 @@ export async function seedRoles(prisma: PrismaClient): Promise<void> {
   const roles = [
     { name: 'ADMIN', description: 'Administrator role with full access' },
     {
-      name: 'FARMER',
-      description: 'Farmer role for managing agricultural operations',
+      name: 'GARDENER',
+      description: 'Gardener role for managing plant care',
     },
     { name: 'SUPPORT', description: 'Support role for customer assistance' },
     {
@@ -23,5 +23,5 @@ export async function seedRoles(prisma: PrismaClient): Promise<void> {
     });
   }
 
-  console.log('Seed Roles thành công.');
+  console.log('✅ Seed Roles thành công.');
 }

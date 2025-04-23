@@ -5,10 +5,14 @@ import { ConfigService } from '@nestjs/config';
 import { useContainer } from 'class-validator';
 import { ValidationPipe } from '@nestjs/common';
 import * as bodyParser from 'body-parser';
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   // Tạo ứng dụng NestJS
   const app = await NestFactory.create(AppModule);
+
+  app.setGlobalPrefix('v1');
+  app.use(cookieParser());
 
   // Sử dụng container của NestJS cho class-validator để tự động resolve các dependency
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
@@ -27,13 +31,13 @@ async function bootstrap() {
 
   // Cấu hình Swagger cho API
   const swaggerConfig = new DocumentBuilder()
-    .setTitle(configService.get<string>('SWAGGER_TITLE') || 'Smart Farm API')
+    .setTitle(configService.get<string>('SWAGGER_TITLE') || 'Smart Garden API')
     .setDescription(
       configService.get<string>('SWAGGER_DESCRIPTION') ||
-        'API documentation for Smart Farm Server',
+        'API documentation for Smart Garden Server',
     )
     .setVersion(configService.get<string>('SWAGGER_VERSION') || '1.0')
-    .addTag(configService.get<string>('SWAGGER_TAG') || 'smart-farm')
+    .addTag(configService.get<string>('SWAGGER_TAG') || 'smart-garden')
     .addBearerAuth()
     .build();
 

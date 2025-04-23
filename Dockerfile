@@ -1,27 +1,20 @@
-# Sử dụng image Node.js phiên bản 16-alpine cho kích thước nhỏ và hiệu năng cao
 FROM node:23-alpine
 
-# Đặt label cho container (tùy chọn, giúp quản lý metadata)
-LABEL maintainer="trandaiviet78@gmail.com"
-LABEL app="smart-farm-server"
-
-# Thiết lập thư mục làm việc trong container
 WORKDIR /usr/src/app
 
-# Copy các file package để cài đặt dependencies trước khi copy toàn bộ source (tận dụng caching)
+# 1. Copy manifest, cài cả dev-deps để build & generate Prisma
 COPY package*.json ./
+RUN npm ci
 
-# Cài đặt dependencies
-RUN npm install
+# 2. Copy Prisma schema & sinh client
+COPY prisma ./prisma
+RUN npx prisma generate
 
-# Copy toàn bộ mã nguồn của dự án vào container
+# 3. Copy source code & build
 COPY . .
-
-# Build ứng dụng (nếu dùng TypeScript)
 RUN npm run build
 
-# Expose port mà ứng dụng NestJS lắng nghe (mặc định 3000)
+# 4. Chạy app
+ENV NODE_ENV=production
 EXPOSE 3000
-
-# Command chạy ứng dụng sau khi build
-CMD ["node", "dist/main.js"]
+CMD ["npm", "start"]

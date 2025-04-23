@@ -1,33 +1,36 @@
 version: '3.8'
+
 services:
-  smart-farm-db:
+  smart-garden-db:
     image: postgres:16
     restart: always
     environment:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: smartfarmdb
+      POSTGRES_DB: smartgardendb
     ports:
-      - '15444:5432' # Ánh xạ cổng local 15444 sang cổng 5432 trong container
+      - '15444:5432'
     volumes:
       - pgdata:/var/lib/postgresql/data
-    # Tùy chọn: thêm label để quản lý container
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U user -d smartgardendb']
+      interval: 10s
+      retries: 5
     labels:
-      - 'app=smart-farm-db'
+      - app=smart-garden-db
 
-  smart-farm-server:
+  smart-garden-server:
     build: .
     restart: always
     depends_on:
-      - smart-farm-db
+      smart-garden-db:
+        condition: service_healthy
     ports:
-      - '3456:3000' # Ứng dụng lắng nghe trên cổng 3000
+      - '3456:3000'
     environment:
-      # Sử dụng hostname của service smart-farm-db trong mạng docker-compose
-      DATABASE_URL: 'postgresql://user:postgres@smart-farm-db:5432/smartfarmdb?schema=public'
-    command: npm run start:prod
+      DATABASE_URL: postgresql://user:postgres@smart-garden-db:5432/smartgardendb?schema=public
     labels:
-      - 'app=smart-farm-server'
+      - app=smart-garden-server
 
 volumes:
   pgdata:

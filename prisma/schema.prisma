@@ -15,15 +15,9 @@ datasource db {
 
 model Role {
   id          Int     @id @default(autoincrement()) // Unique identifier for the role
-  name        String  @unique // Name of the role, e.g., 'FARMER', 'ADMIN'
+  name        String  @unique // Name of the role, e.g., 'GARDENER', 'ADMIN'
   description String? // Optional description of the role
   users       User[] // Users associated with this role
-}
-
-enum ExperienceLevel {
-  BEGINNER
-  INTERMEDIATE
-  EXPERT
 }
 
 model User {
@@ -31,6 +25,7 @@ model User {
   firstName      String // First name
   lastName       String // Last name
   email          String    @unique
+  username       String    @unique
   password       String // Note: The password should be stored in hashed form
   phoneNumber    String?
   dateOfBirth    DateTime?
@@ -46,7 +41,7 @@ model User {
 
   // Extended relations: each user can be either an Admin or a Gardener (not both)
   admin              Admin?
-  farmer             Gardener?
+  gardener           Gardener?
   activityEvaluation ActivityEvaluation[]
 
   @@index([lastLogin]) // Creates an index for queries by last login time
@@ -72,59 +67,72 @@ model Admin {
   auditLogs AuditLog[]
 }
 
-model Gardener {
-  // Each Gardener corresponds to one user, using userId as the primary key
-  userId            Int              @id
-  user              User             @relation(fields: [userId], references: [id])
-  experienceLevel   ExperienceLevel?
-  yearsOfExperience Int?
-
-  /// Relations to other models
-  farmLabs           FarmLab[] // Farms associated with the user
-  farmActivities     FarmActivity[] // Activities performed by the user
-  activityEvaluation ActivityEvaluation[]
+model ExperienceLevel {
+  id          Int        @id @default(autoincrement())
+  level       Int        @unique // Số cấp độ (ví dụ: 1, 2, 3)
+  minXP       Int // Ngưỡng XP tối thiểu để đạt cấp độ
+  title       String // Danh hiệu (ví dụ: "Người làm vườn mới")
+  description String // Mô tả cấp độ
+  icon        String // Biểu tượng đại diện (ví dụ: 🌱)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  gardeners   Gardener[] // Người làm vườn ở cấp độ này
 }
 
-model FarmLab {
-  // Identification Group
-  id         Int    @id @default(autoincrement()) // Unique ID for the farm, auto-increases
-  farmLabKey String @unique // Unique UUID to identify the farm
-  name       String // Name of the farm
+model Gardener {
+  userId            Int             @id
+  user              User            @relation(fields: [userId], references: [id])
+  experiencePoints  Int             @default(0) // Điểm kinh nghiệm hiện tại
+  experienceLevelId Int // Khóa ngoại liên kết với Level.id
+  experienceLevel   ExperienceLevel @relation(fields: [experienceLevelId], references: [id])
 
-  // Address Group (Nhóm địa chỉ)
-  street   String? // Street address (e.g., "123 Lang Street")
-  ward     String? // Ward or commune (e.g., "Lang Thuong Ward")
-  district String? // District or county (e.g., "Dong Da District")
-  city     String? // City or province (e.g., "Hanoi City")
-  lat      Float? // Latitude for farm location
-  lng      Float? // Longitude for farm location
+  gardens Garden[]
 
-  // Gardener Group (Nhóm nông dân)
-  farmerId Int // ID of the farmer who owns the farm
-  farmer   Gardener @relation(fields: [farmerId], references: [userId], onDelete: Cascade) // Link to the farmer (User model)
+  votes              Vote[]
+  posts              Post[]
+  comments           Comment[]
+  follow             Follow[]             @relation("Follower")
+  following          Follow[]             @relation("Followee")
+  Task               Task[]
+  GardenActivity     GardenActivity[]
+  ActivityEvaluation ActivityEvaluation[]
+  PhotoEvaluation    PhotoEvaluation[]
 
-  // Crop Information Group (Nhóm thông tin cây trồng)
-  cropName      String? // Name of the crop (e.g., "Tomato")
-  cropStage     String? // Current growth stage (e.g., "Seeding")
-  cropStartDate DateTime? // Date when the crop was planted
-  cropDuration  Int? // Expected growth duration in days (e.g., 90)
+  @@index([experiencePoints])
+  @@index([experienceLevelId])
+}
 
-  // Sensor and Monitoring Group (Nhóm cảm biến và giám sát)
-  sensors    Sensor[] // List of sensors on the farm
-  sensorData SensorData[] // Data collected from sensors
-  alerts     Alert[] // Alerts related to the farm
+model Garden {
+  id               Int                  @id @default(autoincrement())
+  gardenKey        String               @unique
+  name             String
+  street           String?
+  ward             String?
+  district         String?
+  city             String?
+  lat              Float?
+  lng              Float?
+  gardenerId       Int
+  gardener         Gardener             @relation(fields: [gardenerId], references: [userId], onDelete: Cascade)
+  cropName         String?
+  cropStage        String?
+  cropStartDate    DateTime?
+  cropDuration     Int?
+  sensors          Sensor[]
+  sensorData       SensorData[]
+  alerts           Alert[]
+  activities       GardenActivity[]
+  weatherData      WeatherObservation[]
+  hourlyForecast   HourlyForecast[]
+  dailyForecast    DailyForecast[]
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+  Task             Task[]
+  WateringSchedule WateringSchedule[]
+  Post             Post[]
 
-  // Activity Group (Nhóm hoạt động)
-  activities FarmActivity[] // Activities happening on the farm
-
-  // Weather Group (Nhóm thời tiết)
-  weatherData    WeatherObservation[] // Real-time weather data for the farm
-  hourlyForecast HourlyForecast[] // Hourly weather forecast
-  dailyForecast  DailyForecast[] // Daily weather forecast
-
-  // Timestamp Group (Nhóm thời gian)
-  createdAt DateTime @default(now()) // When the farm record was created
-  updatedAt DateTime @updatedAt // When the farm record was last updated
+  @@index([cropName]) // Thêm chỉ mục
+  @@index([cropStage]) // Thêm chỉ mục
 }
 
 enum SensorType {
@@ -144,8 +152,8 @@ model Sensor {
   type      SensorType // Type of sensor (e.g., HUMIDITY, TEMPERATURE)
 
   // Relation Group
-  farmLabId  Int // ID of the related FarmLab
-  farmLab    FarmLab      @relation(fields: [farmLabId], references: [id]) // Relation to FarmLab
+  gardenId   Int // ID of the related Garden
+  garden     Garden       @relation(fields: [gardenId], references: [id]) // Relation to Garden
   sensorData SensorData[] // Relation to sensor data collected by this sensor
 
   // Timestamp Group
@@ -164,8 +172,8 @@ model SensorData {
   value     Float // Measured value from the sensor (e.g., 65.5 for humidity)
 
   // Relation Group
-  farmLabId Int? // ID of the related FarmLab (optional)
-  FarmLab   FarmLab? @relation(fields: [farmLabId], references: [id]) // Relation to FarmLab (optional)
+  gardenId Int? // ID of the related Garden (optional)
+  Garden   Garden? @relation(fields: [gardenId], references: [id]) // Relation to Garden (optional)
 
   // Timestamp Group
   createdAt DateTime @default(now()) // Timestamp when the record was created
@@ -173,6 +181,33 @@ model SensorData {
 
   // Index for performance
   @@index([sensorId, timestamp]) // Index on sensorId and timestamp for efficient querying
+}
+
+enum TaskStatus {
+  PENDING
+  COMPLETED
+  SKIPPED
+}
+
+model Task {
+  id                 Int               @id @default(autoincrement())
+  gardenerId         Int
+  gardener           Gardener          @relation(fields: [gardenerId], references: [userId])
+  gardenId           Int
+  garden             Garden            @relation(fields: [gardenId], references: [id])
+  plantTypeName      String?
+  plantStageName     String?
+  type               String
+  description        String
+  dueDate            DateTime
+  status             TaskStatus        @default(PENDING) // Sử dụng enum thay vì String
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+  wateringScheduleId Int?
+  wateringSchedule   WateringSchedule? @relation(fields: [wateringScheduleId], references: [id])
+  photoEvaluations   PhotoEvaluation[]
+
+  @@index([gardenerId, dueDate])
 }
 
 enum ActivityType {
@@ -187,19 +222,19 @@ enum ActivityType {
   OTHER // Other unspecified activities
 }
 
-model FarmActivity {
+model GardenActivity {
   // Identification Group
-  id        Int     @id @default(autoincrement()) // Unique ID for the activity
-  farmLabId Int // ID of the related FarmLab
-  farmLab   FarmLab @relation(fields: [farmLabId], references: [id]) // Relation to FarmLab
-  farmerId  Int // ID of the user (farmer) who performed the activity
-  farmer    Gardener  @relation(fields: [farmerId], references: [userId]) // Relation to User
+  id         Int      @id @default(autoincrement()) // Unique ID for the activity
+  gardenId   Int // ID of the related Garden
+  garden     Garden   @relation(fields: [gardenId], references: [id]) // Relation to Garden
+  gardenerId Int // ID of the user (gardener) who performed the activity
+  gardener   Gardener @relation(fields: [gardenerId], references: [userId]) // Relation to User
 
   // Activity Details Group
   name         String // Name of the activity (e.g., "Watering", "Fertilizing")
   activityType ActivityType // Type of activity (using enum for standardization)
   timestamp    DateTime // Timestamp when the activity was performed
-  cropName     String? // Name of the crop (optional, can be auto-filled from FarmLab)
+  cropName     String? // Name of the crop (optional, can be auto-filled from Garden)
   growthStage  String? // Growth stage of the crop (optional, e.g., "Seeding", "Flowering")
 
   // Environmental Conditions Group
@@ -220,7 +255,7 @@ model FarmActivity {
   reason  String? // Reason for the activity (e.g., "Routine maintenance")
 
   // Notes and Observations Group
-  notes String? // Additional notes from the farmer (e.g., "Plants look healthy")
+  notes String? // Additional notes from the gardener (e.g., "Plants look healthy")
 
   // Timestamp Group
   createdAt DateTime @default(now()) // Timestamp when the record was created
@@ -231,20 +266,20 @@ model FarmActivity {
 }
 
 enum EvaluatorType {
-  USER // Evaluation performed by the farmer
+  USER // Evaluation performed by the gardener
   SYSTEM // Evaluation performed automatically by the system
 }
 
 model ActivityEvaluation {
   // Identification Group
-  id             Int          @id @default(autoincrement()) // Unique ID for the evaluation
-  farmActivityId Int // ID of the activity being evaluated
-  farmActivity   FarmActivity @relation(fields: [farmActivityId], references: [id]) // Relation to FarmActivity
+  id               Int            @id @default(autoincrement()) // Unique ID for the evaluation
+  gardenActivityId Int // ID of the activity being evaluated
+  gardenActivity   GardenActivity @relation(fields: [gardenActivityId], references: [id]) // Relation to GardenActivity
 
   // Evaluator Information Group
   evaluatorType EvaluatorType // Type of evaluator (USER or SYSTEM)
-  farmerId      Int? // ID of the evaluator (if evaluatorType is USER)
-  farmer        Gardener?       @relation(fields: [farmerId], references: [userId]) // Relation to User (if applicable)
+  gardenerId    Int? // ID of the evaluator (if evaluatorType is USER)
+  gardener      Gardener?     @relation(fields: [gardenerId], references: [userId]) // Relation to User (if applicable)
 
   // Sensor Data Group
   humidity       Float? // Humidity level at the time of activity in percentage (%)
@@ -269,14 +304,49 @@ model ActivityEvaluation {
   userId    Int?
 }
 
+model WateringSchedule {
+  id          Int        @id @default(autoincrement())
+  gardenId    Int
+  garden      Garden     @relation(fields: [gardenId], references: [id])
+  plantId     Int? // Tùy chọn, cho tưới cây cụ thể
+  plant       PlantType? @relation(fields: [plantId], references: [id])
+  scheduledAt DateTime // Thời gian lịch tưới
+  amount      Float? // Lượng nước đề xuất (ví dụ: lít)
+  method      String? // Phương pháp tưới (ví dụ: "nhỏ giọt", "tưới tay")
+  status      String     @default("PENDING") // PENDING, COMPLETED, SKIPPED
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  tasks       Task[] // Liên kết với công việc để thực hiện
+
+  @@index([gardenId, scheduledAt])
+}
+
+model PhotoEvaluation {
+  id          Int       @id @default(autoincrement())
+  taskId      Int
+  task        Task      @relation(fields: [taskId], references: [id])
+  gardenerId  Int
+  gardener    Gardener  @relation(fields: [gardenerId], references: [userId])
+  plantId     Int
+  plant       PlantType @relation(fields: [plantId], references: [id])
+  photoUrl    String // URL của ảnh tải lên (ví dụ: lưu trong Firebase Storage)
+  aiFeedback  String? // Phản hồi AI (ví dụ: "Lá bị vàng, kiểm tra tưới quá nước")
+  confidence  Float? // Độ tin cậy của AI (0 đến 1)
+  evaluatedAt DateTime
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([plantId, evaluatedAt])
+}
+
 model PlantType {
   // Identification Group
   id   Int    @id @default(autoincrement()) // Unique ID for the plant type
-  name String @unique // Plant name, e.g., "Tomato" (must be unique)
+  name String @unique // PlantType name, e.g., "Tomato" (must be unique)
 
   // Botanical Information Group
   scientificName String? // Scientific name, e.g., "Solanum lycopersicum" (optional)
-  family         String? // Plant family, e.g., "Solanaceae" (optional)
+  family         String? // PlantType family, e.g., "Solanaceae" (optional)
 
   // Description Group
   description    String? // Short description, e.g., "Likes sun, needs water" (optional)
@@ -287,7 +357,11 @@ model PlantType {
   updatedAt DateTime @updatedAt // Timestamp when the record was last updated
 
   // Relations
-  growthStages GrowthStage[] // Relation to growth stages associated with this plant type
+  growthStages     GrowthStage[] // Relation to growth stages associated with this plant type
+  WateringSchedule WateringSchedule[]
+  PhotoEvaluation  PhotoEvaluation[]
+
+  Post Post[]
 }
 
 model GrowthStage {
@@ -334,9 +408,9 @@ enum WeatherMain {
 
 model WeatherObservation {
   // Identification Group
-  id        Int     @id @default(autoincrement()) // Unique ID for the weather observation
-  farmLabId Int // ID of the related FarmLab
-  farmLab   FarmLab @relation(fields: [farmLabId], references: [id]) // Relation to FarmLab
+  id       Int    @id @default(autoincrement()) // Unique ID for the weather observation
+  gardenId Int // ID of the related Garden
+  garden   Garden @relation(fields: [gardenId], references: [id]) // Relation to Garden
 
   // Observation Timestamp Group
   observedAt DateTime // Time of observation in UTC
@@ -368,14 +442,14 @@ model WeatherObservation {
   iconCode    String // Weather icon code
 
   // Relations
-  FarmActivity FarmActivity[] // Relation to FarmActivity (activities linked to this weather observation)
+  GardenActivity GardenActivity[] // Relation to GardenActivity (activities linked to this weather observation)
 }
 
 model HourlyForecast {
   // Identification Group
-  id        Int     @id @default(autoincrement()) // Unique ID for the hourly forecast
-  farmLabId Int // ID of the related FarmLab
-  farmLab   FarmLab @relation(fields: [farmLabId], references: [id]) // Relation to FarmLab
+  id       Int    @id @default(autoincrement()) // Unique ID for the hourly forecast
+  gardenId Int // ID of the related Garden
+  garden   Garden @relation(fields: [gardenId], references: [id]) // Relation to Garden
 
   // Forecast Timestamp Group
   forecastFor  DateTime // Date and time for which the forecast is made
@@ -411,9 +485,9 @@ model HourlyForecast {
 
 model DailyForecast {
   // Identification Group
-  id        Int     @id @default(autoincrement()) // Unique ID for the daily forecast
-  farmLabId Int // ID of the related FarmLab
-  farmLab   FarmLab @relation(fields: [farmLabId], references: [id]) // Relation to FarmLab
+  id       Int    @id @default(autoincrement()) // Unique ID for the daily forecast
+  gardenId Int // ID of the related Garden
+  garden   Garden @relation(fields: [gardenId], references: [id]) // Relation to Garden
 
   // Forecast Timestamp Group
   forecastFor  DateTime // Date for which the forecast is made
@@ -552,9 +626,9 @@ enum NotificationMethod {
 
 model Alert {
   // Identification Group
-  id        Int     @id @default(autoincrement()) // Unique identifier for the alert
-  farmLabId Int // Foreign key linking to FarmLab
-  farmLab   FarmLab @relation(fields: [farmLabId], references: [id]) // Relation to the associated farm
+  id       Int    @id @default(autoincrement()) // Unique identifier for the alert
+  gardenId Int // Foreign key linking to Garden
+  garden   Garden @relation(fields: [gardenId], references: [id]) // Relation to the associated garden
 
   // Alert Details Group
   type       AlertType // Type of the alert (e.g., WEATHER, SENSOR_ERROR)
@@ -569,4 +643,111 @@ model Alert {
   // Timestamp Group
   createdAt DateTime @default(now()) // Time when the alert was created
   updatedAt DateTime @updatedAt // Time when the alert was last updated
+}
+
+// Social network accounts linked to users
+// Mô hình bài viết
+model Post {
+  id         Int         @id @default(autoincrement())
+  gardenerId Int
+  gardener   Gardener    @relation(fields: [gardenerId], references: [userId])
+  gardenId   Int?
+  garden     Garden?     @relation(fields: [gardenId], references: [id])
+  plantId    Int?
+  plant      PlantType?  @relation(fields: [plantId], references: [id])
+  title      String
+  content    String
+  score      Int         @default(0)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  tags       PostTag[]
+  comments   Comment[]
+  images     PostImage[]
+  votes      Vote[]
+
+  @@index([createdAt])
+  @@index([score])
+  @@index([gardenerId])
+  @@index([title]) // Thêm chỉ mục cho tìm kiếm theo tiêu đề
+}
+
+// Mô hình bình luận
+model Comment {
+  id         Int       @id @default(autoincrement())
+  postId     Int
+  post       Post      @relation(fields: [postId], references: [id])
+  parentId   Int?
+  parent     Comment?  @relation("CommentReplies", fields: [parentId], references: [id])
+  gardenerId Int
+  gardener   Gardener  @relation(fields: [gardenerId], references: [userId])
+  content    String
+  score      Int       @default(0)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  replies    Comment[] @relation("CommentReplies")
+  votes      Vote[]
+
+  @@index([createdAt])
+  @@index([score])
+  @@index([postId])
+  @@index([parentId])
+}
+
+// Mô hình thẻ phân loại
+model Tag {
+  id    Int       @id @default(autoincrement())
+  name  String    @unique
+  posts PostTag[]
+}
+
+// Mô hình nối bài viết và thẻ
+model PostTag {
+  postId Int
+  tagId  Int
+  post   Post @relation(fields: [postId], references: [id])
+  tag    Tag  @relation(fields: [tagId], references: [id])
+
+  @@id([postId, tagId])
+}
+
+enum VoteTargetType {
+  POST
+  COMMENT
+}
+
+// Mô hình phiếu bầu
+model Vote {
+  id         Int            @id @default(autoincrement())
+  gardenerId Int
+  gardener   Gardener       @relation(fields: [gardenerId], references: [userId])
+  targetType VoteTargetType
+  targetId   Int
+  voteValue  Int // 1 cho phiếu lên, -1 cho phiếu xuống
+  createdAt  DateTime       @default(now())
+  post       Post?          @relation(fields: [targetId], references: [id], map: "Vote_Post_targetId_fkey")
+  comment    Comment?       @relation(fields: [targetId], references: [id], map: "Vote_Comment_targetId_fkey")
+
+  @@unique([gardenerId, targetType, targetId])
+  @@index([targetType, targetId])
+}
+
+// Mô hình hình ảnh bài viết
+model PostImage {
+  id     Int    @id @default(autoincrement())
+  postId Int
+  post   Post   @relation(fields: [postId], references: [id])
+  url    String
+}
+
+// Mô hình theo dõi
+model Follow {
+  followerId Int
+  followeeId Int
+  follower   Gardener @relation("Follower", fields: [followerId], references: [userId])
+  followee   Gardener @relation("Followee", fields: [followeeId], references: [userId])
+  createdAt  DateTime @default(now())
+
+  @@id([followerId, followeeId])
+  @@index([followerId])
+  @@index([followeeId])
 }
