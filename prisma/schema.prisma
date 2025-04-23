@@ -26,57 +26,67 @@ enum ExperienceLevel {
   EXPERT
 }
 
+model User {
+  id             Int       @id @default(autoincrement())
+  firstName      String // First name
+  lastName       String // Last name
+  email          String    @unique
+  password       String // Note: The password should be stored in hashed form
+  phoneNumber    String?
+  dateOfBirth    DateTime?
+  roleId         Int
+  role           Role      @relation(fields: [roleId], references: [id])
+  refreshToken   String?
+  lastLogin      DateTime? // Last login timestamp
+  profilePicture String?
+  address        String?
+  bio            String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // Extended relations: each user can be either an Admin or a Gardener (not both)
+  admin              Admin?
+  farmer             Gardener?
+  activityEvaluation ActivityEvaluation[]
+
+  @@index([lastLogin]) // Creates an index for queries by last login time
+}
+
 model AuditLog {
   id        Int      @id @default(autoincrement())
   adminId   Int
-  admin     User     @relation(fields: [adminId], references: [id])
-  action    String
-  details   String?
-  timestamp DateTime
+  admin     Admin    @relation(fields: [adminId], references: [userId], onDelete: Cascade)
+  action    String // Action performed, e.g., "CREATE_USER", "DELETE_RECORD", etc.
+  details   String? // Additional details or notes
+  timestamp DateTime // Timestamp of the action
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([timestamp]) // Index for queries based on timestamp (e.g., for audit logs, reporting)
 }
 
-model User {
-  // Basic information
-  id          Int       @id @default(autoincrement()) // Unique identifier for the user
-  firstName   String // The user's first name (e.g., "John" or "Nguyễn")
-  lastName    String // The user's last name (e.g., "Doe" or "Văn A")
-  email       String    @unique // The user's email address, must be unique
-  password    String // The user's password, should be hashed
-  phoneNumber String? // The user's phone number, optional
-  dateOfBirth DateTime? // The user's date of birth, optional  
+model Admin {
+  userId Int  @id
+  user   User @relation(fields: [userId], references: [id])
 
-  // Role information
-  roleId Int // Foreign key to the Role model
-  role   Role @relation(fields: [roleId], references: [id]) // Relation to Role
+  auditLogs AuditLog[]
+}
 
-  // Authentication and session management
-  refreshToken String? // For managing long-term sessions
-  lastLogin    DateTime? // Timestamp of the user's last login
+model Gardener {
+  // Each Gardener corresponds to one user, using userId as the primary key
+  userId            Int              @id
+  user              User             @relation(fields: [userId], references: [id])
+  experienceLevel   ExperienceLevel?
+  yearsOfExperience Int?
 
-  // Profile information
-  profilePicture String? // URL or path to the user's profile picture
-  address        String? // The user's address
-  bio            String? // A short description or bio of the user
-
-  // Farm-related information
-  experienceLevel   ExperienceLevel? // The user's experience level, e.g., BEGINNER, INTERMEDIATE, EXPERT
-  yearsOfExperience Int? // Number of years the user has been farming
-
-  // Timestamps
-  createdAt DateTime @default(now()) // Timestamp when the user was created
-  updatedAt DateTime @updatedAt // Timestamp when the user was last updated
-
-  // Relations to other models
+  /// Relations to other models
   farmLabs           FarmLab[] // Farms associated with the user
-  auditLogs          AuditLog[] // Audit logs for admins
   farmActivities     FarmActivity[] // Activities performed by the user
-  ActivityEvaluation ActivityEvaluation[]
+  activityEvaluation ActivityEvaluation[]
 }
 
 model FarmLab {
-  // Identification Group (Nhóm nhận diện)
+  // Identification Group
   id         Int    @id @default(autoincrement()) // Unique ID for the farm, auto-increases
   farmLabKey String @unique // Unique UUID to identify the farm
   name       String // Name of the farm
@@ -89,9 +99,9 @@ model FarmLab {
   lat      Float? // Latitude for farm location
   lng      Float? // Longitude for farm location
 
-  // Farmer Group (Nhóm nông dân)
+  // Gardener Group (Nhóm nông dân)
   farmerId Int // ID of the farmer who owns the farm
-  farmer   User @relation(fields: [farmerId], references: [id]) // Link to the farmer (User model)
+  farmer   Gardener @relation(fields: [farmerId], references: [userId], onDelete: Cascade) // Link to the farmer (User model)
 
   // Crop Information Group (Nhóm thông tin cây trồng)
   cropName      String? // Name of the crop (e.g., "Tomato")
@@ -182,8 +192,8 @@ model FarmActivity {
   id        Int     @id @default(autoincrement()) // Unique ID for the activity
   farmLabId Int // ID of the related FarmLab
   farmLab   FarmLab @relation(fields: [farmLabId], references: [id]) // Relation to FarmLab
-  userId    Int // ID of the user (farmer) who performed the activity
-  user      User    @relation(fields: [userId], references: [id]) // Relation to User
+  farmerId  Int // ID of the user (farmer) who performed the activity
+  farmer    Gardener  @relation(fields: [farmerId], references: [userId]) // Relation to User
 
   // Activity Details Group
   name         String // Name of the activity (e.g., "Watering", "Fertilizing")
@@ -233,8 +243,8 @@ model ActivityEvaluation {
 
   // Evaluator Information Group
   evaluatorType EvaluatorType // Type of evaluator (USER or SYSTEM)
-  userId        Int? // ID of the evaluator (if evaluatorType is USER)
-  user          User?         @relation(fields: [userId], references: [id]) // Relation to User (if applicable)
+  farmerId      Int? // ID of the evaluator (if evaluatorType is USER)
+  farmer        Gardener?       @relation(fields: [farmerId], references: [userId]) // Relation to User (if applicable)
 
   // Sensor Data Group
   humidity       Float? // Humidity level at the time of activity in percentage (%)
@@ -255,6 +265,8 @@ model ActivityEvaluation {
   // Timestamp Group
   createdAt DateTime @default(now()) // Timestamp when the record was created
   updatedAt DateTime @updatedAt // Timestamp when the record was last updated
+  User      User?    @relation(fields: [userId], references: [id])
+  userId    Int?
 }
 
 model PlantType {

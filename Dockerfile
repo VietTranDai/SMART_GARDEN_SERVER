@@ -1,5 +1,5 @@
 # Sử dụng image Node.js phiên bản 16-alpine cho kích thước nhỏ và hiệu năng cao
-FROM node:20-alpine
+FROM node:23-alpine
 
 # Đặt label cho container (tùy chọn, giúp quản lý metadata)
 LABEL maintainer="trandaiviet78@gmail.com"
