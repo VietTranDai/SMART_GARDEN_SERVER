@@ -1,30 +1,34 @@
 import { HttpAdapterHost, NestFactory } from '@nestjs/core';
-import { AppModule } from './app/app.module';
+import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ConfigService } from '@nestjs/config';
 import { useContainer } from 'class-validator';
 import { ValidationPipe } from '@nestjs/common';
 import * as bodyParser from 'body-parser';
 import * as cookieParser from 'cookie-parser';
+import { ResponseInterceptor } from './common/pipes/response.interceptor';
+import { AllExceptionsFilter } from './common/pipes/http-exception.filter';
 
 async function bootstrap() {
   // Tạo ứng dụng NestJS
   const app = await NestFactory.create(AppModule);
 
+  app.useGlobalInterceptors(new ResponseInterceptor());
+  app.useGlobalFilters(new AllExceptionsFilter());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      forbidNonWhitelisted: false,
+    }),
+  );
+
   app.setGlobalPrefix('v1');
   app.use(cookieParser());
 
-  // Sử dụng container của NestJS cho class-validator để tự động resolve các dependency
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
 
-  // // Đăng ký global validation pipe
-  // app.useGlobalPipes(
-  //   new ValidationPipe({
-  //     whitelist: true,
-  //     transform: true,
-  //     forbidNonWhitelisted: false,
-  //   }),
-  // );
+  // Đăng ký global validation pipe
 
   // Lấy ConfigService để truy xuất biến môi trường
   const configService = app.get(ConfigService);
