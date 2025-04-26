@@ -71,6 +71,7 @@ model ExperienceLevel {
   id          Int        @id @default(autoincrement())
   level       Int        @unique // Số cấp độ (ví dụ: 1, 2, 3)
   minXP       Int // Ngưỡng XP tối thiểu để đạt cấp độ
+  maxXP       Int
   title       String // Danh hiệu (ví dụ: "Người làm vườn mới")
   description String // Mô tả cấp độ
   icon        String // Biểu tượng đại diện (ví dụ: 🌱)
@@ -80,8 +81,9 @@ model ExperienceLevel {
 }
 
 model Gardener {
-  userId            Int             @id
-  user              User            @relation(fields: [userId], references: [id])
+  userId Int  @id
+  user   User @relation(fields: [userId], references: [id])
+
   experiencePoints  Int             @default(0) // Điểm kinh nghiệm hiện tại
   experienceLevelId Int // Khóa ngoại liên kết với Level.id
   experienceLevel   ExperienceLevel @relation(fields: [experienceLevelId], references: [id])
@@ -102,37 +104,61 @@ model Gardener {
   @@index([experienceLevelId])
 }
 
-model Garden {
-  id               Int                  @id @default(autoincrement())
-  gardenKey        String               @unique
-  name             String
-  street           String?
-  ward             String?
-  district         String?
-  city             String?
-  lat              Float?
-  lng              Float?
-  gardenerId       Int
-  gardener         Gardener             @relation(fields: [gardenerId], references: [userId], onDelete: Cascade)
-  cropName         String?
-  cropStage        String?
-  cropStartDate    DateTime?
-  cropDuration     Int?
-  sensors          Sensor[]
-  sensorData       SensorData[]
-  alerts           Alert[]
-  activities       GardenActivity[]
-  weatherData      WeatherObservation[]
-  hourlyForecast   HourlyForecast[]
-  dailyForecast    DailyForecast[]
-  createdAt        DateTime             @default(now())
-  updatedAt        DateTime             @updatedAt
-  Task             Task[]
-  WateringSchedule WateringSchedule[]
-  Post             Post[]
+enum GardenStatus {
+  ACTIVE
+  INACTIVE
+}
 
-  @@index([cropName]) // Thêm chỉ mục
-  @@index([cropStage]) // Thêm chỉ mục
+enum GardenType {
+  INDOOR
+  OUTDOOR
+  BALCONY
+  ROOFTOP
+  WINDOW_SILL
+}
+
+model Garden {
+  id        Int    @id @default(autoincrement())
+  gardenKey String @unique
+
+  name     String
+  street   String?
+  ward     String?
+  district String?
+  city     String?
+  lat      Float?
+  lng      Float?
+
+  gardenerId Int
+  gardener   Gardener @relation(fields: [gardenerId], references: [userId], onDelete: Cascade)
+
+  type   GardenType   @default(OUTDOOR) // Indoor, Outdoor, Balcony, Rooftop, Window Sill
+  status GardenStatus @default(ACTIVE)
+
+  plantName      String?
+  plantGrowStage String?
+
+  plantStartDate DateTime?
+  plantDuration  Int?
+
+  sensors    Sensor[]
+  sensorData SensorData[]
+
+  alerts     Alert[]
+  activities GardenActivity[]
+
+  weatherData    WeatherObservation[]
+  hourlyForecast HourlyForecast[]
+  dailyForecast  DailyForecast[]
+
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  task             Task[]
+  wateringSchedule WateringSchedule[]
+  post             Post[]
+
+  @@index([plantName]) // Thêm chỉ mục
+  @@index([plantGrowStage]) // Thêm chỉ mục
 }
 
 enum SensorType {
@@ -206,16 +232,17 @@ model Task {
   wateringScheduleId Int?
   wateringSchedule   WateringSchedule? @relation(fields: [wateringScheduleId], references: [id])
   photoEvaluations   PhotoEvaluation[]
+  completedAt        DateTime? // Thời gian hoàn thành công việc
 
   @@index([gardenerId, dueDate])
 }
 
 enum ActivityType {
-  PLANTING // Planting crops
-  WATERING // Watering crops
+  PLANTING // Planting
+  WATERING // Watering
   FERTILIZING // Applying fertilizer
   PRUNING // Pruning branches
-  HARVESTING // Harvesting crops
+  HARVESTING // Harvesting
   PEST_CONTROL // Pest and disease control
   SOIL_TESTING // Testing soil conditions
   WEEDING // Removing weeds
@@ -234,8 +261,9 @@ model GardenActivity {
   name         String // Name of the activity (e.g., "Watering", "Fertilizing")
   activityType ActivityType // Type of activity (using enum for standardization)
   timestamp    DateTime // Timestamp when the activity was performed
-  cropName     String? // Name of the crop (optional, can be auto-filled from Garden)
-  growthStage  String? // Growth stage of the crop (optional, e.g., "Seeding", "Flowering")
+
+  plantName      String?
+  plantGrowStage String?
 
   // Environmental Conditions Group
   weatherObservationId Int? // ID of the nearest WeatherObservation at the time of activity
@@ -305,38 +333,43 @@ model ActivityEvaluation {
 }
 
 model WateringSchedule {
-  id          Int        @id @default(autoincrement())
-  gardenId    Int
-  garden      Garden     @relation(fields: [gardenId], references: [id])
-  plantId     Int? // Tùy chọn, cho tưới cây cụ thể
-  plant       PlantType? @relation(fields: [plantId], references: [id])
+  id       Int    @id @default(autoincrement())
+  gardenId Int
+  garden   Garden @relation(fields: [gardenId], references: [id])
+
   scheduledAt DateTime // Thời gian lịch tưới
   amount      Float? // Lượng nước đề xuất (ví dụ: lít)
-  method      String? // Phương pháp tưới (ví dụ: "nhỏ giọt", "tưới tay")
-  status      String     @default("PENDING") // PENDING, COMPLETED, SKIPPED
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-  tasks       Task[] // Liên kết với công việc để thực hiện
+
+  status String @default("PENDING") // PENDING, COMPLETED, SKIPPED
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tasks Task[] // Liên kết với công việc để thực hiện
 
   @@index([gardenId, scheduledAt])
 }
 
 model PhotoEvaluation {
-  id          Int       @id @default(autoincrement())
-  taskId      Int
-  task        Task      @relation(fields: [taskId], references: [id])
-  gardenerId  Int
-  gardener    Gardener  @relation(fields: [gardenerId], references: [userId])
-  plantId     Int
-  plant       PlantType @relation(fields: [plantId], references: [id])
-  photoUrl    String // URL của ảnh tải lên (ví dụ: lưu trong Firebase Storage)
-  aiFeedback  String? // Phản hồi AI (ví dụ: "Lá bị vàng, kiểm tra tưới quá nước")
-  confidence  Float? // Độ tin cậy của AI (0 đến 1)
-  evaluatedAt DateTime
+  id     Int  @id @default(autoincrement())
+  taskId Int
+  task   Task @relation(fields: [taskId], references: [id])
+
+  gardenerId Int
+  gardener   Gardener @relation(fields: [gardenerId], references: [userId])
+
+  plantName      String?
+  plantGrowStage String?
+
+  photoUrl   String // URL của ảnh tải lên (ví dụ: lưu trong Firebase Storage)
+  aiFeedback String? // Phản hồi AI (ví dụ: "Lá bị vàng, kiểm tra tưới quá nước")
+  confidence Float? // Độ tin cậy của AI (0 đến 1)
+
+  evaluatedAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  @@index([plantId, evaluatedAt])
+  @@index([plantName, evaluatedAt])
 }
 
 model PlantType {
@@ -357,16 +390,13 @@ model PlantType {
   updatedAt DateTime @updatedAt // Timestamp when the record was last updated
 
   // Relations
-  growthStages     GrowthStage[] // Relation to growth stages associated with this plant type
-  WateringSchedule WateringSchedule[]
-  PhotoEvaluation  PhotoEvaluation[]
-
-  Post Post[]
+  growthStages GrowthStage[] // Relation to growth stages associated with this plant type
 }
 
 model GrowthStage {
   // Identification Group
-  id          Int       @id @default(autoincrement()) // Unique ID for the growth stage
+  id Int @id @default(autoincrement()) // Unique ID for the growth stage
+
   plantTypeId Int // ID of the related PlantType
   plantType   PlantType @relation(fields: [plantTypeId], references: [id], onDelete: Cascade) // Relation to PlantType
 
@@ -383,6 +413,8 @@ model GrowthStage {
   optimalHumidityMax    Float // Maximum ideal humidity in percentage (%), e.g., 80
   optimalPHMin          Float? // Minimum ideal soil pH, e.g., 5.5 (optional)
   optimalPHMax          Float? // Maximum ideal soil pH, e.g., 6.5 (optional)
+  optimalLightMin       Float? // Ideal light intensity in lux
+  optimalLightMax       Float? // Ideal light intensity in lux 
 
   // Care Requirements Group
   lightRequirement    String? // Light needs, e.g., "Full sun" (optional)
@@ -592,6 +624,9 @@ model Wards {
   district               Districts           @relation(fields: [district_code], references: [code]) // Link to district
   administrative_unit_id Int // ID of the administrative unit type (e.g., 8 for Ward)
   administrative_unit    AdministrativeUnits @relation(fields: [administrative_unit_id], references: [id]) // Link to unit type
+
+  latitude  Float? // latitude
+  longitude Float? // longitude
 }
 
 // Enum for the type of alert
@@ -599,7 +634,7 @@ enum AlertType {
   WEATHER // Weather-related alerts (e.g., storms, heavy rain)
   SENSOR_ERROR // Sensor malfunctions (e.g., failure, disconnection)
   SYSTEM // System issues (e.g., power outage, software errors)
-  CROP_CONDITION // Crop health issues (e.g., pests, water deficiency)
+  PLANT_CONDITION // Plant health issues (e.g., pests, water deficiency)
   ACTIVITY // Activity-related issues (e.g., overwatering, wrong fertilizing)
   MAINTENANCE // Maintenance reminders (e.g., sensor or equipment check)
   SECURITY // Security concerns (e.g., intrusion, anomalies)
@@ -648,25 +683,32 @@ model Alert {
 // Social network accounts linked to users
 // Mô hình bài viết
 model Post {
-  id         Int         @id @default(autoincrement())
+  id Int @id @default(autoincrement())
+
   gardenerId Int
-  gardener   Gardener    @relation(fields: [gardenerId], references: [userId])
-  gardenId   Int?
-  garden     Garden?     @relation(fields: [gardenId], references: [id])
-  plantId    Int?
-  plant      PlantType?  @relation(fields: [plantId], references: [id])
-  title      String
-  content    String
-  score      Int         @default(0)
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
-  tags       PostTag[]
-  comments   Comment[]
-  images     PostImage[]
-  votes      Vote[]
+  gardener   Gardener @relation(fields: [gardenerId], references: [userId])
+
+  gardenId Int?
+  garden   Garden? @relation(fields: [gardenId], references: [id])
+
+  plantName      String?
+  plantGrowStage String?
+
+  title   String
+  content String
+
+  total_vote Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tags     PostTag[]
+  comments Comment[]
+  images   PostImage[]
+  votes    Vote[]
 
   @@index([createdAt])
-  @@index([score])
+  @@index([total_vote])
   @@index([gardenerId])
   @@index([title]) // Thêm chỉ mục cho tìm kiếm theo tiêu đề
 }

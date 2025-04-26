@@ -5,15 +5,14 @@ import { PrismaModule } from 'src/prisma/prisma.module';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from 'src/auth/guard';
-import { UserModule } from 'src/user-management/user/user.module';
-import { UserManagementModule } from 'src/user-management/user-management.module';
+import { UsersModule } from 'src/users/users.module';
 import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
-    UserManagementModule,
+    UsersModule,
     AuthModule,
   ],
   controllers: [AppController],

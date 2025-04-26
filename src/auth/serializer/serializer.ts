@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common'; // Sử dụng @Injectable để đánh dấu class có thể được inject vào nơi khác thông qua Dependency Injection.
 import { PassportSerializer } from '@nestjs/passport'; // Kế thừa PassportSerializer để làm việc với session trong Passport.js
-import { UserService } from 'src/user-management/user/service/user.service'; // Import UserService để lấy dữ liệu người dùng từ cơ sở dữ liệu.
+import { UserService } from 'src/users/user/service/user.service'; // Import UserService để lấy dữ liệu người dùng từ cơ sở dữ liệu.
 import { User } from '.prisma/client'; // Import kiểu dữ liệu User được Prisma tạo tự động từ schema.
 
 @Injectable()
