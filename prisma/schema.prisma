@@ -94,7 +94,7 @@ model Gardener {
   posts              Post[]
   comments           Comment[]
   follow             Follow[]             @relation("Follower")
-  following          Follow[]             @relation("Followee")
+  following          Follow[]             @relation("Followed")
   Task               Task[]
   GardenActivity     GardenActivity[]
   ActivityEvaluation ActivityEvaluation[]
@@ -784,12 +784,12 @@ model PostImage {
 // Mô hình theo dõi
 model Follow {
   followerId Int
-  followeeId Int
+  followedId Int
   follower   Gardener @relation("Follower", fields: [followerId], references: [userId])
-  followee   Gardener @relation("Followee", fields: [followeeId], references: [userId])
+  followed   Gardener @relation("Followed", fields: [followedId], references: [userId])
   createdAt  DateTime @default(now())
 
-  @@id([followerId, followeeId])
+  @@id([followerId, followedId])
   @@index([followerId])
-  @@index([followeeId])
+  @@index([followedId])
 }

@@ -4,8 +4,6 @@ import {
   ConflictException,
   InternalServerErrorException,
   Logger,
-  forwardRef,
-  Inject,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -15,7 +13,6 @@ import { Tokens } from './dto/tokens.dto';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { User } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
-import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class AuthService {
@@ -25,7 +22,6 @@ export class AuthService {
     private prisma: PrismaService,
     private config: ConfigService,
     private jwtService: JwtService,
-    @Inject(forwardRef(() => UsersService)) private usersService: UsersService,
   ) {}
 
   // NEW: 0) User Registration
@@ -164,6 +160,23 @@ export class AuthService {
     };
   }
 
+  // 3) Lưu hashed Refresh Token vào DB
+  async updateRefreshToken(userId: number, refreshToken: string) {
+    const hash = await bcrypt.hash(refreshToken, 10);
+    try {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { refreshToken: hash },
+      });
+    } catch (error) {
+      this.logger.error(
+        `Failed to update refresh token for user ${userId}`,
+        error.stack,
+      );
+      // Decide if this should throw. Probably not critical path for login/refresh response.
+    }
+  }
+
   // 4) Xử lý Login
   async login(user: Omit<User, 'password' | 'refreshToken'>) {
     // Update last login time
@@ -180,7 +193,7 @@ export class AuthService {
     }
 
     const tokens = await this.getTokens(user.id, user.username);
-    await this.usersService.updateRefreshToken(user.id, tokens.refresh_token);
+    await this.updateRefreshToken(user.id, tokens.refresh_token);
     this.logger.log(`User logged in successfully: ${user.username}`);
     return tokens;
   }
@@ -188,7 +201,10 @@ export class AuthService {
   // 5) Xử lý Logout
   async logout(userId: number) {
     try {
-      await this.usersService.updateRefreshToken(userId, null);
+      await this.prisma.user.updateMany({
+        where: { id: userId, refreshToken: { not: null } },
+        data: { refreshToken: null },
+      });
       this.logger.log(`User logged out successfully: ${userId}`);
     } catch (error) {
       this.logger.error(`Failed to logout user ${userId}`, error.stack);
@@ -198,14 +214,26 @@ export class AuthService {
 
   // 6) Xử lý Refresh token
   async refreshTokens(userId: number, rt: string) {
-    const user = await this.usersService.validateRefreshToken(userId, rt);
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || !user.refreshToken) {
+      this.logger.warn(
+        `Refresh token validation failed: User ${userId} not found or no token stored.`,
+      );
+      throw new UnauthorizedException('Access Denied');
+    }
 
-    if (!user) {
+    const isMatch = await bcrypt.compare(rt, user.refreshToken);
+    if (!isMatch) {
+      this.logger.warn(
+        `Refresh token validation failed: Token mismatch for user ${userId}.`,
+      );
+      // Security consideration: Invalidate token here if mismatch?
+      // await this.logout(userId);
       throw new UnauthorizedException('Access Denied');
     }
 
     const tokens = await this.getTokens(user.id, user.username);
-    await this.usersService.updateRefreshToken(user.id, tokens.refresh_token);
+    await this.updateRefreshToken(user.id, tokens.refresh_token); // Rotate refresh token
     this.logger.log(`Tokens refreshed successfully for user: ${user.username}`);
     return tokens;
   }

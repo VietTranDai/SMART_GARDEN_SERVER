@@ -7,5 +7,6 @@ import { GardenService } from './service/garden.service';
   imports: [PrismaModule],
   controllers: [GardenController],
   providers: [GardenService],
+  exports: [GardenService],
 })
 export class GardenModule {}

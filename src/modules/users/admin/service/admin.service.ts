@@ -3,93 +3,105 @@ import {
   NotFoundException,
   ConflictException,
 } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Admin } from '../entity/admin.entity';
 import { CreateAdminDto } from '../dto/create-admin.dto';
 import { UpdateAdminDto } from '../dto/update-admin.dto';
 import { AdminFilterDto } from '../dto/admin-filter.dto';
-import { UsersService } from '../../users.service';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { Admin } from '@prisma/client';
+import { UserService } from '../../user/service/user.service';
 
 @Injectable()
 export class AdminService {
   constructor(
-    @InjectRepository(Admin)
-    private readonly adminRepository: Repository<Admin>,
-    private readonly usersService: UsersService,
+    private readonly prisma: PrismaService,
+    private readonly userService: UserService,
   ) {}
 
+  // Tạo admin mới
   async create(createAdminDto: CreateAdminDto): Promise<Admin> {
-    // Check if user exists
-    const user = await this.usersService.findOne(createAdminDto.userId);
+    // 1) Kiểm tra user có tồn tại không
+    await this.userService.findOne(createAdminDto.userId);
 
-    // Check if user is already an admin
-    const existingAdmin = await this.adminRepository.findOne({
-      where: { user: { id: createAdminDto.userId } },
+    // 2) Kiểm tra đã là admin chưa
+    const existing = await this.prisma.admin.findUnique({
+      where: { userId: createAdminDto.userId },
     });
-
-    if (existingAdmin) {
+    if (existing) {
       throw new ConflictException('User is already an admin');
     }
 
-    // Create new admin
-    const admin = this.adminRepository.create({
-      user,
+    // 3) Tạo admin, connect tới user
+    return this.prisma.admin.create({
+      data: {
+        user: { connect: { id: createAdminDto.userId } },
+      },
     });
-
-    return this.adminRepository.save(admin);
   }
 
-  async findAll(filterDto: AdminFilterDto): Promise<[Admin[], number]> {
-    const { page, limit, sortBy, sortOrder } = filterDto;
+  // Lấy danh sách admin theo trang, kèm tổng số
+  async findAll(filter: AdminFilterDto): Promise<[Admin[], number]> {
+    const { page = 1, limit = 10, sortBy = 'id', sortOrder = 'asc' } = filter;
+    const skip = (page - 1) * limit;
+    const take = limit;
 
-    const query = this.adminRepository
-      .createQueryBuilder('admin')
-      .leftJoinAndSelect('admin.user', 'user')
-      .skip((page - 1) * limit)
-      .take(limit)
-      .orderBy(`admin.${sortBy}`, sortOrder);
+    const [data, total] = await this.prisma.$transaction([
+      this.prisma.admin.findMany({
+        skip,
+        take,
+        orderBy: { [sortBy]: sortOrder },
+        include: { user: true },
+      }),
+      this.prisma.admin.count(),
+    ]);
 
-    return query.getManyAndCount();
+    return [data, total];
   }
 
+  // Lấy 1 admin theo ID
   async findOne(id: number): Promise<Admin> {
-    const admin = await this.adminRepository.findOne({
-      where: { id },
-      relations: ['user'],
+    const admin = await this.prisma.admin.findUnique({
+      where: { userId: id },
+      include: { user: true },
     });
-
     if (!admin) {
       throw new NotFoundException(`Admin with ID ${id} not found`);
     }
-
     return admin;
   }
 
+  // Lấy 1 admin theo userId
   async findByUserId(userId: number): Promise<Admin> {
-    const admin = await this.adminRepository.findOne({
-      where: { user: { id: userId } },
-      relations: ['user'],
+    const admin = await this.prisma.admin.findUnique({
+      where: { userId },
+      include: { user: true },
     });
-
     if (!admin) {
       throw new NotFoundException(`Admin with user ID ${userId} not found`);
     }
-
     return admin;
   }
 
+  // Cập nhật (hiện tại chỉ có thể đổi userId nếu DTO có trường này)
   async update(id: number, updateAdminDto: UpdateAdminDto): Promise<Admin> {
-    const admin = await this.findOne(id);
+    await this.findOne(id);
 
-    // Since admin entity doesn't have fields to update besides the user,
-    // we don't need to update admin-specific fields
+    const data: any = {};
+    if (updateAdminDto.userId) {
+      // Kiểm tra user mới có tồn tại không
+      await this.userService.findOne(updateAdminDto.userId);
+      data.user = { connect: { id: updateAdminDto.userId } };
+    }
 
-    return this.adminRepository.save(admin);
+    return this.prisma.admin.update({
+      where: { userId: id },
+      data,
+      include: { user: true },
+    });
   }
 
+  // Xóa admin
   async remove(id: number): Promise<void> {
-    const admin = await this.findOne(id);
-    await this.adminRepository.remove(admin);
+    await this.findOne(id);
+    await this.prisma.admin.delete({ where: { userId: id } });
   }
 }

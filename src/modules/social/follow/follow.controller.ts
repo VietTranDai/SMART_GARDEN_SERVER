@@ -67,65 +67,65 @@ export class FollowController {
     return this.followService.unfollow(user.sub, followedId);
   }
 
-  @Get('followers/:gardenerId')
-  @Public()
-  @ApiOperation({
-    summary: 'Lấy danh sách người theo dõi của một người làm vườn',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Danh sách người theo dõi.',
-    type: FollowerListDto,
-  })
-  @ApiQuery({
-    name: 'page',
-    required: false,
-    type: Number,
-    description: 'Trang',
-  })
-  @ApiQuery({
-    name: 'limit',
-    required: false,
-    type: Number,
-    description: 'Số lượng người theo dõi trên một trang',
-  })
-  getFollowers(
-    @Param('gardenerId', ParseIntPipe) gardenerId: number,
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
-  ): Promise<FollowerListDto> {
-    return this.followService.getFollowers(gardenerId, page, limit);
-  }
+  // @Get('followers/:gardenerId')
+  // @Public()
+  // @ApiOperation({
+  //   summary: 'Lấy danh sách người theo dõi của một người làm vườn',
+  // })
+  // @ApiResponse({
+  //   status: 200,
+  //   description: 'Danh sách người theo dõi.',
+  //   type: FollowerListDto,
+  // })
+  // @ApiQuery({
+  //   name: 'page',
+  //   required: false,
+  //   type: Number,
+  //   description: 'Trang',
+  // })
+  // @ApiQuery({
+  //   name: 'limit',
+  //   required: false,
+  //   type: Number,
+  //   description: 'Số lượng người theo dõi trên một trang',
+  // })
+  // getFollowers(
+  //   @Param('gardenerId', ParseIntPipe) gardenerId: number,
+  //   @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+  //   @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+  // ): Promise<FollowerListDto> {
+  //   return this.followService.getFollowers(gardenerId, page, limit);
+  // }
 
-  @Get('following/:gardenerId')
-  @Public()
-  @ApiOperation({
-    summary: 'Lấy danh sách người mà một người làm vườn đang theo dõi',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Danh sách người đang theo dõi.',
-    type: FollowingListDto,
-  })
-  @ApiQuery({
-    name: 'page',
-    required: false,
-    type: Number,
-    description: 'Trang',
-  })
-  @ApiQuery({
-    name: 'limit',
-    required: false,
-    type: Number,
-    description: 'Số lượng người đang theo dõi trên một trang',
-  })
-  getFollowing(
-    @Param('gardenerId', ParseIntPipe) gardenerId: number,
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
-  ): Promise<FollowingListDto> {
-    return this.followService.getFollowing(gardenerId, page, limit);
-  }
+  // @Get('following/:gardenerId')
+  // @Public()
+  // @ApiOperation({
+  //   summary: 'Lấy danh sách người mà một người làm vườn đang theo dõi',
+  // })
+  // @ApiResponse({
+  //   status: 200,
+  //   description: 'Danh sách người đang theo dõi.',
+  //   type: FollowingListDto,
+  // })
+  // @ApiQuery({
+  //   name: 'page',
+  //   required: false,
+  //   type: Number,
+  //   description: 'Trang',
+  // })
+  // @ApiQuery({
+  //   name: 'limit',
+  //   required: false,
+  //   type: Number,
+  //   description: 'Số lượng người đang theo dõi trên một trang',
+  // })
+  // getFollowing(
+  //   @Param('gardenerId', ParseIntPipe) gardenerId: number,
+  //   @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+  //   @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+  // ): Promise<FollowingListDto> {
+  //   return this.followService.getFollowing(gardenerId, page, limit);
+  // }
 
   @Get('status/:followedId')
   @ApiOperation({ summary: 'Kiểm tra trạng thái theo dõi' })

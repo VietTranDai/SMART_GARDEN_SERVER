@@ -328,7 +328,7 @@ export class CommentService {
         return {
           id: reply.id,
           postId: reply.postId,
-          parentId: reply.parentId,
+          parentId: reply.parentId || undefined,
           gardenerId: reply.gardenerId,
           gardenerName: `${reply.gardener.user.firstName} ${reply.gardener.user.lastName}`,
           content: reply.content,
@@ -370,20 +370,17 @@ export class CommentService {
               user: true,
             },
           },
-          replies:
-            comment.parentId === null
-              ? {
-                  orderBy: { createdAt: 'asc' },
-                  take: 5,
-                  include: {
-                    gardener: {
-                      include: {
-                        user: true,
-                      },
-                    },
-                  },
-                }
-              : undefined,
+          replies: {
+            orderBy: { createdAt: 'asc' },
+            take: 5,
+            include: {
+              gardener: {
+                include: {
+                  user: true,
+                },
+              },
+            },
+          },
         },
       });
 

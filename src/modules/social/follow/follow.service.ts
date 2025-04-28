@@ -20,268 +20,167 @@ export class FollowService {
 
   constructor(private readonly prisma: PrismaService) {}
 
+  // Theo dõi (follow)
   async follow(
     followerId: number,
     createFollowDto: CreateFollowDto,
   ): Promise<FollowDto> {
-    try {
-      // Kiểm tra xem người được theo dõi có tồn tại không
-      const followedGardener = await this.prisma.gardener.findUnique({
-        where: { id: createFollowDto.followedId },
-      });
+    const followedId = createFollowDto.followedId;
 
-      if (!followedGardener) {
-        throw new NotFoundException(
-          `Không tìm thấy người làm vườn với ID ${createFollowDto.followedId}`,
-        );
-      }
-
-      // Không thể tự theo dõi chính mình
-      if (followerId === createFollowDto.followedId) {
-        throw new BadRequestException('Không thể tự theo dõi chính mình');
-      }
-
-      // Kiểm tra xem đã theo dõi người này chưa
-      const existingFollow = await this.prisma.follow.findUnique({
-        where: {
-          followerId_followedId: {
-            followerId,
-            followedId: createFollowDto.followedId,
-          },
-        },
-      });
-
-      if (existingFollow) {
-        throw new ConflictException('Bạn đã theo dõi người này rồi');
-      }
-
-      // Tạo mối quan hệ theo dõi mới
-      const follow = await this.prisma.follow.create({
-        data: {
-          followerId,
-          followedId: createFollowDto.followedId,
-        },
-      });
-
-      this.logger.log(
-        `Gardener ${followerId} followed gardener ${createFollowDto.followedId}`,
+    // Kiểm tra followed có tồn tại không
+    const followed = await this.prisma.gardener.findUnique({
+      where: { userId: followedId },
+    });
+    if (!followed) {
+      throw new NotFoundException(
+        `Không tìm thấy người làm vườn với ID ${followedId}`,
       );
-
-      return {
-        followerId: follow.followerId,
-        followedId: follow.followedId,
-        createdAt: follow.createdAt,
-      };
-    } catch (error) {
-      this.logger.error(
-        `Error following gardener: ${error.message}`,
-        error.stack,
-      );
-      if (
-        error instanceof NotFoundException ||
-        error instanceof BadRequestException ||
-        error instanceof ConflictException
-      ) {
-        throw error;
-      }
-      throw new BadRequestException('Không thể theo dõi người làm vườn này');
     }
+
+    if (followerId === followedId) {
+      throw new BadRequestException('Không thể tự theo dõi chính mình');
+    }
+
+    // Kiểm tra đã follow chưa
+    const existing = await this.prisma.follow.findUnique({
+      where: {
+        followerId_followedId: { followerId, followedId },
+      },
+    });
+    if (existing) {
+      throw new ConflictException('Bạn đã theo dõi người này rồi');
+    }
+
+    const follow = await this.prisma.follow.create({
+      data: { followerId, followedId },
+    });
+
+    this.logger.log(`Gardener ${followerId} followed gardener ${followedId}`);
+
+    return {
+      followerId: follow.followerId,
+      followedId: follow.followedId,
+      createdAt: follow.createdAt,
+    };
   }
 
+  // Hủy theo dõi (unfollow)
   async unfollow(followerId: number, followedId: number): Promise<void> {
-    try {
-      // Kiểm tra xem mối quan hệ theo dõi có tồn tại không
-      const follow = await this.prisma.follow.findUnique({
-        where: {
-          followerId_followedId: {
-            followerId,
-            followedId,
-          },
-        },
-      });
-
-      if (!follow) {
-        throw new NotFoundException('Bạn chưa theo dõi người này');
-      }
-
-      // Xóa mối quan hệ theo dõi
-      await this.prisma.follow.delete({
-        where: {
-          followerId_followedId: {
-            followerId,
-            followedId,
-          },
-        },
-      });
-
-      this.logger.log(
-        `Gardener ${followerId} unfollowed gardener ${followedId}`,
-      );
-    } catch (error) {
-      this.logger.error(
-        `Error unfollowing gardener: ${error.message}`,
-        error.stack,
-      );
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
-      throw new BadRequestException(
-        'Không thể hủy theo dõi người làm vườn này',
-      );
+    const existing = await this.prisma.follow.findUnique({
+      where: {
+        followerId_followedId: { followerId, followedId },
+      },
+    });
+    if (!existing) {
+      throw new NotFoundException('Bạn chưa theo dõi người này');
     }
+
+    await this.prisma.follow.delete({
+      where: {
+        followerId_followedId: { followerId, followedId },
+      },
+    });
+
+    this.logger.log(`Gardener ${followerId} unfollowed gardener ${followedId}`);
   }
 
-  async getFollowers(
-    gardenerId: number,
-    page = 1,
-    limit = 10,
-  ): Promise<FollowerListDto> {
-    try {
-      // Kiểm tra xem người làm vườn có tồn tại không
-      const gardener = await this.prisma.gardener.findUnique({
-        where: { id: gardenerId },
-      });
+  // // Lấy danh sách followers của một gardener
+  // async getFollowers(
+  //   gardenerId: number,
+  //   page = 1,
+  //   limit = 10,
+  // ): Promise<FollowerListDto> {
+  //   const gardener = await this.prisma.gardener.findUnique({
+  //     where: { userId: gardenerId },
+  //   });
+  //   if (!gardener) {
+  //     throw new NotFoundException(
+  //       `Không tìm thấy người làm vườn với ID ${gardenerId}`,
+  //     );
+  //   }
 
-      if (!gardener) {
-        throw new NotFoundException(
-          `Không tìm thấy người làm vườn với ID ${gardenerId}`,
-        );
-      }
+  //   const skip = (page - 1) * limit;
+  //   const total = await this.prisma.follow.count({
+  //     where: { followedId: gardenerId },
+  //   });
 
-      const skip = (page - 1) * limit;
+  //   const follows = await this.prisma.follow.findMany({
+  //     where: { followedId: gardenerId },
+  //     orderBy: { createdAt: 'desc' },
+  //     skip,
+  //     take: limit,
+  //     include: {
+  //       follower: {
+  //         include: { user: true },
+  //       },
+  //     },
+  //   });
 
-      // Đếm tổng số người theo dõi
-      const total = await this.prisma.follow.count({
-        where: { followedId: gardenerId },
-      });
+  //   const followers: GardenerDto[] = follows.map((f) => ({
+  //     id: f.followerId,
+  //     name: `${f.follower.user.firstName} ${f.follower.user.lastName}`,
+  //     avatarUrl: f.follower.user.avatarUrl,
+  //     email: f.follower.user.email,
+  //     username: f.follower.user.username,
+  //     experiencePoints: f.follower.experiencePoints,
+  //     experienceLevel: f.follower.experienceLevel,
+  //     createdAt: f.follower.createdAt,
+  //   }));
 
-      // Lấy danh sách người theo dõi
-      const follows = await this.prisma.follow.findMany({
-        where: { followedId: gardenerId },
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: limit,
-        include: {
-          follower: {
-            include: {
-              user: true,
-            },
-          },
-        },
-      });
+  //   return { followers, total, page, limit };
+  // }
 
-      // Chuyển đổi thành DTO
-      const followers: GardenerDto[] = follows.map((follow) => ({
-        id: follow.follower.id,
-        name: `${follow.follower.user.firstName} ${follow.follower.user.lastName}`,
-        avatarUrl: follow.follower.user.avatarUrl,
-      }));
+  // // Lấy danh sách những người mà gardener đang follow
+  // async getFollowing(
+  //   gardenerId: number,
+  //   page = 1,
+  //   limit = 10,
+  // ): Promise<FollowingListDto> {
+  //   const gardener = await this.prisma.gardener.findUnique({
+  //     where: { userId: gardenerId },
+  //   });
+  //   if (!gardener) {
+  //     throw new NotFoundException(
+  //       `Không tìm thấy người làm vườn với ID ${gardenerId}`,
+  //     );
+  //   }
 
-      return {
-        followers,
-        total,
-        page,
-        limit,
-      };
-    } catch (error) {
-      this.logger.error(
-        `Error getting followers for gardener ${gardenerId}: ${error.message}`,
-        error.stack,
-      );
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
-      throw new BadRequestException('Không thể lấy danh sách người theo dõi');
-    }
-  }
+  //   const skip = (page - 1) * limit;
+  //   const total = await this.prisma.follow.count({
+  //     where: { followerId: gardenerId },
+  //   });
 
-  async getFollowing(
-    gardenerId: number,
-    page = 1,
-    limit = 10,
-  ): Promise<FollowingListDto> {
-    try {
-      // Kiểm tra xem người làm vườn có tồn tại không
-      const gardener = await this.prisma.gardener.findUnique({
-        where: { id: gardenerId },
-      });
+  //   const follows = await this.prisma.follow.findMany({
+  //     where: { followerId: gardenerId },
+  //     orderBy: { createdAt: 'desc' },
+  //     skip,
+  //     take: limit,
+  //     include: {
+  //       followed: {
+  //         include: { user: true },
+  //       },
+  //     },
+  //   });
 
-      if (!gardener) {
-        throw new NotFoundException(
-          `Không tìm thấy người làm vườn với ID ${gardenerId}`,
-        );
-      }
+  //   const following: GardenerDto[] = follows.map((f) => ({
+  //     id: f.followedId,
+  //     name: `${f.followed.user.firstName} ${f.followed.user.lastName}`,
+  //     avatarUrl: f.followed.user.avatarUrl,
+  //   }));
 
-      const skip = (page - 1) * limit;
+  //   return { following, total, page, limit };
+  // }
 
-      // Đếm tổng số người đang theo dõi
-      const total = await this.prisma.follow.count({
-        where: { followerId: gardenerId },
-      });
-
-      // Lấy danh sách người đang theo dõi
-      const follows = await this.prisma.follow.findMany({
-        where: { followerId: gardenerId },
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: limit,
-        include: {
-          followed: {
-            include: {
-              user: true,
-            },
-          },
-        },
-      });
-
-      // Chuyển đổi thành DTO
-      const following: GardenerDto[] = follows.map((follow) => ({
-        id: follow.followed.id,
-        name: `${follow.followed.user.firstName} ${follow.followed.user.lastName}`,
-        avatarUrl: follow.followed.user.avatarUrl,
-      }));
-
-      return {
-        following,
-        total,
-        page,
-        limit,
-      };
-    } catch (error) {
-      this.logger.error(
-        `Error getting following for gardener ${gardenerId}: ${error.message}`,
-        error.stack,
-      );
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
-      throw new BadRequestException(
-        'Không thể lấy danh sách người đang theo dõi',
-      );
-    }
-  }
-
+  // Kiểm tra trạng thái follow
   async checkFollowStatus(
     followerId: number,
     followedId: number,
   ): Promise<boolean> {
-    try {
-      const follow = await this.prisma.follow.findUnique({
-        where: {
-          followerId_followedId: {
-            followerId,
-            followedId,
-          },
-        },
-      });
-
-      return !!follow;
-    } catch (error) {
-      this.logger.error(
-        `Error checking follow status: ${error.message}`,
-        error.stack,
-      );
-      throw new BadRequestException('Không thể kiểm tra trạng thái theo dõi');
-    }
+    const f = await this.prisma.follow.findUnique({
+      where: {
+        followerId_followedId: { followerId, followedId },
+      },
+    });
+    return !!f;
   }
 }

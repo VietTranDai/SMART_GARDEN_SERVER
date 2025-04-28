@@ -59,7 +59,7 @@ async function bootstrap() {
   });
 
   // Lấy port từ biến môi trường, mặc định 8080
-  const port = configService.get<number>('PORT') || 8080;
+  const port = configService.get<number>('PORT') || 3000;
 
   // (Tùy chọn) Lấy HttpAdapterHost để đăng ký các filter global nếu cần
   const httpAdapterHost = app.get(HttpAdapterHost);

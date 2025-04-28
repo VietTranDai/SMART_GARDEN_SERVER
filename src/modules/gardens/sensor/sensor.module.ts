@@ -22,6 +22,6 @@ import { SensorController } from './controller/sensor.controller';
     SensorStatisticsService,
     ThresholdAlertService,
   ],
-  exports: [SensorService], // Export for use in other modules if needed
+  exports: [SensorService],
 })
 export class SensorModule {}

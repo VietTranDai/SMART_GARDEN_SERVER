@@ -296,6 +296,7 @@ export class PostService {
 
       postDto.comments = post.comments.map((comment) => ({
         id: comment.id,
+        postId: comment.postId,
         gardenerId: comment.gardenerId,
         gardenerName: `${comment.gardener.user.firstName} ${comment.gardener.user.lastName}`,
         content: comment.content,

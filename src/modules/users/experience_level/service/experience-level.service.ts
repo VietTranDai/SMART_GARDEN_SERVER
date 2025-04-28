@@ -112,11 +112,17 @@ export class ExperienceLevelService {
 
     if (!level) {
       // If no level is found, return the highest level
-      return this.prisma.experienceLevel.findFirst({
+      const highestLevel = await this.prisma.experienceLevel.findFirst({
         orderBy: {
           level: 'desc',
         },
       });
+
+      if (!highestLevel) {
+        throw new NotFoundException('No experience levels found');
+      }
+
+      return highestLevel;
     }
 
     return level;
