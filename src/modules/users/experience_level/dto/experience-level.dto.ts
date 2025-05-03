@@ -14,18 +14,6 @@ export class ExperienceLevelDto {
   level: number;
 
   @ApiProperty({
-    description: 'Minimum experience points required for this level',
-    example: 0,
-  })
-  minXP: number;
-
-  @ApiProperty({
-    description: 'Maximum experience points for this level',
-    example: 99,
-  })
-  maxXP: number;
-
-  @ApiProperty({
     description: 'Title for this experience level',
     example: 'Beginner Gardener',
   })
@@ -42,14 +30,4 @@ export class ExperienceLevelDto {
     example: '🌱',
   })
   icon: string;
-
-  @ApiProperty({
-    description: 'Creation timestamp',
-  })
-  createdAt: Date;
-
-  @ApiProperty({
-    description: 'Last update timestamp',
-  })
-  updatedAt: Date;
 }

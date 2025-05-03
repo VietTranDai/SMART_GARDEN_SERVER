@@ -13,6 +13,7 @@ import { Tokens } from './dto/tokens.dto';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { User } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { JwtPayload } from './dto/jwt-payload.interface';
 
 @Injectable()
 export class AuthService {
@@ -47,7 +48,7 @@ export class AuthService {
       );
     }
 
-    // Get default Experience Level (assuming level 1 is the starting level)
+    // Get the default Experience Level (assuming level 1 is the starting level)
     const defaultExperienceLevel = await this.prisma.experienceLevel.findFirst({
       where: { level: 1 },
       orderBy: { level: 'asc' },
@@ -73,10 +74,10 @@ export class AuthService {
             firstName,
             lastName,
             roleId: gardenerRole.id,
-            // refreshToken will be set on first login
+            // refreshToken will be set on the first login
           },
           include: {
-            role: true, // Include role if needed in the response
+            role: true, // Include a role if needed in the response
           },
         });
 
@@ -115,11 +116,10 @@ export class AuthService {
     }
   }
 
-  // 1) Validate credentials khi login
   async validateUser(
     username: string,
     pass: string,
-  ): Promise<Omit<User, 'password' | 'refreshToken'>> {
+  ): Promise<User> {
     const user = await this.prisma.user.findUnique({ where: { username } });
     if (!user) {
       this.logger.debug(
@@ -134,14 +134,13 @@ export class AuthService {
       );
       throw new UnauthorizedException('Invalid credentials');
     }
-    // Exclude sensitive fields before returning
-    const { password, refreshToken, ...result } = user;
-    return result;
+
+    return user;
   }
 
   // 2) Tạo Access + Refresh token
   async getTokens(userId: number, username: string): Promise<Tokens> {
-    const payload = { sub: userId, username };
+    const payload: JwtPayload = { sub: userId, username: username};
 
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, {
@@ -213,7 +212,7 @@ export class AuthService {
   }
 
   // 6) Xử lý Refresh token
-  async refreshTokens(userId: number, rt: string) {
+  async refreshTokens(userId: number, refreshToken: string) {
     const user = await this.prisma.user.findUnique({ where: { id: userId } });
     if (!user || !user.refreshToken) {
       this.logger.warn(
@@ -222,12 +221,12 @@ export class AuthService {
       throw new UnauthorizedException('Access Denied');
     }
 
-    const isMatch = await bcrypt.compare(rt, user.refreshToken);
+    const isMatch = await bcrypt.compare(refreshToken, user.refreshToken);
     if (!isMatch) {
       this.logger.warn(
         `Refresh token validation failed: Token mismatch for user ${userId}.`,
       );
-      // Security consideration: Invalidate token here if mismatch?
+      // Security consideration: Invalidate token here if mismatched?
       // await this.logout(userId);
       throw new UnauthorizedException('Access Denied');
     }

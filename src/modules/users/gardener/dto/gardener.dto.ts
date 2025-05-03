@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { ExperienceLevelDto } from '../../experience_level/dto';
+import { ExperienceLevelDto } from '../../experience_level';
 
 export class GardenerUserDto {
   @ApiProperty({ description: 'First name', example: 'John' })

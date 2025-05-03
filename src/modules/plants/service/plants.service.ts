@@ -7,12 +7,15 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { PlantType, GrowthStage } from '@prisma/client';
+import { Plant, PlantType, GrowthStage } from '@prisma/client';
 import { CreatePlantTypeDto } from '../dto/create-plant-type.dto';
 import { UpdatePlantTypeDto } from '../dto/update-plant-type.dto';
+import { CreatePlantDto } from '../dto/create-plant.dto';
+import { UpdatePlantDto } from '../dto/update-plant.dto';
 import { CreateGrowthStageDto } from '../dto/create-growth-stage.dto';
 import { UpdateGrowthStageDto } from '../dto/update-growth-stage.dto';
 import { PlantTypeDto } from '../dto/plant-type.dto';
+import { PlantDto } from '../dto/plant.dto';
 import { GrowthStageDto } from '../dto/growth-stage.dto';
 
 @Injectable()
@@ -26,19 +29,30 @@ export class PlantsService {
     return {
       id: plantType.id,
       name: plantType.name,
-      scientificName: plantType.scientificName || undefined,
-      family: plantType.family || undefined,
       description: plantType.description || undefined,
-      growthDuration: plantType.growthDuration || undefined,
       createdAt: plantType.createdAt,
       updatedAt: plantType.updatedAt,
+    };
+  }
+
+  private mapToPlantDto(plant: Plant): PlantDto {
+    return {
+      id: plant.id,
+      plantTypeId: plant.plantTypeId || undefined,
+      name: plant.name,
+      scientificName: plant.scientificName || undefined,
+      family: plant.family || undefined,
+      description: plant.description || undefined,
+      growthDuration: plant.growthDuration || undefined,
+      createdAt: plant.createdAt,
+      updatedAt: plant.updatedAt,
     };
   }
 
   private mapToGrowthStageDto(growthStage: GrowthStage): GrowthStageDto {
     return {
       id: growthStage.id,
-      plantTypeId: growthStage.plantTypeId,
+      plantId: growthStage.plantId,
       stageName: growthStage.stageName,
       order: growthStage.order,
       duration: growthStage.duration,
@@ -67,7 +81,11 @@ export class PlantsService {
   ): Promise<PlantTypeDto> {
     try {
       const plantType = await this.prisma.plantType.create({
-        data: createPlantTypeDto,
+        data: {
+          id: 0, // This will be auto-assigned or overridden by the DB
+          name: createPlantTypeDto.name,
+          description: createPlantTypeDto.description,
+        },
       });
 
       this.logger.log(
@@ -102,7 +120,7 @@ export class PlantsService {
     try {
       const plantType = await this.prisma.plantType.findUnique({
         where: { id },
-        include: { growthStages: true },
+        include: { plants: true },
       });
 
       if (!plantType) {
@@ -169,25 +187,143 @@ export class PlantsService {
     }
   }
 
+  // Plant CRUD operations
+  async createPlant(createPlantDto: CreatePlantDto): Promise<PlantDto> {
+    try {
+      // If plantTypeId is provided, verify it exists
+      if (createPlantDto.plantTypeId) {
+        await this.findPlantType(createPlantDto.plantTypeId);
+      }
+
+      const plant = await this.prisma.plant.create({
+        data: createPlantDto,
+      });
+
+      this.logger.log(
+        `Plant '${plant.name}' created successfully with ID: ${plant.id}`,
+      );
+      return this.mapToPlantDto(plant);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      this.logger.error(
+        `Failed to create plant: ${error.message}`,
+        error.stack,
+      );
+      throw new InternalServerErrorException('Failed to create plant');
+    }
+  }
+
+  async findAllPlants(): Promise<PlantDto[]> {
+    try {
+      const plants = await this.prisma.plant.findMany({
+        orderBy: { name: 'asc' },
+        include: { PlantType: true },
+      });
+      return plants.map((plant) => this.mapToPlantDto(plant));
+    } catch (error) {
+      this.logger.error(`Failed to get plants: ${error.message}`, error.stack);
+      throw new InternalServerErrorException('Failed to get plants');
+    }
+  }
+
+  async findPlant(id: number): Promise<PlantDto> {
+    try {
+      const plant = await this.prisma.plant.findUnique({
+        where: { id },
+        include: { PlantType: true, growthStages: true },
+      });
+
+      if (!plant) {
+        throw new NotFoundException(`Plant with ID ${id} not found`);
+      }
+
+      return this.mapToPlantDto(plant);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      this.logger.error(
+        `Failed to get plant ${id}: ${error.message}`,
+        error.stack,
+      );
+      throw new InternalServerErrorException('Failed to get plant');
+    }
+  }
+
+  async updatePlant(
+    id: number,
+    updatePlantDto: UpdatePlantDto,
+  ): Promise<PlantDto> {
+    try {
+      // Verify plant exists
+      await this.findPlant(id);
+
+      // If plantTypeId is provided, verify it exists
+      if (updatePlantDto.plantTypeId) {
+        await this.findPlantType(updatePlantDto.plantTypeId);
+      }
+
+      const updatedPlant = await this.prisma.plant.update({
+        where: { id },
+        data: updatePlantDto,
+        include: { PlantType: true },
+      });
+
+      this.logger.log(`Plant ${id} updated successfully`);
+      return this.mapToPlantDto(updatedPlant);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      this.logger.error(
+        `Failed to update plant ${id}: ${error.message}`,
+        error.stack,
+      );
+      throw new InternalServerErrorException('Failed to update plant');
+    }
+  }
+
+  async removePlant(id: number): Promise<void> {
+    try {
+      // Verify plant exists
+      await this.findPlant(id);
+
+      await this.prisma.plant.delete({ where: { id } });
+
+      this.logger.log(`Plant ${id} deleted successfully`);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      this.logger.error(
+        `Failed to delete plant ${id}: ${error.message}`,
+        error.stack,
+      );
+      throw new InternalServerErrorException('Failed to delete plant');
+    }
+  }
+
   // GrowthStage CRUD operations
   async createGrowthStage(
     createGrowthStageDto: CreateGrowthStageDto,
   ): Promise<GrowthStageDto> {
     try {
-      // Verify plant type exists
-      await this.findPlantType(createGrowthStageDto.plantTypeId);
+      // Verify plant exists
+      await this.findPlant(createGrowthStageDto.plantId);
 
-      // Check if the order is unique for this plant type
+      // Check if the order is unique for this plant
       const existingGrowthStage = await this.prisma.growthStage.findFirst({
         where: {
-          plantTypeId: createGrowthStageDto.plantTypeId,
+          plantId: createGrowthStageDto.plantId,
           order: createGrowthStageDto.order,
         },
       });
 
       if (existingGrowthStage) {
         throw new BadRequestException(
-          `Growth stage with order ${createGrowthStageDto.order} already exists for this plant type`,
+          `Growth stage with order ${createGrowthStageDto.order} already exists for this plant`,
         );
       }
 
@@ -214,15 +350,13 @@ export class PlantsService {
     }
   }
 
-  async findAllGrowthStagesByPlantType(
-    plantTypeId: number,
-  ): Promise<GrowthStageDto[]> {
+  async findAllGrowthStagesByPlant(plantId: number): Promise<GrowthStageDto[]> {
     try {
-      // Verify plant type exists
-      await this.findPlantType(plantTypeId);
+      // Verify plant exists
+      await this.findPlant(plantId);
 
       const growthStages = await this.prisma.growthStage.findMany({
-        where: { plantTypeId },
+        where: { plantId },
         orderBy: { order: 'asc' },
       });
 
@@ -232,7 +366,7 @@ export class PlantsService {
         throw error;
       }
       this.logger.error(
-        `Failed to get growth stages for plant type ${plantTypeId}: ${error.message}`,
+        `Failed to get growth stages for plant ${plantId}: ${error.message}`,
         error.stack,
       );
       throw new InternalServerErrorException('Failed to get growth stages');
@@ -243,11 +377,10 @@ export class PlantsService {
     try {
       const growthStage = await this.prisma.growthStage.findUnique({
         where: { id },
-        include: { plantType: true },
       });
 
       if (!growthStage) {
-        throw new NotFoundException(`GrowthStage with ID ${id} not found`);
+        throw new NotFoundException(`Growth stage with ID ${id} not found`);
       }
 
       return this.mapToGrowthStageDto(growthStage);
@@ -269,24 +402,35 @@ export class PlantsService {
   ): Promise<GrowthStageDto> {
     try {
       // Verify growth stage exists
-      const existingGrowthStage = await this.findGrowthStage(id);
+      const existingStage = await this.findGrowthStage(id);
 
-      // If order is being updated, check for duplicate order
-      if (
-        updateGrowthStageDto.order &&
-        updateGrowthStageDto.order !== existingGrowthStage.order
-      ) {
-        const duplicateOrder = await this.prisma.growthStage.findFirst({
+      // Check for potential conflicts if updating the plant or order
+      if (updateGrowthStageDto.hasOwnProperty('plantId')) {
+        // Verify new plant exists if changing plants
+        const plantId = updateGrowthStageDto['plantId'] as number;
+        if (plantId !== existingStage.plantId) {
+          await this.findPlant(plantId);
+        }
+      }
+
+      if (updateGrowthStageDto.hasOwnProperty('order')) {
+        // Check if the order would conflict
+        const order = updateGrowthStageDto['order'] as number;
+        const plantId = updateGrowthStageDto.hasOwnProperty('plantId')
+          ? (updateGrowthStageDto['plantId'] as number)
+          : existingStage.plantId;
+
+        const conflictingStage = await this.prisma.growthStage.findFirst({
           where: {
-            plantTypeId: existingGrowthStage.plantTypeId,
-            order: updateGrowthStageDto.order,
-            id: { not: id },
+            plantId,
+            order,
+            id: { not: id }, // Exclude current stage
           },
         });
 
-        if (duplicateOrder) {
+        if (conflictingStage) {
           throw new BadRequestException(
-            `Growth stage with order ${updateGrowthStageDto.order} already exists for this plant type`,
+            `Growth stage with order ${order} already exists for this plant`,
           );
         }
       }
@@ -296,7 +440,7 @@ export class PlantsService {
         data: updateGrowthStageDto,
       });
 
-      this.logger.log(`GrowthStage ${id} updated successfully`);
+      this.logger.log(`Growth stage ${id} updated successfully`);
       return this.mapToGrowthStageDto(updatedGrowthStage);
     } catch (error) {
       if (
@@ -320,7 +464,7 @@ export class PlantsService {
 
       await this.prisma.growthStage.delete({ where: { id } });
 
-      this.logger.log(`GrowthStage ${id} deleted successfully`);
+      this.logger.log(`Growth stage ${id} deleted successfully`);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
@@ -330,166 +474,6 @@ export class PlantsService {
         error.stack,
       );
       throw new InternalServerErrorException('Failed to delete growth stage');
-    }
-  }
-
-  async create(
-    gardenerId: number,
-    createPlantDto: CreatePlantTypeDto,
-  ): Promise<PlantType> {
-    const { name, scientificName, family, description, growthDuration } =
-      createPlantDto;
-
-    try {
-      const plant = await this.prisma.plantType.create({
-        data: {
-          name,
-          scientificName,
-          family,
-          description,
-          growthDuration,
-        },
-      });
-
-      this.logger.log(
-        `Plant '${name}' created successfully with ID: ${plant.id}`,
-      );
-      return plant;
-    } catch (error) {
-      if (
-        error instanceof ForbiddenException ||
-        error instanceof NotFoundException
-      ) {
-        throw error;
-      }
-      this.logger.error(
-        `Failed to create plant '${name}': ${error.message}`,
-        error.stack,
-      );
-      throw new InternalServerErrorException('Failed to create plant');
-    }
-  }
-
-  async findAllByGarden(
-    gardenerId: number,
-    gardenId: number,
-  ): Promise<PlantTypeDto[]> {
-    try {
-      const plants = await this.prisma.plantType.findMany({
-        orderBy: { createdAt: 'desc' },
-      });
-
-      return plants.map((plant) => this.mapToPlantTypeDto(plant));
-    } catch (error) {
-      if (
-        error instanceof ForbiddenException ||
-        error instanceof NotFoundException
-      ) {
-        throw error;
-      }
-      this.logger.error(
-        `Failed to get plants for garden ${gardenId}: ${error.message}`,
-        error.stack,
-      );
-      throw new InternalServerErrorException('Failed to get plants');
-    }
-  }
-
-  async findOne(plantId: number): Promise<PlantTypeDto> {
-    try {
-      const plant = await this.prisma.plantType.findUnique({
-        where: { id: plantId },
-      });
-
-      if (!plant) {
-        throw new NotFoundException(`Plant with ID ${plantId} not found`);
-      }
-
-      return this.mapToPlantTypeDto(plant);
-    } catch (error) {
-      if (
-        error instanceof ForbiddenException ||
-        error instanceof NotFoundException
-      ) {
-        throw error;
-      }
-      this.logger.error(
-        `Failed to get plant ${plantId}: ${error.message}`,
-        error.stack,
-      );
-      throw new InternalServerErrorException('Failed to get plant');
-    }
-  }
-
-  async update(
-    gardenerId: number,
-    plantId: number,
-    updatePlantDto: UpdatePlantTypeDto,
-  ): Promise<PlantTypeDto> {
-    try {
-      // Verify plant exists and user has access
-      const existingPlant = await this.findOne(plantId);
-
-      const dataToUpdate: Partial<UpdatePlantTypeDto> & {
-        plantingDate?: Date | null;
-      } = {};
-      if (updatePlantDto.name !== undefined)
-        dataToUpdate.name = updatePlantDto.name;
-      if (updatePlantDto.scientificName !== undefined)
-        dataToUpdate.scientificName = updatePlantDto.scientificName;
-      if (updatePlantDto.family !== undefined)
-        dataToUpdate.family = updatePlantDto.family;
-      if (updatePlantDto.description !== undefined)
-        dataToUpdate.description = updatePlantDto.description;
-      if (updatePlantDto.growthDuration !== undefined)
-        dataToUpdate.growthDuration = updatePlantDto.growthDuration;
-
-      if (Object.keys(dataToUpdate).length === 0) {
-        return existingPlant; // Nothing to update
-      }
-
-      const updatedPlant = await this.prisma.plantType.update({
-        where: { id: plantId },
-        data: dataToUpdate,
-      });
-
-      this.logger.log(`Plant ${plantId} updated successfully`);
-      return this.mapToPlantTypeDto(updatedPlant);
-    } catch (error) {
-      if (
-        error instanceof ForbiddenException ||
-        error instanceof NotFoundException
-      ) {
-        throw error;
-      }
-      this.logger.error(
-        `Failed to update plant ${plantId}: ${error.message}`,
-        error.stack,
-      );
-      throw new InternalServerErrorException('Failed to update plant');
-    }
-  }
-
-  async remove(gardenerId: number, plantId: number): Promise<void> {
-    try {
-      // Verify plant exists and user has access
-      await this.findOne(plantId);
-
-      await this.prisma.plantType.delete({ where: { id: plantId } });
-
-      this.logger.log(`Plant ${plantId} deleted successfully`);
-    } catch (error) {
-      if (
-        error instanceof ForbiddenException ||
-        error instanceof NotFoundException
-      ) {
-        throw error;
-      }
-      this.logger.error(
-        `Failed to delete plant ${plantId}: ${error.message}`,
-        error.stack,
-      );
-      throw new InternalServerErrorException('Failed to delete plant');
     }
   }
 }

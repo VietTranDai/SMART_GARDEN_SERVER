@@ -1,37 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { GardenStatus, GardenType } from '@prisma/client';
-
-export class GardenerDto {
-  @ApiProperty({
-    description: 'ID of the gardener (user ID)',
-    example: 1,
-  })
-  userId: number;
-
-  @ApiProperty({
-    description: 'Experience points of the gardener',
-    example: 150,
-  })
-  experiencePoints: number;
-
-  @ApiProperty({
-    description: 'Experience level of the gardener',
-    example: {
-      id: 2,
-      level: 2,
-      title: 'Beginner Gardener',
-      description: "You're starting to grow your gardening skills!",
-      icon: '🌱',
-    },
-  })
-  experienceLevel: {
-    id: number;
-    level: number;
-    title: string;
-    description: string;
-    icon: string;
-  };
-}
+import { GardenerDto } from '../../../users/gardener/dto';
 
 export class GardenDto {
   @ApiProperty({
@@ -52,6 +21,18 @@ export class GardenDto {
   })
   name: string;
 
+  @ApiProperty({
+    description: 'Profile picture of the garden, used for display purposes',
+    example: '/example.com/profile-picture.jpg',
+  })
+  profilePicture: string | null;
+
+  @ApiProperty({
+    description: 'Short description of the garden, used for display purposes',
+    example: 'My Balcony Garden',
+  })
+  description: string | null;
+  
   @ApiPropertyOptional({
     description: 'Street address of the garden',
     example: '123 Garden Street',

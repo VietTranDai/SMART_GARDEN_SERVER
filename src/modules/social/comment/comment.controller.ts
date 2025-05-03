@@ -25,11 +25,7 @@ import {
 import { CommentDto, CommentPaginationDto } from './dto/comment.dto';
 import { GetUser } from 'src/modules/auth/decorators/get-user.decorator';
 import { Public } from 'src/common/decorators/public.decorator';
-
-interface JwtPayload {
-  sub: number;
-  email: string;
-}
+import { JwtPayload } from '../../auth/dto/jwt-payload.interface';
 
 @ApiTags('Comments')
 @Controller('comments')

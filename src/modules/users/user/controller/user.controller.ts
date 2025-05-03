@@ -1,226 +1,182 @@
+// src/controller/user.controller.ts
 import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
   Body,
-  Param,
-  Query,
-  UseGuards,
-  ParseIntPipe,
+  Controller,
+  Delete,
+  Get,
   HttpCode,
   HttpStatus,
+  Param,
+  ParseIntPipe,
+  Post,
+  Put,
+  Query,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
-  ApiTags,
   ApiOperation,
-  ApiResponse,
   ApiParam,
-  ApiQuery,
+  ApiResponse,
+  ApiTags,
 } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { extname, join } from 'path';
+
 import { UserService } from '../service/user.service';
 import { GetUser } from 'src/modules/auth/decorators/get-user.decorator';
 import {
   CreateUserDto,
+  UpdatePasswordDto,
   UpdateUserDto,
   UserDto,
-  UpdatePasswordDto,
-  UpdateAvatarDto,
   UserFilterDto,
 } from '../dto';
 
-@ApiTags('users')
-@Controller('users')
+@ApiTags('User')
+@Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
-
-  // ---- GET endpoints ----
 
   @Get()
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all users with filtering and pagination' })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns a paginated list of users',
-  })
-  findAll(@Query() filter: UserFilterDto) {
-    return this.userService.findAll(filter);
+  @ApiResponse({ status: 200, description: 'List of users', type: UserDto, isArray: true })
+  async findAll(@Query() filter: UserFilterDto) {
+    const { data, meta } = await this.userService.findAllEntities(filter);
+    const dtos = data.map(user => this.userService.mapToUserDto(user));
+    return { data: dtos, meta };
   }
 
   @Get('me')
   @ApiBearerAuth()
-  @ApiOperation({ summary: "Get the current user's profile" })
-  @ApiResponse({
-    status: 200,
-    description: "Returns the current user's profile",
-    type: UserDto,
-  })
-  getProfile(@GetUser() user: any) {
-    return this.userService.findOne(user.id);
+  @ApiOperation({ summary: "Get current user's profile" })
+  @ApiResponse({ status: 200, type: UserDto })
+  async getProfile(@GetUser('id') id: number) {
+    const user = await this.userService.findOneEntity(id);
+    return this.userService.mapToUserDto(user);
   }
 
   @Get(':id')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get a user by ID' })
   @ApiParam({ name: 'id', description: 'User ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns the user with the specified ID',
-    type: UserDto,
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'User not found',
-  })
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.userService.findOne(id);
+  @ApiResponse({ status: 200, type: UserDto })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async findOne(@Param('id', ParseIntPipe) id: number) {
+    const user = await this.userService.findOneEntity(id);
+    return this.userService.mapToUserDto(user);
   }
-
-  // ---- POST endpoints ----
 
   @Post()
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new user' })
-  @ApiResponse({
-    status: 201,
-    description: 'The user has been successfully created',
-    type: UserDto,
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Invalid input data',
-  })
-  @ApiResponse({
-    status: 409,
-    description: 'Username or email already exists',
-  })
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.userService.create(createUserDto);
+  @ApiResponse({ status: 201, type: UserDto })
+  @ApiResponse({ status: 400, description: 'Invalid input' })
+  @ApiResponse({ status: 409, description: 'Conflict (username/email)' })
+  async create(@Body() dto: CreateUserDto) {
+    const user = await this.userService.createEntity(dto);
+    return this.userService.mapToUserDto(user);
   }
 
-  // ---- PUT endpoints ----
+  @Post(':id/upload-avatar')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Upload avatar for a user' })
+  @ApiParam({ name: 'id', description: 'User ID' })
+  @ApiResponse({ status: 200, type: UserDto })
+  @ApiResponse({ status: 400, description: 'Invalid file' })
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: join(process.cwd(), 'pictures/avatars'),
+        filename: (req, file, cb) => {
+          const id = req.params.id;
+          cb(null, `user-${id}-${Date.now()}${extname(file.originalname)}`);
+        },
+      }),
+      fileFilter: (_req, file, cb) => {
+        if (!file.mimetype.match(/^image\/(jpe?g|png)$/)) {
+          return cb(new Error('Only JPG/PNG allowed'), false);
+        }
+        cb(null, true);
+      },
+    }),
+  )
+  async uploadAvatar(
+    @Param('id', ParseIntPipe) id: number,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    const url = `/pictures/avatars/${file.filename}`;
+    const user = await this.userService.updateProfilePictureEntity(id, url);
+    return this.userService.mapToUserDto(user);
+  }
 
   @Put(':id')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a user' })
   @ApiParam({ name: 'id', description: 'User ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'The user has been successfully updated',
-    type: UserDto,
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Invalid input data',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'User not found',
-  })
-  update(
+  @ApiResponse({ status: 200, type: UserDto })
+  @ApiResponse({ status: 400, description: 'Invalid input' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async update(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateUserDto: UpdateUserDto,
+    @Body() dto: UpdateUserDto,
   ) {
-    return this.userService.update(id, updateUserDto);
+    const user = await this.userService.updateEntity(id, dto);
+    return this.userService.mapToUserDto(user);
   }
 
   @Put('me/profile')
   @ApiBearerAuth()
   @ApiOperation({ summary: "Update current user's profile" })
-  @ApiResponse({
-    status: 200,
-    description: 'The profile has been successfully updated',
-    type: UserDto,
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Invalid input data',
-  })
-  updateProfile(
+  @ApiResponse({ status: 200, type: UserDto })
+  @ApiResponse({ status: 400, description: 'Invalid input' })
+  async updateProfile(
     @GetUser('id') id: number,
-    @Body() updateUserDto: UpdateUserDto,
+    @Body() dto: UpdateUserDto,
   ) {
-    // Remove sensitive fields that users shouldn't be able to update themselves
-    const { roleId, ...safeUpdateData } = updateUserDto;
-    return this.userService.update(id, safeUpdateData);
+    const { roleId, ...safeDto } = dto;
+    const user = await this.userService.updateEntity(id, safeDto);
+    return this.userService.mapToUserDto(user);
   }
 
   @Put('me/password')
   @ApiBearerAuth()
   @ApiOperation({ summary: "Update current user's password" })
-  @ApiResponse({
-    status: 200,
-    description: 'The password has been successfully updated',
-    type: UserDto,
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Invalid password data or current password incorrect',
-  })
-  updatePassword(
+  @ApiResponse({ status: 200, type: UserDto })
+  @ApiResponse({ status: 400, description: 'Invalid password or current wrong' })
+  async updatePassword(
     @GetUser('id') id: number,
-    @Body() updatePasswordDto: UpdatePasswordDto,
+    @Body() dto: UpdatePasswordDto,
   ) {
-    return this.userService.updatePassword(id, updatePasswordDto);
-  }
-
-  @Put('me/avatar')
-  @ApiBearerAuth()
-  @ApiOperation({ summary: "Update current user's avatar" })
-  @ApiResponse({
-    status: 200,
-    description: 'The avatar has been successfully updated',
-    type: UserDto,
-  })
-  updateAvatar(
-    @GetUser('id') id: number,
-    @Body() updateAvatarDto: UpdateAvatarDto,
-  ) {
-    return this.userService.updateAvatar(id, updateAvatarDto);
+    const user = await this.userService.updatePasswordEntity(id, dto);
+    return this.userService.mapToUserDto(user);
   }
 
   @Put(':id/password')
   @ApiBearerAuth()
-  @ApiOperation({ summary: "Update a user's password (admin only)" })
+  @ApiOperation({ summary: "Admin: update a user's password" })
   @ApiParam({ name: 'id', description: 'User ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'The password has been successfully updated',
-    type: UserDto,
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Invalid password data',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'User not found',
-  })
-  adminUpdatePassword(
+  @ApiResponse({ status: 200, type: UserDto })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async adminUpdatePassword(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updatePasswordDto: UpdatePasswordDto,
+    @Body() dto: UpdatePasswordDto,
   ) {
-    return this.userService.updatePassword(id, updatePasswordDto);
+    const user = await this.userService.updatePasswordEntity(id, dto);
+    return this.userService.mapToUserDto(user);
   }
-
-  // ---- DELETE endpoints ----
 
   @Delete(':id')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a user' })
   @ApiParam({ name: 'id', description: 'User ID' })
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiResponse({
-    status: 204,
-    description: 'The user has been successfully deleted',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'User not found',
-  })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.userService.remove(id);
+  @ApiResponse({ status: 204, description: 'Deleted successfully' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async remove(@Param('id', ParseIntPipe) id: number) {
+    await this.userService.removeEntity(id);
   }
 }

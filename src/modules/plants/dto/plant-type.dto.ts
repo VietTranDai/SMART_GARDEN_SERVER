@@ -4,36 +4,15 @@ export class PlantTypeDto {
   @ApiProperty({ description: 'PlantType ID', example: 1 })
   id: number;
 
-  @ApiProperty({ description: 'PlantType name', example: 'Tomato' })
+  @ApiProperty({ description: 'PlantType name', example: 'Cây cảnh' })
   name: string;
 
   @ApiProperty({
-    description: 'Scientific name',
-    example: 'Solanum lycopersicum',
-    required: false,
-  })
-  scientificName?: string;
-
-  @ApiProperty({
-    description: 'PlantType family',
-    example: 'Solanaceae',
-    required: false,
-  })
-  family?: string;
-
-  @ApiProperty({
     description: 'Short description',
-    example: 'Likes sun, needs moderate water.',
+    example: 'Các loại cây trồng làm cảnh',
     required: false,
   })
   description?: string;
-
-  @ApiProperty({
-    description: 'Total growth duration in days',
-    example: 90,
-    required: false,
-  })
-  growthDuration?: number;
 
   @ApiProperty({ description: 'Creation timestamp' })
   createdAt: Date;

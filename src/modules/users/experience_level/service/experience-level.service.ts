@@ -1,130 +1,129 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { ExperienceLevel } from '@prisma/client';
 import {
   CreateExperienceLevelDto,
-  UpdateExperienceLevelDto,
   ExperienceLevelDto,
+  UpdateExperienceLevelDto,
 } from '../dto';
+import { plainToInstance } from 'class-transformer';
 
 @Injectable()
 export class ExperienceLevelService {
   constructor(private prisma: PrismaService) {}
 
+  /**
+   * Generic mapper: chuyển entity (hoặc mảng entity) sang DTO
+   * @param entity - đối tượng entity hoặc mảng entity
+   * @param dtoClass - lớp DTO cần chuyển đến
+   * @returns instance của DTO hoặc mảng instance DTO
+   */
+  public mapToDto<D>(
+    entity: object | object[],
+    dtoClass: new () => D,
+  ): D | D[] {
+    return plainToInstance(dtoClass, entity, {
+      excludeExtraneousValues: true,
+    });
+  }
+
+  // ─── CRUD TRẢ VỀ PRISMA ENTITY ─────────────────────────────────────────
+
   async create(
     createExperienceLevelDto: CreateExperienceLevelDto,
-  ): Promise<ExperienceLevelDto> {
+  ): Promise<ExperienceLevel> {
     return this.prisma.experienceLevel.create({
       data: createExperienceLevelDto,
     });
   }
 
-  async findAll(): Promise<ExperienceLevelDto[]> {
+  async findAll(): Promise<ExperienceLevel[]> {
     return this.prisma.experienceLevel.findMany({
-      orderBy: {
-        level: 'asc',
-      },
+      orderBy: { level: 'asc' },
     });
   }
 
-  async findOne(id: number): Promise<ExperienceLevelDto> {
-    const experienceLevel = await this.prisma.experienceLevel.findUnique({
+  async findOne(id: number): Promise<ExperienceLevel> {
+    const entity = await this.prisma.experienceLevel.findUnique({
       where: { id },
     });
-
-    if (!experienceLevel) {
+    if (!entity) {
       throw new NotFoundException(`Experience level with ID ${id} not found`);
     }
-
-    return experienceLevel;
-  }
-
-  async findByLevel(level: number): Promise<ExperienceLevelDto> {
-    const experienceLevel = await this.prisma.experienceLevel.findUnique({
-      where: { level },
-    });
-
-    if (!experienceLevel) {
-      throw new NotFoundException(
-        `Experience level with level ${level} not found`,
-      );
-    }
-
-    return experienceLevel;
+    return entity;
   }
 
   async update(
     id: number,
     updateExperienceLevelDto: UpdateExperienceLevelDto,
-  ): Promise<ExperienceLevelDto> {
+  ): Promise<ExperienceLevel> {
     try {
       return await this.prisma.experienceLevel.update({
         where: { id },
         data: updateExperienceLevelDto,
       });
-    } catch (error) {
+    } catch {
       throw new NotFoundException(`Experience level with ID ${id} not found`);
     }
   }
 
   async remove(id: number): Promise<void> {
     try {
-      await this.prisma.experienceLevel.delete({
-        where: { id },
-      });
-    } catch (error) {
+      await this.prisma.experienceLevel.delete({ where: { id } });
+    } catch {
       throw new NotFoundException(`Experience level with ID ${id} not found`);
     }
   }
 
-  async findNextLevel(currentXP: number): Promise<ExperienceLevelDto | null> {
-    // Find the experience level that matches the user's current XP
+  // ─── CÁC HÀM LOGIC KHÁC ────────────────────────────────────────────────
+
+  async findNextLevel(
+    currentXP: number,
+  ): Promise<ExperienceLevel | null> {
     const currentLevel = await this.prisma.experienceLevel.findFirst({
       where: {
         minXP: { lte: currentXP },
         maxXP: { gte: currentXP },
       },
     });
-
     if (!currentLevel) {
-      return null;
+      throw new NotFoundException('No experience levels found');
     }
-
-    // Find the next level
-    const nextLevel = await this.prisma.experienceLevel.findFirst({
-      where: {
-        level: { gt: currentLevel.level },
-      },
-      orderBy: {
-        level: 'asc',
-      },
+    return this.prisma.experienceLevel.findFirst({
+      where: { level: { gt: currentLevel.level } },
+      orderBy: { level: 'asc' },
     });
-
-    return nextLevel;
   }
 
-  async calculateLevel(xp: number): Promise<ExperienceLevelDto> {
+  async calculateLevel(xp: number): Promise<ExperienceLevel> {
     const level = await this.prisma.experienceLevel.findFirst({
-      where: {
-        minXP: { lte: xp },
-        maxXP: { gte: xp },
-      },
+      where: { minXP: { lte: xp }, maxXP: { gte: xp } },
     });
-
-    if (!level) {
-      // If no level is found, return the highest level
-      const highestLevel = await this.prisma.experienceLevel.findFirst({
-        orderBy: {
-          level: 'desc',
-        },
-      });
-
-      if (!highestLevel) {
-        throw new NotFoundException('No experience levels found');
-      }
-
-      return highestLevel;
+    if (level) {
+      return level;
     }
+    const highest = await this.prisma.experienceLevel.findFirst({
+      orderBy: { level: 'desc' },
+    });
+    if (!highest) {
+      throw new NotFoundException('No experience levels found');
+    }
+    return highest;
+  }
 
-    return level;
+  /**
+   * Ví dụ: lấy entity rồi map sang DTO
+   */
+  async findOneDto(id: number): Promise<ExperienceLevelDto> {
+    const entity = await this.findOne(id);
+    return this.mapToDto(entity, ExperienceLevelDto) as ExperienceLevelDto;
+  }
+
+  /**
+   * Ví dụ: lấy tất cả rồi map sang mảng DTO
+   */
+  async findAllDto(): Promise<ExperienceLevelDto[]> {
+    const entities = await this.findAll();
+    return this.mapToDto(entities, ExperienceLevelDto) as ExperienceLevelDto[];
   }
 }

@@ -22,17 +22,17 @@ model Role {
 
 model User {
   id             Int       @id @default(autoincrement())
-  firstName      String // First name
-  lastName       String // Last name
-  email          String    @unique
+  firstName      String
+  lastName       String
+  email          String
   username       String    @unique
-  password       String // Note: The password should be stored in hashed form
+  password       String
   phoneNumber    String?
   dateOfBirth    DateTime?
   roleId         Int
   role           Role      @relation(fields: [roleId], references: [id])
   refreshToken   String?
-  lastLogin      DateTime? // Last login timestamp
+  lastLogin      DateTime?
   profilePicture String?
   address        String?
   bio            String?
@@ -121,7 +121,10 @@ model Garden {
   id        Int    @id @default(autoincrement())
   gardenKey String @unique
 
-  name     String
+  name           String
+  profilePicture String?
+  description    String?
+
   street   String?
   ward     String?
   district String?
@@ -374,10 +377,28 @@ model PhotoEvaluation {
 
 model PlantType {
   // Identification Group
-  id   Int    @id @default(autoincrement()) // Unique ID for the plant type
-  name String @unique // PlantType name, e.g., "Tomato" (must be unique)
+  id   Int    @id
+  name String @unique // PlantType name, e.g., "Cây cảnh", "Cây gia vị" (must be unique)]
+
+  description String? // Short description
+
+  // Timestamp Group
+  createdAt DateTime @default(now()) // Timestamp when the record was created
+  updatedAt DateTime @updatedAt // Timestamp when the record was last updated
+
+  // Relations
+  plants Plant[] // Quan hệ với model Plant (các cây cụ thể thuộc phân loại này)
+}
+
+model Plant {
+  // Identification Group
+  id Int @id @default(autoincrement()) // Unique ID for the plant type
+
+  PlantType   PlantType? @relation(fields: [plantTypeId], references: [id])
+  plantTypeId Int?
 
   // Botanical Information Group
+  name           String  @unique // PlantType name, e.g., "Tomato" (must be unique)
   scientificName String? // Scientific name, e.g., "Solanum lycopersicum" (optional)
   family         String? // PlantType family, e.g., "Solanaceae" (optional)
 
@@ -397,8 +418,8 @@ model GrowthStage {
   // Identification Group
   id Int @id @default(autoincrement()) // Unique ID for the growth stage
 
-  plantTypeId Int // ID of the related PlantType
-  plantType   PlantType @relation(fields: [plantTypeId], references: [id], onDelete: Cascade) // Relation to PlantType
+  plantId Int // ID of the related PlantType
+  plant   Plant @relation(fields: [plantId], references: [id], onDelete: Cascade) // Relation to PlantType
 
   // Stage Details Group
   stageName   String // Stage name, e.g., "Seeding"
@@ -475,6 +496,9 @@ model WeatherObservation {
 
   // Relations
   GardenActivity GardenActivity[] // Relation to GardenActivity (activities linked to this weather observation)
+
+  @@unique([gardenId, observedAt], name: "gardenId_observedAt")
+  @@index([gardenId, observedAt])
 }
 
 model HourlyForecast {
@@ -513,6 +537,9 @@ model HourlyForecast {
   weatherMain WeatherMain // Main forecasted weather condition (enum)
   weatherDesc String // Description of the forecasted weather condition
   iconCode    String // Weather icon code for the forecast
+
+  @@unique([gardenId, forecastFor], name: "gardenId_forecastFor")
+  @@index([gardenId, forecastFor])
 }
 
 model DailyForecast {
@@ -553,6 +580,9 @@ model DailyForecast {
   weatherMain WeatherMain // Main forecasted weather condition (enum)
   weatherDesc String // Description of the forecasted weather condition
   iconCode    String // Weather icon code for the forecast
+
+  @@unique([gardenId, forecastFor], name: "gardenId_forecastFor")
+  @@index([gardenId, forecastFor])
 }
 
 // Store information about different administrative regions
@@ -627,6 +657,8 @@ model Wards {
 
   latitude  Float? // latitude
   longitude Float? // longitude
+
+  isNoResult Boolean @default(false) // Whether the ward is no result
 }
 
 // Enum for the type of alert

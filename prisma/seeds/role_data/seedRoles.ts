@@ -2,15 +2,18 @@ import { PrismaClient } from '@prisma/client';
 
 export async function seedRoles(prisma: PrismaClient): Promise<void> {
   const roles = [
-    { name: 'ADMIN', description: 'Administrator role with full access' },
+    {
+      name: 'ADMIN',
+      description: 'Vai trò Quản trị viên với quyền truy cập đầy đủ',
+    },
     {
       name: 'GARDENER',
-      description: 'Gardener role for managing plant care',
+      description: 'Vai trò Người làm vườn để quản lý chăm sóc cây trồng',
     },
-    { name: 'SUPPORT', description: 'Support role for customer assistance' },
+    { name: 'SUPPORT', description: 'Vai trò Hỗ trợ chăm sóc khách hàng' },
     {
       name: 'MANAGER',
-      description: 'Manager role with oversight responsibilities',
+      description: 'Vai trò Quản lý với trách nhiệm giám sát',
     },
   ];
 
@@ -18,8 +21,8 @@ export async function seedRoles(prisma: PrismaClient): Promise<void> {
     // Dùng upsert để tránh trùng lặp nếu đã seed trước đó
     await prisma.role.upsert({
       where: { name: role.name },
-      update: {}, // Nếu đã tồn tại, không cần cập nhật gì
-      create: role, // Nếu chưa có, tạo mới record
+      update: {}, // Nếu đã tồn tại, giữ nguyên
+      create: role, // Nếu chưa có, tạo mới bản ghi
     });
   }
 

@@ -1,2 +1,10 @@
+// src/common/guards/jwt-refresh.guard.ts
+import { Injectable, ExecutionContext } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-export class JwtRefreshGuard extends AuthGuard('jwt-refresh') {}
+
+@Injectable()
+export class JwtRefreshGuard extends AuthGuard('jwt-refresh') {
+  canActivate(context: ExecutionContext) {
+    return super.canActivate(context);
+  }
+}

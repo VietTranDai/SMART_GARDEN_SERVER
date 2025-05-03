@@ -23,14 +23,7 @@ import {
   UpdateThresholdAlertDto,
 } from '../dto/threshold-alert.dto';
 import { GetUser } from 'src/modules/auth/decorators/get-user.decorator';
-
-// Define JwtPayload interface locally
-interface JwtPayload {
-  sub: number;
-  email: string;
-  iat?: number;
-  exp?: number;
-}
+import { JwtPayload } from '../../../auth/dto/jwt-payload.interface';
 
 @Controller('threshold-alerts')
 @ApiTags('Threshold Alert')

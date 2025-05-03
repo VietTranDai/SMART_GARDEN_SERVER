@@ -20,7 +20,7 @@ export class AdminService {
   // Tạo admin mới
   async create(createAdminDto: CreateAdminDto): Promise<Admin> {
     // 1) Kiểm tra user có tồn tại không
-    await this.userService.findOne(createAdminDto.userId);
+    await this.userService.findOneEntity(createAdminDto.userId);
 
     // 2) Kiểm tra đã là admin chưa
     const existing = await this.prisma.admin.findUnique({
@@ -69,18 +69,6 @@ export class AdminService {
     return admin;
   }
 
-  // Lấy 1 admin theo userId
-  async findByUserId(userId: number): Promise<Admin> {
-    const admin = await this.prisma.admin.findUnique({
-      where: { userId },
-      include: { user: true },
-    });
-    if (!admin) {
-      throw new NotFoundException(`Admin with user ID ${userId} not found`);
-    }
-    return admin;
-  }
-
   // Cập nhật (hiện tại chỉ có thể đổi userId nếu DTO có trường này)
   async update(id: number, updateAdminDto: UpdateAdminDto): Promise<Admin> {
     await this.findOne(id);
@@ -88,7 +76,7 @@ export class AdminService {
     const data: any = {};
     if (updateAdminDto.userId) {
       // Kiểm tra user mới có tồn tại không
-      await this.userService.findOne(updateAdminDto.userId);
+      await this.userService.findOneEntity(updateAdminDto.userId);
       data.user = { connect: { id: updateAdminDto.userId } };
     }
 

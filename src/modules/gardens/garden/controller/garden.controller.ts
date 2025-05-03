@@ -33,7 +33,7 @@ import { GetUser } from 'src/modules/auth/decorators/get-user.decorator';
 import { GardenStatus, GardenType } from '@prisma/client';
 
 @ApiTags('Garden')
-@Controller('garden')
+@Controller('gardens')
 export class GardenController {
   constructor(private readonly gardenService: GardenService) {}
 
@@ -48,7 +48,7 @@ export class GardenController {
   })
   @ApiInternalServerErrorResponse({ description: 'Could not create garden' })
   async create(
-    @GetUser('sub') userId: number,
+    @GetUser('id') userId: number,
     @Body() createGardenDto: CreateGardenDto,
   ) {
     return this.gardenService.create(userId, createGardenDto);
@@ -60,7 +60,7 @@ export class GardenController {
     description: 'List of garden returned successfully',
     type: [GardenDto],
   })
-  async findAll(@GetUser('sub') userId: number) {
+  async findAll(@GetUser('id') userId: number) {
     return this.gardenService.findAll(userId);
   }
 
@@ -76,7 +76,7 @@ export class GardenController {
     description: 'You do not have permission to access this garden',
   })
   async findOne(
-    @GetUser('sub') userId: number,
+    @GetUser('id') userId: number,
     @Param('id', ParseIntPipe) id: number,
   ) {
     const garden = await this.gardenService.findOne(id);
@@ -119,7 +119,7 @@ export class GardenController {
     description: 'You do not have permission to update this garden',
   })
   async update(
-    @GetUser('sub') userId: number,
+    @GetUser('id') userId: number,
     @Param('id', ParseIntPipe) id: number,
     @Body() updateGardenDto: UpdateGardenDto,
   ) {
@@ -136,7 +136,7 @@ export class GardenController {
     description: 'You do not have permission to delete this garden',
   })
   async remove(
-    @GetUser('sub') userId: number,
+    @GetUser('id') userId: number,
     @Param('id', ParseIntPipe) id: number,
   ) {
     await this.gardenService.remove(userId, id);
@@ -159,7 +159,7 @@ export class GardenController {
     description: 'You do not have permission to update this garden',
   })
   async updateStatus(
-    @GetUser('sub') userId: number,
+    @GetUser('id') userId: number,
     @Param('id', ParseIntPipe) id: number,
     @Query('status') status: GardenStatus,
   ) {
@@ -188,7 +188,7 @@ export class GardenController {
     description: 'You do not have permission to update this garden',
   })
   async updatePlantInfo(
-    @GetUser('sub') userId: number,
+    @GetUser('id') userId: number,
     @Param('id', ParseIntPipe) id: number,
     @Query('plantName') plantName: string,
     @Query('plantGrowStage') plantGrowStage?: string,

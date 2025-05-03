@@ -17,11 +17,7 @@ import { PostImageService } from './post-image.service';
 import { CreatePostImageDto } from './dto/create-post-image.dto';
 import { PostImageDto } from './dto/post-image.dto';
 import { GetUser } from 'src/modules/auth/decorators/get-user.decorator';
-
-interface JwtPayload {
-  sub: number;
-  email: string;
-}
+import { JwtPayload } from '../../auth/dto/jwt-payload.interface';
 
 @ApiTags('Post Images')
 @Controller('post-images')

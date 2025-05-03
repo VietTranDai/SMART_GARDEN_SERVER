@@ -8,6 +8,7 @@ import { PrismaModule } from 'src/prisma/prisma.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { LocalStrategy } from './strategies/local.strategy';
 import { JwtRefreshStrategy } from './strategies';
+import { UsersModule } from '../users/users.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { JwtRefreshStrategy } from './strategies';
       }),
     }),
     PrismaModule,
+    UsersModule,
   ],
   providers: [AuthService, LocalStrategy, JwtStrategy, JwtRefreshStrategy],
   controllers: [AuthController],

@@ -1,4 +1,10 @@
 -- CreateEnum
+CREATE TYPE "GardenStatus" AS ENUM ('ACTIVE', 'INACTIVE');
+
+-- CreateEnum
+CREATE TYPE "GardenType" AS ENUM ('INDOOR', 'OUTDOOR', 'BALCONY', 'ROOFTOP', 'WINDOW_SILL');
+
+-- CreateEnum
 CREATE TYPE "SensorType" AS ENUM ('HUMIDITY', 'TEMPERATURE', 'LIGHT', 'WATER_LEVEL', 'RAINFALL', 'SOIL_MOISTURE', 'SOIL_PH');
 
 -- CreateEnum
@@ -14,7 +20,7 @@ CREATE TYPE "EvaluatorType" AS ENUM ('USER', 'SYSTEM');
 CREATE TYPE "WeatherMain" AS ENUM ('THUNDERSTORM', 'DRIZZLE', 'RAIN', 'SNOW', 'ATMOSPHERE', 'CLEAR', 'CLOUDS');
 
 -- CreateEnum
-CREATE TYPE "AlertType" AS ENUM ('WEATHER', 'SENSOR_ERROR', 'SYSTEM', 'CROP_CONDITION', 'ACTIVITY', 'MAINTENANCE', 'SECURITY', 'OTHER');
+CREATE TYPE "AlertType" AS ENUM ('WEATHER', 'SENSOR_ERROR', 'SYSTEM', 'PLANT_CONDITION', 'ACTIVITY', 'MAINTENANCE', 'SECURITY', 'OTHER');
 
 -- CreateEnum
 CREATE TYPE "AlertStatus" AS ENUM ('PENDING', 'IN_PROGRESS', 'RESOLVED', 'IGNORED', 'ESCALATED');
@@ -81,6 +87,7 @@ CREATE TABLE "ExperienceLevel" (
     "id" SERIAL NOT NULL,
     "level" INTEGER NOT NULL,
     "minXP" INTEGER NOT NULL,
+    "maxXP" INTEGER NOT NULL,
     "title" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "icon" TEXT NOT NULL,
@@ -104,6 +111,8 @@ CREATE TABLE "Garden" (
     "id" SERIAL NOT NULL,
     "gardenKey" TEXT NOT NULL,
     "name" TEXT NOT NULL,
+    "profilePicture" TEXT,
+    "description" TEXT,
     "street" TEXT,
     "ward" TEXT,
     "district" TEXT,
@@ -111,10 +120,12 @@ CREATE TABLE "Garden" (
     "lat" DOUBLE PRECISION,
     "lng" DOUBLE PRECISION,
     "gardenerId" INTEGER NOT NULL,
-    "cropName" TEXT,
-    "cropStage" TEXT,
-    "cropStartDate" TIMESTAMP(3),
-    "cropDuration" INTEGER,
+    "type" "GardenType" NOT NULL DEFAULT 'OUTDOOR',
+    "status" "GardenStatus" NOT NULL DEFAULT 'ACTIVE',
+    "plantName" TEXT,
+    "plantGrowStage" TEXT,
+    "plantStartDate" TIMESTAMP(3),
+    "plantDuration" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -160,6 +171,7 @@ CREATE TABLE "Task" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "wateringScheduleId" INTEGER,
+    "completedAt" TIMESTAMP(3),
 
     CONSTRAINT "Task_pkey" PRIMARY KEY ("id")
 );
@@ -172,8 +184,8 @@ CREATE TABLE "GardenActivity" (
     "name" TEXT NOT NULL,
     "activityType" "ActivityType" NOT NULL,
     "timestamp" TIMESTAMP(3) NOT NULL,
-    "cropName" TEXT,
-    "growthStage" TEXT,
+    "plantName" TEXT,
+    "plantGrowStage" TEXT,
     "weatherObservationId" INTEGER,
     "humidity" DOUBLE PRECISION,
     "temperature" DOUBLE PRECISION,
@@ -220,10 +232,8 @@ CREATE TABLE "ActivityEvaluation" (
 CREATE TABLE "WateringSchedule" (
     "id" SERIAL NOT NULL,
     "gardenId" INTEGER NOT NULL,
-    "plantId" INTEGER,
     "scheduledAt" TIMESTAMP(3) NOT NULL,
     "amount" DOUBLE PRECISION,
-    "method" TEXT,
     "status" TEXT NOT NULL DEFAULT 'PENDING',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -236,11 +246,12 @@ CREATE TABLE "PhotoEvaluation" (
     "id" SERIAL NOT NULL,
     "taskId" INTEGER NOT NULL,
     "gardenerId" INTEGER NOT NULL,
-    "plantId" INTEGER NOT NULL,
+    "plantName" TEXT,
+    "plantGrowStage" TEXT,
     "photoUrl" TEXT NOT NULL,
     "aiFeedback" TEXT,
     "confidence" DOUBLE PRECISION,
-    "evaluatedAt" TIMESTAMP(3) NOT NULL,
+    "evaluatedAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -249,7 +260,19 @@ CREATE TABLE "PhotoEvaluation" (
 
 -- CreateTable
 CREATE TABLE "PlantType" (
+    "id" INTEGER NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "PlantType_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Plant" (
     "id" SERIAL NOT NULL,
+    "plantTypeId" INTEGER,
     "name" TEXT NOT NULL,
     "scientificName" TEXT,
     "family" TEXT,
@@ -258,13 +281,13 @@ CREATE TABLE "PlantType" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "PlantType_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "Plant_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "GrowthStage" (
     "id" SERIAL NOT NULL,
-    "plantTypeId" INTEGER NOT NULL,
+    "plantId" INTEGER NOT NULL,
     "stageName" TEXT NOT NULL,
     "order" INTEGER NOT NULL,
     "duration" INTEGER NOT NULL,
@@ -275,6 +298,8 @@ CREATE TABLE "GrowthStage" (
     "optimalHumidityMax" DOUBLE PRECISION NOT NULL,
     "optimalPHMin" DOUBLE PRECISION,
     "optimalPHMax" DOUBLE PRECISION,
+    "optimalLightMin" DOUBLE PRECISION,
+    "optimalLightMax" DOUBLE PRECISION,
     "lightRequirement" TEXT,
     "waterRequirement" TEXT,
     "nutrientRequirement" TEXT,
@@ -429,6 +454,9 @@ CREATE TABLE "Wards" (
     "code_name" TEXT NOT NULL,
     "district_code" TEXT NOT NULL,
     "administrative_unit_id" INTEGER NOT NULL,
+    "latitude" DOUBLE PRECISION,
+    "longitude" DOUBLE PRECISION,
+    "isNoResult" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "Wards_pkey" PRIMARY KEY ("code")
 );
@@ -454,10 +482,11 @@ CREATE TABLE "Post" (
     "id" SERIAL NOT NULL,
     "gardenerId" INTEGER NOT NULL,
     "gardenId" INTEGER,
-    "plantId" INTEGER,
+    "plantName" TEXT,
+    "plantGrowStage" TEXT,
     "title" TEXT NOT NULL,
     "content" TEXT NOT NULL,
-    "score" INTEGER NOT NULL DEFAULT 0,
+    "total_vote" INTEGER NOT NULL DEFAULT 0,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -518,17 +547,14 @@ CREATE TABLE "PostImage" (
 -- CreateTable
 CREATE TABLE "Follow" (
     "followerId" INTEGER NOT NULL,
-    "followeeId" INTEGER NOT NULL,
+    "followedId" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT "Follow_pkey" PRIMARY KEY ("followerId","followeeId")
+    CONSTRAINT "Follow_pkey" PRIMARY KEY ("followerId","followedId")
 );
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Role_name_key" ON "Role"("name");
-
--- CreateIndex
-CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_username_key" ON "User"("username");
@@ -552,10 +578,10 @@ CREATE INDEX "Gardener_experienceLevelId_idx" ON "Gardener"("experienceLevelId")
 CREATE UNIQUE INDEX "Garden_gardenKey_key" ON "Garden"("gardenKey");
 
 -- CreateIndex
-CREATE INDEX "Garden_cropName_idx" ON "Garden"("cropName");
+CREATE INDEX "Garden_plantName_idx" ON "Garden"("plantName");
 
 -- CreateIndex
-CREATE INDEX "Garden_cropStage_idx" ON "Garden"("cropStage");
+CREATE INDEX "Garden_plantGrowStage_idx" ON "Garden"("plantGrowStage");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Sensor_sensorKey_key" ON "Sensor"("sensorKey");
@@ -570,16 +596,37 @@ CREATE INDEX "Task_gardenerId_dueDate_idx" ON "Task"("gardenerId", "dueDate");
 CREATE INDEX "WateringSchedule_gardenId_scheduledAt_idx" ON "WateringSchedule"("gardenId", "scheduledAt");
 
 -- CreateIndex
-CREATE INDEX "PhotoEvaluation_plantId_evaluatedAt_idx" ON "PhotoEvaluation"("plantId", "evaluatedAt");
+CREATE INDEX "PhotoEvaluation_plantName_evaluatedAt_idx" ON "PhotoEvaluation"("plantName", "evaluatedAt");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "PlantType_name_key" ON "PlantType"("name");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Plant_name_key" ON "Plant"("name");
+
+-- CreateIndex
+CREATE INDEX "WeatherObservation_gardenId_observedAt_idx" ON "WeatherObservation"("gardenId", "observedAt");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "WeatherObservation_gardenId_observedAt_key" ON "WeatherObservation"("gardenId", "observedAt");
+
+-- CreateIndex
+CREATE INDEX "HourlyForecast_gardenId_forecastFor_idx" ON "HourlyForecast"("gardenId", "forecastFor");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "HourlyForecast_gardenId_forecastFor_key" ON "HourlyForecast"("gardenId", "forecastFor");
+
+-- CreateIndex
+CREATE INDEX "DailyForecast_gardenId_forecastFor_idx" ON "DailyForecast"("gardenId", "forecastFor");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "DailyForecast_gardenId_forecastFor_key" ON "DailyForecast"("gardenId", "forecastFor");
+
+-- CreateIndex
 CREATE INDEX "Post_createdAt_idx" ON "Post"("createdAt");
 
 -- CreateIndex
-CREATE INDEX "Post_score_idx" ON "Post"("score");
+CREATE INDEX "Post_total_vote_idx" ON "Post"("total_vote");
 
 -- CreateIndex
 CREATE INDEX "Post_gardenerId_idx" ON "Post"("gardenerId");
@@ -612,7 +659,7 @@ CREATE UNIQUE INDEX "Vote_gardenerId_targetType_targetId_key" ON "Vote"("gardene
 CREATE INDEX "Follow_followerId_idx" ON "Follow"("followerId");
 
 -- CreateIndex
-CREATE INDEX "Follow_followeeId_idx" ON "Follow"("followeeId");
+CREATE INDEX "Follow_followedId_idx" ON "Follow"("followedId");
 
 -- AddForeignKey
 ALTER TABLE "User" ADD CONSTRAINT "User_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "Role"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -672,19 +719,16 @@ ALTER TABLE "ActivityEvaluation" ADD CONSTRAINT "ActivityEvaluation_userId_fkey"
 ALTER TABLE "WateringSchedule" ADD CONSTRAINT "WateringSchedule_gardenId_fkey" FOREIGN KEY ("gardenId") REFERENCES "Garden"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "WateringSchedule" ADD CONSTRAINT "WateringSchedule_plantId_fkey" FOREIGN KEY ("plantId") REFERENCES "PlantType"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "PhotoEvaluation" ADD CONSTRAINT "PhotoEvaluation_taskId_fkey" FOREIGN KEY ("taskId") REFERENCES "Task"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "PhotoEvaluation" ADD CONSTRAINT "PhotoEvaluation_gardenerId_fkey" FOREIGN KEY ("gardenerId") REFERENCES "Gardener"("userId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "PhotoEvaluation" ADD CONSTRAINT "PhotoEvaluation_plantId_fkey" FOREIGN KEY ("plantId") REFERENCES "PlantType"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Plant" ADD CONSTRAINT "Plant_plantTypeId_fkey" FOREIGN KEY ("plantTypeId") REFERENCES "PlantType"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "GrowthStage" ADD CONSTRAINT "GrowthStage_plantTypeId_fkey" FOREIGN KEY ("plantTypeId") REFERENCES "PlantType"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "GrowthStage" ADD CONSTRAINT "GrowthStage_plantId_fkey" FOREIGN KEY ("plantId") REFERENCES "Plant"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "WeatherObservation" ADD CONSTRAINT "WeatherObservation_gardenId_fkey" FOREIGN KEY ("gardenId") REFERENCES "Garden"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -723,9 +767,6 @@ ALTER TABLE "Post" ADD CONSTRAINT "Post_gardenerId_fkey" FOREIGN KEY ("gardenerI
 ALTER TABLE "Post" ADD CONSTRAINT "Post_gardenId_fkey" FOREIGN KEY ("gardenId") REFERENCES "Garden"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Post" ADD CONSTRAINT "Post_plantId_fkey" FOREIGN KEY ("plantId") REFERENCES "PlantType"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "Comment" ADD CONSTRAINT "Comment_postId_fkey" FOREIGN KEY ("postId") REFERENCES "Post"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -756,4 +797,4 @@ ALTER TABLE "PostImage" ADD CONSTRAINT "PostImage_postId_fkey" FOREIGN KEY ("pos
 ALTER TABLE "Follow" ADD CONSTRAINT "Follow_followerId_fkey" FOREIGN KEY ("followerId") REFERENCES "Gardener"("userId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Follow" ADD CONSTRAINT "Follow_followeeId_fkey" FOREIGN KEY ("followeeId") REFERENCES "Gardener"("userId") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Follow" ADD CONSTRAINT "Follow_followedId_fkey" FOREIGN KEY ("followedId") REFERENCES "Gardener"("userId") ON DELETE RESTRICT ON UPDATE CASCADE;

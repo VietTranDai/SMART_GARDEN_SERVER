@@ -1,13 +1,15 @@
-// prisma/seedPlantTypes.ts
+// prisma/seedPlants.ts
 import { PrismaClient } from '@prisma/client';
 
-export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
-  const plantTypes = [
+export async function seedPlants(prisma: PrismaClient): Promise<void> {
+  const plants = [
     {
       name: 'Cây Lưỡi hổ',
+      plantTypeId: 1,
       scientificName: 'Sansevieria trifasciata',
       family: 'Asparagaceae',
-      description: 'Cây cảnh lá xanh đậm viền vàng cứng cáp, rất dễ trồng và giúp thanh lọc không khí trong nhà.',
+      description:
+        'Cây cảnh lá xanh đậm viền vàng cứng cáp, rất dễ trồng và giúp thanh lọc không khí trong nhà.',
       growthDuration: null,
       growthStages: {
         create: [
@@ -15,7 +17,8 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             stageName: 'Nhân giống',
             order: 1,
             duration: 42,
-            description: 'Nhân giống bằng cách tách bụi hoặc giâm lá trong đất ẩm để ra rễ mới.',
+            description:
+              'Nhân giống bằng cách tách bụi hoặc giâm lá trong đất ẩm để ra rễ mới.',
             optimalTemperatureMin: 20,
             optimalTemperatureMax: 30,
             optimalHumidityMin: 40,
@@ -27,8 +30,9 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             lightRequirement: 'Ánh sáng gián tiếp hoặc bóng râm',
             waterRequirement: 'Thấp (chỉ tưới khi đất khô)',
             nutrientRequirement: 'Thấp (bón phân loãng 2–3 tháng/lần)',
-            careInstructions: 'Tránh để nước đọng trên lá; có thể trồng nơi ít ánh sáng',
-            pestSusceptibility: 'Ít sâu bệnh, đôi khi bị rệp sáp'
+            careInstructions:
+              'Tránh để nước đọng trên lá; có thể trồng nơi ít ánh sáng',
+            pestSusceptibility: 'Ít sâu bệnh, đôi khi bị rệp sáp',
           },
           {
             stageName: 'Sinh trưởng',
@@ -47,13 +51,14 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Thấp (tưới rất ít)',
             nutrientRequirement: 'Thấp (bón phân hữu cơ loãng 3–4 tháng/lần)',
             careInstructions: 'Thay chậu 2–3 năm/lần; lau bụi lá',
-            pestSusceptibility: 'Thối rễ nếu úng'
+            pestSusceptibility: 'Thối rễ nếu úng',
           },
           {
             stageName: 'Trưởng thành',
             order: 3,
             duration: 365,
-            description: 'Cây đạt kích thước tối đa, lá dày cứng, hiếm khi ra hoa.',
+            description:
+              'Cây đạt kích thước tối đa, lá dày cứng, hiếm khi ra hoa.',
             optimalTemperatureMin: 18,
             optimalTemperatureMax: 35,
             optimalHumidityMin: 30,
@@ -66,16 +71,18 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Thấp (tưới 2–4 tuần/lần)',
             nutrientRequirement: 'Thấp (bón phân chậm tan 6 tháng/lần)',
             careInstructions: 'Cắt bỏ lá vàng úa',
-            pestSusceptibility: 'Ít sâu bệnh'
-          }
-        ]
-      }
+            pestSusceptibility: 'Ít sâu bệnh',
+          },
+        ],
+      },
     },
     {
       name: 'Cây Trầu bà',
+      plantTypeId: 1,
       scientificName: 'Epipremnum aureum',
       family: 'Araceae',
-      description: 'Cây dây leo lá tim vàng xanh, dễ trồng trong nước hoặc đất, thường trồng trang trí và lọc không khí.',
+      description:
+        'Cây dây leo lá tim vàng xanh, dễ trồng trong nước hoặc đất, thường trồng trang trí và lọc không khí.',
       growthDuration: null,
       growthStages: {
         create: [
@@ -83,7 +90,8 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             stageName: 'Nhân giống',
             order: 1,
             duration: 21,
-            description: 'Cắt đoạn thân có rễ khí, giâm vào nước hoặc đất ẩm để ra rễ mới.',
+            description:
+              'Cắt đoạn thân có rễ khí, giâm vào nước hoặc đất ẩm để ra rễ mới.',
             optimalTemperatureMin: 20,
             optimalTemperatureMax: 30,
             optimalHumidityMin: 50,
@@ -95,8 +103,9 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             lightRequirement: 'Ánh sáng yếu đến trung bình',
             waterRequirement: 'Trung bình (giữ ẩm đất)',
             nutrientRequirement: 'Thấp (bón phân loãng mỗi 2 tháng)',
-            careInstructions: 'Thay nước nếu trồng thủy sinh; cắt tỉa nhánh dài',
-            pestSusceptibility: 'Có thể bị rệp sáp'
+            careInstructions:
+              'Thay nước nếu trồng thủy sinh; cắt tỉa nhánh dài',
+            pestSusceptibility: 'Có thể bị rệp sáp',
           },
           {
             stageName: 'Sinh trưởng',
@@ -115,7 +124,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Trung bình (tưới khi đất se khô)',
             nutrientRequirement: 'Thấp (bón hữu cơ 3–4 tháng/lần)',
             careInstructions: 'Lau lá, xoay chậu nhận sáng đều',
-            pestSusceptibility: 'Thối rễ nếu quá ẩm'
+            pestSusceptibility: 'Thối rễ nếu quá ẩm',
           },
           {
             stageName: 'Trưởng thành',
@@ -134,16 +143,18 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Trung bình (1–2 lần/tuần)',
             nutrientRequirement: 'Thấp (bón chậm tan 6 tháng/lần)',
             careInstructions: 'Cắt tỉa dây để rậm lá',
-            pestSusceptibility: 'Rệp sáp'
-          }
-        ]
-      }
+            pestSusceptibility: 'Rệp sáp',
+          },
+        ],
+      },
     },
     {
       name: 'Cây Lan ý',
+      plantTypeId: 1,
       scientificName: 'Spathiphyllum wallisii',
       family: 'Araceae',
-      description: 'Cây lá xanh thẫm, hoa trắng hình mo, ưa bóng mát và lọc không khí.',
+      description:
+        'Cây lá xanh thẫm, hoa trắng hình mo, ưa bóng mát và lọc không khí.',
       growthDuration: null,
       growthStages: {
         create: [
@@ -164,7 +175,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Cao (đất luôn ẩm)',
             nutrientRequirement: 'Trung bình (bón hàng tháng để ra hoa)',
             careInstructions: 'Phun sương lên lá; tránh nắng trực tiếp',
-            pestSusceptibility: 'Nhện đỏ, rệp sáp'
+            pestSusceptibility: 'Nhện đỏ, rệp sáp',
           },
           {
             stageName: 'Sinh trưởng',
@@ -183,7 +194,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Cao (2–3 lần/tuần)',
             nutrientRequirement: 'Trung bình (NPK loãng mỗi tháng)',
             careInstructions: 'Lau lá; giữ ẩm không khí cao',
-            pestSusceptibility: 'Thối rễ nếu úng'
+            pestSusceptibility: 'Thối rễ nếu úng',
           },
           {
             stageName: 'Ra hoa',
@@ -202,16 +213,18 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Cao (duy trì ẩm)',
             nutrientRequirement: 'Trung bình (bón nhiều kali trước hoa)',
             careInstructions: 'Không di chuyển khi ra hoa',
-            pestSusceptibility: 'Nấm đốm lá'
-          }
-        ]
-      }
+            pestSusceptibility: 'Nấm đốm lá',
+          },
+        ],
+      },
     },
     {
       name: 'Cây Kim tiền',
+      plantTypeId: 1,
       scientificName: 'Zamioculcas zamiifolia',
       family: 'Araceae',
-      description: 'Cây thân rễ củ, lá dày xanh bóng, dễ sống trong điều kiện thiếu sáng.',
+      description:
+        'Cây thân rễ củ, lá dày xanh bóng, dễ sống trong điều kiện thiếu sáng.',
       growthDuration: null,
       growthStages: {
         create: [
@@ -232,7 +245,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Thấp (để đất khô mới tưới)',
             nutrientRequirement: 'Thấp (bón chậm tan mỗi 6 tháng)',
             careInstructions: 'Lau bụi lá; tránh úng',
-            pestSusceptibility: 'Ít sâu bệnh'
+            pestSusceptibility: 'Ít sâu bệnh',
           },
           {
             stageName: 'Sinh trưởng',
@@ -251,7 +264,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Thấp (1–2 lần/tháng)',
             nutrientRequirement: 'Thấp (bón chậm tan 6 tháng/lần)',
             careInstructions: 'Xoay chậu cho cây mọc đều',
-            pestSusceptibility: 'Thối củ nếu úng'
+            pestSusceptibility: 'Thối củ nếu úng',
           },
           {
             stageName: 'Trưởng thành',
@@ -270,13 +283,14 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Rất thấp (quên tưới lâu cây vẫn OK)',
             nutrientRequirement: 'Thấp (ít cần bón phân)',
             careInstructions: 'Thay chậu 2–3 năm/lần',
-            pestSusceptibility: 'Hiếm sâu bệnh'
-          }
-        ]
-      }
+            pestSusceptibility: 'Hiếm sâu bệnh',
+          },
+        ],
+      },
     },
     {
       name: 'Cây Sen đá',
+      plantTypeId: 1,
       scientificName: 'Echeveria spp.',
       family: 'Crassulaceae',
       description: 'Cây mọng nước nhỏ, lá dày xếp thành hình hoa sen, ưa nắng.',
@@ -300,7 +314,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Thấp (chỉ tưới khi đất khô)',
             nutrientRequirement: 'Thấp (bón xương rồng 1 lần/năm)',
             careInstructions: 'Tránh nước đọng trên lá',
-            pestSusceptibility: 'Thối gốc nếu úng'
+            pestSusceptibility: 'Thối gốc nếu úng',
           },
           {
             stageName: 'Sinh trưởng',
@@ -319,7 +333,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Thấp (1–2 tuần tưới 1 lần)',
             nutrientRequirement: 'Thấp (bón hữu cơ 6 tháng/lần)',
             careInstructions: 'Loại bỏ lá khô héo',
-            pestSusceptibility: 'Ít sâu bệnh'
+            pestSusceptibility: 'Ít sâu bệnh',
           },
           {
             stageName: 'Ra hoa',
@@ -338,16 +352,18 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Thấp (giảm tưới khi có hoa)',
             nutrientRequirement: 'Thấp (bón kali thúc hoa)',
             careInstructions: 'Cắt bỏ cuống hoa khi tàn',
-            pestSusceptibility: 'Ít sâu bệnh'
-          }
-        ]
-      }
+            pestSusceptibility: 'Ít sâu bệnh',
+          },
+        ],
+      },
     },
     {
       name: 'Cây Xương rồng',
+      plantTypeId: 1,
       scientificName: 'Opuntia microdasys',
       family: 'Cactaceae',
-      description: 'Cây mọng nước thân gai, chịu hạn tốt, thường trồng chậu cảnh.',
+      description:
+        'Cây mọng nước thân gai, chịu hạn tốt, thường trồng chậu cảnh.',
       growthDuration: null,
       growthStages: {
         create: [
@@ -355,7 +371,8 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             stageName: 'Nhân giống',
             order: 1,
             duration: 42,
-            description: 'Gieo hạt hoặc giâm nhánh/bẹ trong đất cát ẩm để ra rễ.',
+            description:
+              'Gieo hạt hoặc giâm nhánh/bẹ trong đất cát ẩm để ra rễ.',
             optimalTemperatureMin: 22,
             optimalTemperatureMax: 40,
             optimalHumidityMin: 20,
@@ -368,7 +385,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Rất thấp (1 tháng tưới 1 lần)',
             nutrientRequirement: 'Rất thấp (hầu như không bón)',
             careInstructions: 'Chậu phải thoát nước tốt',
-            pestSusceptibility: 'Thối gốc nếu úng'
+            pestSusceptibility: 'Thối gốc nếu úng',
           },
           {
             stageName: 'Sinh trưởng',
@@ -387,7 +404,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Rất thấp (đất khô mới tưới)',
             nutrientRequirement: 'Rất thấp',
             careInstructions: 'Xoay chậu đều để nhận nắng',
-            pestSusceptibility: 'Ít sâu bệnh'
+            pestSusceptibility: 'Ít sâu bệnh',
           },
           {
             stageName: 'Ra hoa',
@@ -406,16 +423,18 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Rất thấp',
             nutrientRequirement: 'Thấp (thêm photpho nếu cần)',
             careInstructions: 'Tránh mưa vào hoa',
-            pestSusceptibility: 'Ít bị côn trùng'
-          }
-        ]
-      }
+            pestSusceptibility: 'Ít bị côn trùng',
+          },
+        ],
+      },
     },
     {
       name: 'Cây Cau Tiểu Trâm',
+      plantTypeId: 1,
       scientificName: 'Chamaedorea elegans',
       family: 'Arecaceae',
-      description: 'Cây cọ lá lông chim xanh mượt, thích hợp trồng trong nhà, chịu bóng tốt.',
+      description:
+        'Cây cọ lá lông chim xanh mượt, thích hợp trồng trong nhà, chịu bóng tốt.',
       growthDuration: null,
       growthStages: {
         create: [
@@ -436,7 +455,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Trung bình (2 lần/tuần)',
             nutrientRequirement: 'Thấp (NPK loãng 3 tháng/lần)',
             careInstructions: 'Phun sương lên lá để tăng ẩm',
-            pestSusceptibility: 'Nhện đỏ'
+            pestSusceptibility: 'Nhện đỏ',
           },
           {
             stageName: 'Sinh trưởng',
@@ -455,13 +474,14 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Trung bình',
             nutrientRequirement: 'Thấp',
             careInstructions: 'Xoay chậu để cây mọc thẳng',
-            pestSusceptibility: 'Rệp sáp'
+            pestSusceptibility: 'Rệp sáp',
           },
           {
             stageName: 'Trưởng thành',
             order: 3,
             duration: 365,
-            description: 'Cây đạt kích thước chậu tối đa, thỉnh thoảng ra hoa và quả nhỏ.',
+            description:
+              'Cây đạt kích thước chậu tối đa, thỉnh thoảng ra hoa và quả nhỏ.',
             optimalTemperatureMin: 18,
             optimalTemperatureMax: 34,
             optimalHumidityMin: 50,
@@ -474,16 +494,18 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Trung bình (giảm mùa lạnh)',
             nutrientRequirement: 'Thấp (1–2 lần/năm)',
             careInstructions: 'Thay chậu 2–3 năm/lần',
-            pestSusceptibility: 'Ít sâu bệnh'
-          }
-        ]
-      }
+            pestSusceptibility: 'Ít sâu bệnh',
+          },
+        ],
+      },
     },
     {
       name: 'Cây Dương xỉ',
+      plantTypeId: 1,
       scientificName: 'Nephrolepis exaltata',
       family: 'Nephrolepidaceae',
-      description: 'Cây thân thảo mọc thành bụi, lá lông chim xanh non, ưa ẩm và bóng râm.',
+      description:
+        'Cây thân thảo mọc thành bụi, lá lông chim xanh non, ưa ẩm và bóng râm.',
       growthDuration: null,
       growthStages: {
         create: [
@@ -504,7 +526,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Cao (đất luôn ẩm)',
             nutrientRequirement: 'Thấp',
             careInstructions: 'Phun sương hàng ngày',
-            pestSusceptibility: 'Ít sâu bệnh'
+            pestSusceptibility: 'Ít sâu bệnh',
           },
           {
             stageName: 'Sinh trưởng',
@@ -523,7 +545,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Cao (3–4 lần/tuần)',
             nutrientRequirement: 'Thấp',
             careInstructions: 'Tỉa lá già',
-            pestSusceptibility: 'Ít bệnh'
+            pestSusceptibility: 'Ít bệnh',
           },
           {
             stageName: 'Trưởng thành',
@@ -542,16 +564,18 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Cao',
             nutrientRequirement: 'Thấp',
             careInstructions: 'Thay chậu 2 năm/lần',
-            pestSusceptibility: 'Ít sâu bệnh'
-          }
-        ]
-      }
+            pestSusceptibility: 'Ít sâu bệnh',
+          },
+        ],
+      },
     },
     {
       name: 'Cây Nha đam',
+      plantTypeId: 4,
       scientificName: 'Aloe vera',
       family: 'Asphodelaceae',
-      description: 'Cây mọng nước thân thảo, lá dày chứa gel, dùng làm dược liệu và làm đẹp.',
+      description:
+        'Cây mọng nước thân thảo, lá dày chứa gel, dùng làm dược liệu và làm đẹp.',
       growthDuration: null,
       growthStages: {
         create: [
@@ -572,7 +596,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Thấp (1–2 tuần tưới 1 lần)',
             nutrientRequirement: 'Thấp (bón hữu cơ 4–6 tháng/lần)',
             careInstructions: 'Tránh nước đọng nách lá',
-            pestSusceptibility: 'Thối gốc nếu úng'
+            pestSusceptibility: 'Thối gốc nếu úng',
           },
           {
             stageName: 'Sinh trưởng',
@@ -591,7 +615,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Thấp (mùa mưa ít tưới)',
             nutrientRequirement: 'Thấp',
             careInstructions: 'Tách chồi con khi chậu chật',
-            pestSusceptibility: 'Ít sâu bệnh'
+            pestSusceptibility: 'Ít sâu bệnh',
           },
           {
             stageName: 'Ra hoa',
@@ -610,13 +634,14 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Thấp (giảm tưới khi ra hoa)',
             nutrientRequirement: 'Thấp',
             careInstructions: 'Cắt bỏ cán hoa khi tàn',
-            pestSusceptibility: 'Ít côn trùng'
-          }
-        ]
-      }
+            pestSusceptibility: 'Ít côn trùng',
+          },
+        ],
+      },
     },
     {
       name: 'Cây Phú Quý',
+      plantTypeId: 1,
       scientificName: 'Aglaonema sp.',
       family: 'Araceae',
       description: 'Cây cảnh lá pha đỏ/hồng, ưa bóng, phong thủy tài lộc.',
@@ -640,7 +665,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Trung bình (1–2 lần/tuần)',
             nutrientRequirement: 'Trung bình (2 tháng/lần)',
             careInstructions: 'Phun sương; lau lá',
-            pestSusceptibility: 'Rệp sáp'
+            pestSusceptibility: 'Rệp sáp',
           },
           {
             stageName: 'Sinh trưởng',
@@ -659,7 +684,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Trung bình',
             nutrientRequirement: 'Trung bình',
             careInstructions: 'Xoay chậu đều',
-            pestSusceptibility: 'Nấm đốm lá'
+            pestSusceptibility: 'Nấm đốm lá',
           },
           {
             stageName: 'Trưởng thành',
@@ -678,13 +703,14 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Trung bình (giảm mùa lạnh)',
             nutrientRequirement: 'Thấp (6 tháng/lần)',
             careInstructions: 'Thay chậu 2 năm/lần',
-            pestSusceptibility: 'Ít sâu bệnh'
-          }
-        ]
-      }
+            pestSusceptibility: 'Ít sâu bệnh',
+          },
+        ],
+      },
     },
     {
       name: 'Cây Hương thảo',
+      plantTypeId: 4,
       scientificName: 'Rosmarinus officinalis',
       family: 'Lamiaceae',
       description: 'Cây gia vị lá kim nhỏ thơm nồng, ưa nắng và khô ráo.',
@@ -708,7 +734,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Thấp (đất khô mới tưới)',
             nutrientRequirement: 'Thấp',
             careInstructions: 'Tỉa cành để phân nhánh',
-            pestSusceptibility: 'Thối gốc nếu ẩm'
+            pestSusceptibility: 'Thối gốc nếu ẩm',
           },
           {
             stageName: 'Sinh trưởng',
@@ -727,7 +753,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Thấp (1–2 lần/tuần)',
             nutrientRequirement: 'Thấp (6 tháng/lần)',
             careInstructions: 'Chậu phải thoát nước',
-            pestSusceptibility: 'Ít sâu bệnh'
+            pestSusceptibility: 'Ít sâu bệnh',
           },
           {
             stageName: 'Ra hoa',
@@ -746,16 +772,18 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Thấp (giảm tưới)',
             nutrientRequirement: 'Thấp',
             careInstructions: 'Cắt tỉa hoa sau tàn',
-            pestSusceptibility: 'Ít sâu bệnh'
-          }
-        ]
-      }
+            pestSusceptibility: 'Ít sâu bệnh',
+          },
+        ],
+      },
     },
     {
       name: 'Cây Bạc hà',
+      plantTypeId: 4,
       scientificName: 'Mentha arvensis',
       family: 'Lamiaceae',
-      description: 'Cây thân thảo bò, lá nhỏ the mát, dùng làm rau gia vị và trà.',
+      description:
+        'Cây thân thảo bò, lá nhỏ the mát, dùng làm rau gia vị và trà.',
       growthDuration: null,
       growthStages: {
         create: [
@@ -776,7 +804,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Cao (3–4 lần/tuần)',
             nutrientRequirement: 'Trung bình',
             careInstructions: 'Cắt tỉa ngọn để phân nhánh',
-            pestSusceptibility: 'Rệp, sâu'
+            pestSusceptibility: 'Rệp, sâu',
           },
           {
             stageName: 'Sinh trưởng',
@@ -795,7 +823,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Cao',
             nutrientRequirement: 'Trung bình',
             careInstructions: 'Cắt bỏ hoa để tập trung lá',
-            pestSusceptibility: 'Ít bệnh'
+            pestSusceptibility: 'Ít bệnh',
           },
           {
             stageName: 'Thu hoạch',
@@ -814,13 +842,14 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Cao',
             nutrientRequirement: 'Trung bình',
             careInstructions: 'Thu hoạch so le để khóm còn chồi',
-            pestSusceptibility: 'Ít bệnh'
-          }
-        ]
-      }
+            pestSusceptibility: 'Ít bệnh',
+          },
+        ],
+      },
     },
     {
       name: 'Cây Húng quế',
+      plantTypeId: 4,
       scientificName: 'Ocimum basilicum',
       family: 'Lamiaceae',
       description: 'Cây rau gia vị, lá xanh thơm hăng, ăn kèm phở, bún.',
@@ -844,7 +873,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Trung bình',
             nutrientRequirement: 'Thấp',
             careInstructions: 'Che chắn nhẹ giữ ẩm',
-            pestSusceptibility: 'Nấm mốc'
+            pestSusceptibility: 'Nấm mốc',
           },
           {
             stageName: 'Cây con',
@@ -863,7 +892,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Trung bình',
             nutrientRequirement: 'Trung bình',
             careInstructions: 'Ngắt ngọn lần đầu',
-            pestSusceptibility: 'Sâu ăn lá'
+            pestSusceptibility: 'Sâu ăn lá',
           },
           {
             stageName: 'Sinh trưởng',
@@ -882,7 +911,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Trung bình',
             nutrientRequirement: 'Cao (2 tuần/bón)',
             careInstructions: 'Ngắt đọt thường xuyên',
-            pestSusceptibility: 'Rệp muội'
+            pestSusceptibility: 'Rệp muội',
           },
           {
             stageName: 'Ra hoa',
@@ -901,13 +930,14 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Trung bình',
             nutrientRequirement: 'Thấp',
             careInstructions: 'Ngắt hoa sớm để tập trung lá',
-            pestSusceptibility: 'Ít sâu bệnh'
+            pestSusceptibility: 'Ít sâu bệnh',
           },
           {
             stageName: 'Thu hoạch',
             order: 5,
             duration: 365,
-            description: 'Ngắt lá hoặc cắt cành từ 40–50 ngày tuổi, thu nhiều đợt.',
+            description:
+              'Ngắt lá hoặc cắt cành từ 40–50 ngày tuổi, thu nhiều đợt.',
             optimalTemperatureMin: 20,
             optimalTemperatureMax: 35,
             optimalHumidityMin: 50,
@@ -920,16 +950,18 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Cao',
             nutrientRequirement: 'Cao (sau thu hoạch)',
             careInstructions: 'Thu hoạch sáng sớm',
-            pestSusceptibility: 'Rệp muội'
-          }
-        ]
-      }
+            pestSusceptibility: 'Rệp muội',
+          },
+        ],
+      },
     },
     {
       name: 'Cây Ngò rí',
+      plantTypeId: 4,
       scientificName: 'Coriandrum sativum',
       family: 'Apiaceae',
-      description: 'Cây rau mùi, lá xẻ thùy, mùi thơm dễ chịu, gia vị và trang trí.',
+      description:
+        'Cây rau mùi, lá xẻ thùy, mùi thơm dễ chịu, gia vị và trang trí.',
       growthDuration: 60,
       growthStages: {
         create: [
@@ -950,7 +982,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Trung bình',
             nutrientRequirement: 'Thấp',
             careInstructions: 'Phủ rơm giữ ẩm',
-            pestSusceptibility: 'Chim kiến'
+            pestSusceptibility: 'Chim kiến',
           },
           {
             stageName: 'Cây con',
@@ -969,7 +1001,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Trung bình',
             nutrientRequirement: 'Thấp',
             careInstructions: 'Tỉa bớt cây dày',
-            pestSusceptibility: 'Thối nhũn nếu úng'
+            pestSusceptibility: 'Thối nhũn nếu úng',
           },
           {
             stageName: 'Sinh trưởng',
@@ -988,13 +1020,14 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Trung bình',
             nutrientRequirement: 'Trung bình',
             careInstructions: 'Ngắt đọt thường xuyên',
-            pestSusceptibility: 'Rệp muội'
+            pestSusceptibility: 'Rệp muội',
           },
           {
             stageName: 'Ra hoa & tạo hạt',
             order: 4,
             duration: 21,
-            description: 'Cây trổ tán hoa trắng nhỏ, kết hạt rồi lá già cứng và kém thơm.',
+            description:
+              'Cây trổ tán hoa trắng nhỏ, kết hạt rồi lá già cứng và kém thơm.',
             optimalTemperatureMin: 20,
             optimalTemperatureMax: 30,
             optimalHumidityMin: 40,
@@ -1007,16 +1040,18 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Thấp',
             nutrientRequirement: 'Thấp',
             careInstructions: 'Thu hạt khô làm giống',
-            pestSusceptibility: 'Ít sâu bệnh'
-          }
-        ]
-      }
+            pestSusceptibility: 'Ít sâu bệnh',
+          },
+        ],
+      },
     },
     {
       name: 'Cây Ngò gai',
+      plantTypeId: 4,
       scientificName: 'Eryngium foetidum',
       family: 'Apiaceae',
-      description: 'Cây rau thơm lá thon có răng cưa, mùi đậm, dùng nêm phở, canh chua.',
+      description:
+        'Cây rau thơm lá thon có răng cưa, mùi đậm, dùng nêm phở, canh chua.',
       growthDuration: null,
       growthStages: {
         create: [
@@ -1037,7 +1072,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Trung bình',
             nutrientRequirement: 'Thấp',
             careInstructions: 'Che phủ rơm giữ ẩm',
-            pestSusceptibility: 'Thối hạt nếu úng'
+            pestSusceptibility: 'Thối hạt nếu úng',
           },
           {
             stageName: 'Cây con',
@@ -1056,7 +1091,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Trung bình',
             nutrientRequirement: 'Thấp',
             careInstructions: 'Tỉa cây yếu',
-            pestSusceptibility: 'Ốc sên'
+            pestSusceptibility: 'Ốc sên',
           },
           {
             stageName: 'Sinh trưởng',
@@ -1075,7 +1110,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Cao',
             nutrientRequirement: 'Trung bình',
             careInstructions: 'Phủ rơm giữ ẩm',
-            pestSusceptibility: 'Ốc sên'
+            pestSusceptibility: 'Ốc sên',
           },
           {
             stageName: 'Ra hoa & tái sinh',
@@ -1094,13 +1129,14 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Trung bình',
             nutrientRequirement: 'Thấp',
             careInstructions: 'Thu hạt làm giống',
-            pestSusceptibility: 'Ốc sên'
-          }
-        ]
-      }
+            pestSusceptibility: 'Ốc sên',
+          },
+        ],
+      },
     },
     {
       name: 'Cây Tía tô',
+      plantTypeId: 4,
       scientificName: 'Perilla frutescens',
       family: 'Lamiaceae',
       description: 'Cây rau thơm lá tím, vị hăng, ăn sống và nấu cháo.',
@@ -1124,7 +1160,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Trung bình',
             nutrientRequirement: 'Thấp',
             careInstructions: 'Che chắn nhẹ',
-            pestSusceptibility: 'Sâu ăn lá'
+            pestSusceptibility: 'Sâu ăn lá',
           },
           {
             stageName: 'Cây con',
@@ -1143,7 +1179,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Trung bình',
             nutrientRequirement: 'Trung bình',
             careInstructions: 'Bấm ngọn kích thải nhánh',
-            pestSusceptibility: 'Sâu xanh'
+            pestSusceptibility: 'Sâu xanh',
           },
           {
             stageName: 'Sinh trưởng',
@@ -1162,7 +1198,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Trung bình',
             nutrientRequirement: 'Trung bình',
             careInstructions: 'Thu hoạch lá thường xuyên',
-            pestSusceptibility: 'Sâu khoang'
+            pestSusceptibility: 'Sâu khoang',
           },
           {
             stageName: 'Ra hoa & thu hạt',
@@ -1181,13 +1217,14 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Thấp',
             nutrientRequirement: 'Thấp',
             careInstructions: 'Thu hạt phơi khô',
-            pestSusceptibility: 'Ít sâu bệnh'
-          }
-        ]
-      }
+            pestSusceptibility: 'Ít sâu bệnh',
+          },
+        ],
+      },
     },
     {
       name: 'Cây Hành lá',
+      plantTypeId: 4,
       scientificName: 'Allium fistulosum',
       family: 'Amaryllidaceae',
       description: 'Rau gia vị thân ống xanh, trắng gốc, thơm nhẹ, nêm canh.',
@@ -1198,7 +1235,8 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             stageName: 'Gieo trồng',
             order: 1,
             duration: 10,
-            description: 'Gieo hạt hoặc trồng gốc hành có rễ, nảy mầm sau 1 tuần.',
+            description:
+              'Gieo hạt hoặc trồng gốc hành có rễ, nảy mầm sau 1 tuần.',
             optimalTemperatureMin: 15,
             optimalTemperatureMax: 30,
             optimalHumidityMin: 50,
@@ -1211,7 +1249,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Trung bình',
             nutrientRequirement: 'Thấp',
             careInstructions: 'Phủ đất mỏng giữ ẩm',
-            pestSusceptibility: 'Sâu ăn lá'
+            pestSusceptibility: 'Sâu ăn lá',
           },
           {
             stageName: 'Cây con',
@@ -1230,7 +1268,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Trung bình',
             nutrientRequirement: 'Trung bình',
             careInstructions: 'Vun gốc giúp cây đứng',
-            pestSusceptibility: 'Thối nhũn gốc'
+            pestSusceptibility: 'Thối nhũn gốc',
           },
           {
             stageName: 'Sinh trưởng',
@@ -1249,7 +1287,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Trung bình',
             nutrientRequirement: 'Cao (sau mỗi cắt lá)',
             careInstructions: 'Thu hoạch tỉa lá giữ cây xanh',
-            pestSusceptibility: 'Sâu đục thân'
+            pestSusceptibility: 'Sâu đục thân',
           },
           {
             stageName: 'Thu hoạch',
@@ -1268,13 +1306,14 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Cao',
             nutrientRequirement: 'Cao',
             careInstructions: 'Bón đạm sau thu hoạch',
-            pestSusceptibility: 'Nấm gốc'
-          }
-        ]
-      }
+            pestSusceptibility: 'Nấm gốc',
+          },
+        ],
+      },
     },
     {
       name: 'Cây Sả',
+      plantTypeId: 4,
       scientificName: 'Cymbopogon citratus',
       family: 'Poaceae',
       description: 'Cỏ lưu niên thơm chanh, dùng nêm ướp, xua muỗi.',
@@ -1298,7 +1337,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Trung bình',
             nutrientRequirement: 'Thấp',
             careInstructions: 'Vun gốc, phủ rơm giữ ẩm',
-            pestSusceptibility: 'Ít sâu bệnh'
+            pestSusceptibility: 'Ít sâu bệnh',
           },
           {
             stageName: 'Sinh trưởng',
@@ -1317,7 +1356,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Trung bình',
             nutrientRequirement: 'Trung bình',
             careInstructions: 'Vun gốc, cắt bớt lá già',
-            pestSusceptibility: 'Hiếm'
+            pestSusceptibility: 'Hiếm',
           },
           {
             stageName: 'Thu hoạch',
@@ -1336,13 +1375,14 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Trung bình',
             nutrientRequirement: 'Trung bình',
             careInstructions: 'Thu hoạch xen kẽ, bón phân sau mỗi lần',
-            pestSusceptibility: 'Ít bệnh'
-          }
-        ]
-      }
+            pestSusceptibility: 'Ít bệnh',
+          },
+        ],
+      },
     },
     {
       name: 'Rau muống',
+      plantTypeId: 3,
       scientificName: 'Ipomoea aquatica',
       family: 'Convolvulaceae',
       description: 'Rau ăn lá, thân rỗng ưa nước, xào tỏi, nấu canh.',
@@ -1366,7 +1406,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Rất cao (ngập nước)',
             nutrientRequirement: 'Cao',
             careInstructions: 'Giữ mực nước 5–10cm',
-            pestSusceptibility: 'Ốc bưu'
+            pestSusceptibility: 'Ốc bưu',
           },
           {
             stageName: 'Sinh trưởng',
@@ -1385,7 +1425,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Rất cao',
             nutrientRequirement: 'Cao',
             careInstructions: 'Bón chuồng hoai',
-            pestSusceptibility: 'Sâu khoang'
+            pestSusceptibility: 'Sâu khoang',
           },
           {
             stageName: 'Thu hoạch',
@@ -1404,13 +1444,1225 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Rất cao',
             nutrientRequirement: 'Cao',
             careInstructions: 'Thu hoạch luân phiên',
-            pestSusceptibility: 'Rêu tảo'
-          }
-        ]
-      }
+            pestSusceptibility: 'Rêu tảo',
+          },
+        ],
+      },
+    },
+    {
+      plantTypeId: 2,
+      name: 'Chanh mini',
+      scientificName: 'Citrus aurantifolia',
+      family: 'Cam chanh (Rutaceae)',
+      description:
+        'Cây chanh lùn trồng chậu, lá xanh quanh năm, hoa trắng thơm; quả nhiều nước giàu vitamin C dùng làm gia vị, nước uống. Dễ trồng, vừa làm cảnh vừa thu hoạch quả.',
+      growthDuration: null,
+      growthStages: {
+        create: [
+          {
+            stageName: 'Giai đoạn nảy mầm',
+            order: 1,
+            duration: 14,
+            description: 'Hạt bắt đầu nảy mầm trong đất ẩm và ấm.',
+            optimalTemperatureMin: 20,
+            optimalTemperatureMax: 30,
+            optimalHumidityMin: 70,
+            optimalHumidityMax: 85,
+            optimalPHMin: 5.5,
+            optimalPHMax: 6.5,
+            optimalLightMin: 0,
+            optimalLightMax: 5000,
+            lightRequirement: 'Thấp',
+            waterRequirement: 'Cao',
+            nutrientRequirement: 'Thấp',
+            careInstructions: 'Giữ đất ẩm và ấm; tránh tưới quá nhiều gây úng.',
+            pestSusceptibility: 'Hạt dễ bị mốc nếu đất quá sũng nước.',
+          },
+          {
+            stageName: 'Giai đoạn cây con',
+            order: 2,
+            duration: 60,
+            description: 'Cây con ra 2-4 lá thật, cao vài cm, thân nhỏ.',
+            optimalTemperatureMin: 20,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 60,
+            optimalHumidityMax: 80,
+            optimalPHMin: 5.5,
+            optimalPHMax: 6.5,
+            optimalLightMin: 5000,
+            optimalLightMax: 15000,
+            lightRequirement: 'Trung bình',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Thấp',
+            careInstructions:
+              'Chuyển cây sang chậu khi có 4 lá; để nơi nắng nhẹ, tưới vừa phải giữ ẩm.',
+            pestSusceptibility:
+              'Cây con dễ thối gốc nếu tưới úng; coi chừng rệp trên lá non.',
+          },
+          {
+            stageName: 'Giai đoạn sinh trưởng',
+            order: 3,
+            duration: 120,
+            description: 'Cây sinh trưởng mạnh, nhiều cành lá xanh tốt.',
+            optimalTemperatureMin: 25,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 70,
+            optimalPHMin: 5.5,
+            optimalPHMax: 6.5,
+            optimalLightMin: 15000,
+            optimalLightMax: 50000,
+            lightRequirement: 'Cao',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Trung bình',
+            careInstructions:
+              'Đặt cây nơi nắng đầy đủ; tưới khi đất se khô, bón phân định kỳ hàng tháng.',
+            pestSusceptibility: 'Có thể bị sâu vẽ bùa hoặc rệp sáp hại lá non.',
+          },
+          {
+            stageName: 'Giai đoạn ra hoa',
+            order: 4,
+            duration: 14,
+            description: 'Cây bắt đầu ra nụ và nở hoa màu trắng thơm.',
+            optimalTemperatureMin: 20,
+            optimalTemperatureMax: 30,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 70,
+            optimalPHMin: 5.5,
+            optimalPHMax: 6.5,
+            optimalLightMin: 20000,
+            optimalLightMax: 50000,
+            lightRequirement: 'Cao',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Cao',
+            careInstructions:
+              'Tăng cường phân lân, kali trước và trong khi ra hoa; giữ cây ổn định, không di chuyển nhiều.',
+            pestSusceptibility: 'Bọ trĩ có thể hại nụ hoa làm hoa rụng sớm.',
+          },
+          {
+            stageName: 'Giai đoạn kết trái và thu hoạch',
+            order: 5,
+            duration: 180,
+            description: 'Quả phát triển và chín dần (vỏ chuyển vàng xanh).',
+            optimalTemperatureMin: 25,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 70,
+            optimalPHMin: 5.5,
+            optimalPHMax: 6.5,
+            optimalLightMin: 20000,
+            optimalLightMax: 50000,
+            lightRequirement: 'Cao',
+            waterRequirement: 'Cao',
+            nutrientRequirement: 'Cao',
+            careInstructions:
+              'Tưới đủ ẩm, bón thêm kali; tỉa bớt quả nếu quá sai để cây nuôi quả tốt.',
+            pestSusceptibility:
+              'Ruồi đục quả có thể hại quả non (nên bao quả nếu nhiều).',
+          },
+        ],
+      },
+    },
+    {
+      plantTypeId: 2,
+      name: 'Quất',
+      scientificName: 'Citrus japonica',
+      family: 'Cam chanh (Rutaceae)',
+      description:
+        'Cây quất (tắc) dáng nhỏ, lá xanh đậm; quả tròn nhỏ màu cam vị chua thơm. Thường trồng chậu làm cảnh dịp Tết, quả dùng làm mứt, nước giải khát. Cây ưa nắng, sai quả, dễ trồng.',
+      growthDuration: null,
+      growthStages: {
+        create: [
+          {
+            stageName: 'Giai đoạn nảy mầm',
+            order: 1,
+            duration: 14,
+            description: 'Hạt quất nảy mầm sau khoảng 2 tuần gieo.',
+            optimalTemperatureMin: 20,
+            optimalTemperatureMax: 30,
+            optimalHumidityMin: 70,
+            optimalHumidityMax: 85,
+            optimalPHMin: 5.5,
+            optimalPHMax: 6.5,
+            optimalLightMin: 0,
+            optimalLightMax: 5000,
+            lightRequirement: 'Thấp',
+            waterRequirement: 'Cao',
+            nutrientRequirement: 'Thấp',
+            careInstructions:
+              'Gieo hạt vào đất ẩm, giữ ấm và tưới phun sương nhẹ hàng ngày.',
+            pestSusceptibility:
+              'Hạt dễ mốc nếu đất quá ẩm; tránh kiến tha hạt.',
+          },
+          {
+            stageName: 'Giai đoạn cây con',
+            order: 2,
+            duration: 60,
+            description: 'Cây con cao 5-10 cm, vài lá thật xanh nhạt.',
+            optimalTemperatureMin: 20,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 60,
+            optimalHumidityMax: 80,
+            optimalPHMin: 5.5,
+            optimalPHMax: 6.5,
+            optimalLightMin: 5000,
+            optimalLightMax: 15000,
+            lightRequirement: 'Trung bình',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Thấp',
+            careInstructions:
+              'Khi cây có 4-6 lá, chuyển sang chậu; để nơi nắng nhẹ, tưới đủ ẩm, không úng.',
+            pestSusceptibility:
+              'Dễ thối rễ nếu tưới nhiều; coi chừng rệp muội trên lá non.',
+          },
+          {
+            stageName: 'Giai đoạn sinh trưởng',
+            order: 3,
+            duration: 90,
+            description: 'Cây phát triển tán lá, thân dần hóa gỗ, lá xanh tốt.',
+            optimalTemperatureMin: 25,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 70,
+            optimalPHMin: 5.5,
+            optimalPHMax: 6.5,
+            optimalLightMin: 15000,
+            optimalLightMax: 50000,
+            lightRequirement: 'Cao',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Trung bình',
+            careInstructions:
+              'Đặt cây nơi nắng nhiều; tưới khi đất hơi khô, bón phân mỗi tháng một lần.',
+            pestSusceptibility:
+              'Có thể bị rệp, nhện đỏ; tỉa cành cho thông thoáng, dễ kiểm soát sâu hại.',
+          },
+          {
+            stageName: 'Giai đoạn ra hoa',
+            order: 4,
+            duration: 14,
+            description: 'Cây ra nhiều hoa trắng nhỏ thơm, dễ đậu quả.',
+            optimalTemperatureMin: 20,
+            optimalTemperatureMax: 30,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 70,
+            optimalPHMin: 5.5,
+            optimalPHMax: 6.5,
+            optimalLightMin: 20000,
+            optimalLightMax: 50000,
+            lightRequirement: 'Cao',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Cao',
+            careInstructions:
+              'Đảm bảo nhiều nắng; bón thêm kali trước và trong khi ra hoa để tăng đậu quả.',
+            pestSusceptibility:
+              'Hoa có thể rụng do bọ trĩ hoặc thiếu dinh dưỡng, cần chăm sóc tốt để hạn chế.',
+          },
+          {
+            stageName: 'Giai đoạn kết trái và thu hoạch',
+            order: 5,
+            duration: 150,
+            description:
+              'Quả hình thành và lớn dần, chuyển từ xanh sang cam khi chín.',
+            optimalTemperatureMin: 25,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 70,
+            optimalPHMin: 5.5,
+            optimalPHMax: 6.5,
+            optimalLightMin: 15000,
+            optimalLightMax: 50000,
+            lightRequirement: 'Cao',
+            waterRequirement: 'Cao',
+            nutrientRequirement: 'Cao',
+            careInstructions:
+              'Giữ ẩm đủ cho cây nuôi quả; thu hoạch khi vỏ quả chuyển màu cam đậm.',
+            pestSusceptibility:
+              'Ruồi đục quả có thể tấn công quả chín (nên đặt bẫy phòng trừ).',
+          },
+        ],
+      },
+    },
+    {
+      plantTypeId: 2,
+      name: 'Mận (roi)',
+      scientificName: 'Syzygium samarangense',
+      family: 'Đào kim nương (Myrtaceae)',
+      description:
+        'Cây mận (roi) thân gỗ nhỏ trồng chậu, lá xanh bóng; quả hình chuông màu đỏ hoặc xanh, vị ngọt mát. Cây dễ trồng, lớn nhanh, cho bóng mát và quả ăn tươi.',
+      growthDuration: null,
+      growthStages: {
+        create: [
+          {
+            stageName: 'Giai đoạn nảy mầm',
+            order: 1,
+            duration: 10,
+            description: 'Hạt mận nảy mầm trong khoảng 1-2 tuần sau gieo.',
+            optimalTemperatureMin: 25,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 70,
+            optimalHumidityMax: 90,
+            optimalPHMin: 5.5,
+            optimalPHMax: 7.0,
+            optimalLightMin: 0,
+            optimalLightMax: 5000,
+            lightRequirement: 'Thấp',
+            waterRequirement: 'Cao',
+            nutrientRequirement: 'Thấp',
+            careInstructions:
+              'Gieo hạt trong đất ẩm, giữ ấm liên tục. Tưới phun sương giữ ẩm, tránh để khô.',
+            pestSusceptibility:
+              'Hạt dễ mốc nếu quá ẩm; đảm bảo thoát nước tốt cho khay ươm.',
+          },
+          {
+            stageName: 'Giai đoạn cây con',
+            order: 2,
+            duration: 45,
+            description: 'Cây con cao ~10 cm, có vài lá xanh, thân còn mềm.',
+            optimalTemperatureMin: 25,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 70,
+            optimalHumidityMax: 85,
+            optimalPHMin: 5.5,
+            optimalPHMax: 7.0,
+            optimalLightMin: 5000,
+            optimalLightMax: 15000,
+            lightRequirement: 'Trung bình',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Thấp',
+            careInstructions:
+              'Chuyển cây ra chậu rộng khi có 4-5 lá. Để nơi nắng nhẹ, tưới ẩm vừa phải, không để úng.',
+            pestSusceptibility:
+              'Cây con có thể bị ốc sên cắn hoặc nấm thối gốc nếu tưới quá nhiều.',
+          },
+          {
+            stageName: 'Giai đoạn sinh trưởng',
+            order: 3,
+            duration: 120,
+            description:
+              'Cây lớn nhanh, cao 50-70 cm, tán lá sum suê, thân dần cứng cáp.',
+            optimalTemperatureMin: 25,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 60,
+            optimalHumidityMax: 80,
+            optimalPHMin: 5.5,
+            optimalPHMax: 7.0,
+            optimalLightMin: 15000,
+            optimalLightMax: 50000,
+            lightRequirement: 'Cao',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Trung bình',
+            careInstructions:
+              'Đặt cây nơi nắng đầy đủ; tưới đều đặn, bón phân hữu cơ mỗi tháng cho cây khỏe mạnh.',
+            pestSusceptibility:
+              'Sâu ăn lá hoặc rầy mềm có thể xuất hiện; nên kiểm tra lá thường xuyên để xử lý sớm.',
+          },
+          {
+            stageName: 'Giai đoạn ra hoa',
+            order: 4,
+            duration: 10,
+            description:
+              'Cây ra chùm hoa nhỏ màu trắng nhạt, sau đó đậu quả non.',
+            optimalTemperatureMin: 25,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 80,
+            optimalPHMin: 5.5,
+            optimalPHMax: 7.0,
+            optimalLightMin: 15000,
+            optimalLightMax: 50000,
+            lightRequirement: 'Cao',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Cao',
+            careInstructions:
+              'Tưới nước đều khi cây ra hoa; bón phân giàu lân, kali để hoa dễ đậu quả.',
+            pestSusceptibility:
+              'Hoa có thể rụng nếu cây thiếu nước hoặc dinh dưỡng; đảm bảo chăm sóc tốt giai đoạn này.',
+          },
+          {
+            stageName: 'Giai đoạn kết trái và thu hoạch',
+            order: 5,
+            duration: 60,
+            description:
+              'Quả mận phát triển nhanh, chín đỏ mọng sau khoảng 2 tháng từ khi đậu.',
+            optimalTemperatureMin: 25,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 80,
+            optimalPHMin: 5.5,
+            optimalPHMax: 7.0,
+            optimalLightMin: 15000,
+            optimalLightMax: 50000,
+            lightRequirement: 'Cao',
+            waterRequirement: 'Cao',
+            nutrientRequirement: 'Cao',
+            careInstructions:
+              'Tưới nhiều nước khi nuôi quả; thu hoạch khi quả chuyển màu đỏ/hồng tùy giống, vị ngọt mát.',
+            pestSusceptibility:
+              'Ruồi đục quả thường hại mận; nên bao quả hoặc thu sớm khi quả bắt đầu chín để tránh sâu.',
+          },
+        ],
+      },
+    },
+    {
+      plantTypeId: 2,
+      name: 'Dâu tây',
+      scientificName: 'Fragaria × ananassa',
+      family: 'Hoa hồng (Rosaceae)',
+      description:
+        'Cây dâu tây thân cỏ nhỏ, lá xanh có răng cưa; quả đỏ mọng, vị chua ngọt giàu vitamin C. Thường trồng chậu treo hoặc bồn nhỏ, ưa khí hậu mát, đất tơi xốp thoát nước tốt.',
+      growthDuration: 90,
+      growthStages: {
+        create: [
+          {
+            stageName: 'Giai đoạn nảy mầm',
+            order: 1,
+            duration: 14,
+            description: 'Hạt dâu tây nảy mầm sau khoảng 1-2 tuần gieo.',
+            optimalTemperatureMin: 18,
+            optimalTemperatureMax: 25,
+            optimalHumidityMin: 70,
+            optimalHumidityMax: 85,
+            optimalPHMin: 5.5,
+            optimalPHMax: 6.5,
+            optimalLightMin: 0,
+            optimalLightMax: 5000,
+            lightRequirement: 'Thấp',
+            waterRequirement: 'Cao',
+            nutrientRequirement: 'Thấp',
+            careInstructions:
+              'Gieo hạt trên đất ẩm, không phủ đất dày; giữ ẩm bằng cách phun sương, tránh nắng trực tiếp.',
+            pestSusceptibility:
+              'Hạt rất nhỏ, dễ bị mốc nếu quá ẩm hoặc rêu nếu quá lâu chưa nảy mầm.',
+          },
+          {
+            stageName: 'Giai đoạn cây con',
+            order: 2,
+            duration: 30,
+            description: 'Cây con cao 2-3 cm, có 2-3 lá thật xanh mướt.',
+            optimalTemperatureMin: 15,
+            optimalTemperatureMax: 25,
+            optimalHumidityMin: 60,
+            optimalHumidityMax: 80,
+            optimalPHMin: 5.5,
+            optimalPHMax: 6.5,
+            optimalLightMin: 5000,
+            optimalLightMax: 10000,
+            lightRequirement: 'Trung bình',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Thấp',
+            careInstructions:
+              'Khi cây có 2-3 lá thật, chuyển sang chậu cá nhân; để nơi sáng nhưng tránh nắng gắt buổi trưa, tưới giữ ẩm đất.',
+            pestSusceptibility:
+              'Cây con dễ bị nấm chết rạp nếu úng nước; tránh tưới đẫm và bảo vệ khỏi ốc sên.',
+          },
+          {
+            stageName: 'Giai đoạn sinh trưởng',
+            order: 3,
+            duration: 60,
+            description:
+              'Cây phát triển thành bụi thấp, nhiều lá xanh, có thể mọc thân bò (nhánh stolon).',
+            optimalTemperatureMin: 15,
+            optimalTemperatureMax: 28,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 70,
+            optimalPHMin: 5.5,
+            optimalPHMax: 6.5,
+            optimalLightMin: 10000,
+            optimalLightMax: 30000,
+            lightRequirement: 'Trung bình',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Trung bình',
+            careInstructions:
+              'Để cây nơi có nắng sáng, tránh nắng chiều >5 giờ. Tưới nước đều, không để khô hạn; bón phân NPK loãng mỗi 2 tuần giúp cây khỏe, nhiều lá và nhánh.',
+            pestSusceptibility:
+              'Có thể bị nhện đỏ hoặc nấm mốc lá nếu thời tiết quá nóng ẩm; giữ cây thoáng gốc, không tưới nước lên lá vào chiều tối.',
+          },
+          {
+            stageName: 'Giai đoạn ra hoa',
+            order: 4,
+            duration: 10,
+            description:
+              'Cây ra hoa trắng nhỏ trên cuống vươn cao khỏi tán lá.',
+            optimalTemperatureMin: 15,
+            optimalTemperatureMax: 25,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 70,
+            optimalPHMin: 5.5,
+            optimalPHMax: 6.5,
+            optimalLightMin: 10000,
+            optimalLightMax: 30000,
+            lightRequirement: 'Trung bình',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Trung bình',
+            careInstructions:
+              'Đảm bảo đủ nắng cho hoa; nếu thiếu côn trùng, có thể thụ phấn bằng tay (dùng cọ mềm chạm nhẹ vào nhụy hoa). Giữ đất ẩm đều, không bón quá nhiều đạm khi đang ra hoa.',
+            pestSusceptibility:
+              'Hoa dễ bị nấm Botrytis (mốc xám) trong ẩm độ cao; tránh làm ướt cánh hoa và đảm bảo thông thoáng.',
+          },
+          {
+            stageName: 'Giai đoạn kết trái và thu hoạch',
+            order: 5,
+            duration: 30,
+            description:
+              'Quả hình thành từ đế hoa, lớn dần và chín đỏ sau khoảng 3-4 tuần kể từ khi hoa thụ phấn.',
+            optimalTemperatureMin: 15,
+            optimalTemperatureMax: 25,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 70,
+            optimalPHMin: 5.5,
+            optimalPHMax: 6.5,
+            optimalLightMin: 10000,
+            optimalLightMax: 30000,
+            lightRequirement: 'Trung bình',
+            waterRequirement: 'Cao',
+            nutrientRequirement: 'Trung bình',
+            careInstructions:
+              'Duy trì tưới ẩm đều cho đất trong thời gian quả đang lớn. Đặt rơm khô hoặc giá đỡ dưới quả để quả không chạm đất ướt gây thối. Thu hoạch khi quả chín đỏ hoàn toàn, căng mọng.',
+            pestSusceptibility:
+              'Quả chín dễ bị mốc xám hoặc côn trùng, chim ăn; cần thu hoạch kịp thời và có lưới che nếu trồng nhiều.',
+          },
+        ],
+      },
+    },
+    {
+      plantTypeId: 2,
+      name: 'Sung Mỹ',
+      scientificName: 'Ficus carica',
+      family: 'Dâu tằm (Moraceae)',
+      description:
+        'Cây sung Mỹ (sung ngọt) dạng bụi, lá to có thùy; quả tròn nhỏ màu xanh, chín chuyển tím nâu ăn ngọt. Cây dễ trồng, chịu hạn, chịu bóng một phần, ít sâu bệnh.',
+      growthDuration: null,
+      growthStages: {
+        create: [
+          {
+            stageName: 'Giai đoạn nảy mầm/ra rễ',
+            order: 1,
+            duration: 14,
+            description:
+              'Hạt hoặc cành giâm bắt đầu nảy mầm/ra rễ trong môi trường ẩm.',
+            optimalTemperatureMin: 20,
+            optimalTemperatureMax: 30,
+            optimalHumidityMin: 70,
+            optimalHumidityMax: 90,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 0,
+            optimalLightMax: 5000,
+            lightRequirement: 'Thấp',
+            waterRequirement: 'Cao',
+            nutrientRequirement: 'Thấp',
+            careInstructions:
+              'Giâm cành trong cát ẩm, che kín giữ ẩm cho đến khi ra rễ trắng. Nếu gieo hạt thì gieo trên đất ẩm, để chỗ ấm, râm.',
+            pestSusceptibility:
+              'Cành giâm dễ thối gốc nếu quá ẩm và bí; cần thoáng khí vừa phải.',
+          },
+          {
+            stageName: 'Giai đoạn cây con',
+            order: 2,
+            duration: 60,
+            description:
+              'Cây con cao ~10-15 cm, ra vài lá xanh; rễ đã hình thành và hút nước tốt.',
+            optimalTemperatureMin: 20,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 60,
+            optimalHumidityMax: 80,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 5000,
+            optimalLightMax: 15000,
+            lightRequirement: 'Trung bình',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Thấp',
+            careInstructions:
+              'Trồng cây con sang chậu đất tơi xốp thoát nước tốt. Để nơi sáng nhưng không nắng gắt cả ngày. Tưới nước khi đất mặt hơi khô, tránh để úng.',
+            pestSusceptibility:
+              'Có thể bị ốc sên hoặc sâu ăn lá non; bảo vệ cây con đặc biệt vào ban đêm.',
+          },
+          {
+            stageName: 'Giai đoạn sinh trưởng',
+            order: 3,
+            duration: 120,
+            description:
+              'Cây lớn nhanh, cao 40-60 cm, thân dần hóa gỗ; lá xanh um, tán bắt đầu rộng.',
+            optimalTemperatureMin: 20,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 70,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 10000,
+            optimalLightMax: 30000,
+            lightRequirement: 'Trung bình',
+            waterRequirement: 'Thấp',
+            nutrientRequirement: 'Trung bình',
+            careInstructions:
+              'Cho cây nhận nắng sáng 4-6 giờ mỗi ngày. Tưới nước khi đất khô mặt, tránh tưới quá nhiều (sung chịu hạn khá tốt). Bón phân hữu cơ 2 tháng/lần. Tỉa cành yếu để tán thoáng.',
+            pestSusceptibility:
+              'Ít sâu bệnh; thỉnh thoảng có rệp sáp hoặc nấm gỉ sắt trên lá khi ẩm cao, nên kiểm tra lá định kỳ.',
+          },
+          {
+            stageName: 'Giai đoạn ra quả',
+            order: 4,
+            duration: 30,
+            description:
+              'Cây bắt đầu ra quả non (sung không có hoa nở bên ngoài, quả hình thành ở nách lá).',
+            optimalTemperatureMin: 20,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 70,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 15000,
+            optimalLightMax: 30000,
+            lightRequirement: 'Cao',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Cao',
+            careInstructions:
+              'Giữ chế độ tưới ổn định; bón phân thêm kali, canxi giúp quả phát triển tốt. Tránh di chuyển hay thay đổi điều kiện đột ngột khi cây đang mang quả non.',
+            pestSusceptibility:
+              'Quả non ít bị sâu; lưu ý nấm nếu thời tiết quá ẩm ướt, giữ cây khô thoáng.',
+          },
+          {
+            stageName: 'Giai đoạn kết trái và thu hoạch',
+            order: 5,
+            duration: 60,
+            description:
+              'Quả sung lớn dần, vỏ từ xanh chuyển nâu tím khi chín mềm, có thể thu hái.',
+            optimalTemperatureMin: 20,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 70,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 15000,
+            optimalLightMax: 30000,
+            lightRequirement: 'Cao',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Trung bình',
+            careInstructions:
+              'Giảm tưới nhẹ khi quả gần chín để tăng độ ngọt. Thu hoạch khi quả mềm, cuống hơi rủ xuống. Dùng kéo cắt cuống để tránh làm gãy cành.',
+            pestSusceptibility:
+              'Chim, dơi dễ ăn quả chín; cần thu hoạch kịp thời hoặc dùng lưới bảo vệ nếu cần.',
+          },
+        ],
+      },
+    },
+    {
+      plantTypeId: 2,
+      name: 'Chanh dây',
+      scientificName: 'Passiflora edulis',
+      family: 'Lạc tiên (Passifloraceae)',
+      description:
+        'Cây chanh dây (chanh leo) là dây leo thân thảo, lá xanh chia thùy; hoa tím trắng đẹp, quả hình trứng vỏ tím hoặc vàng khi chín, ruột mọng chua ngọt thơm. Cây leo giàn nhanh, ưa nắng, thường trồng sân thượng ban công lấy bóng mát và thu hoạch quả.',
+      growthDuration: 270,
+      growthStages: {
+        create: [
+          {
+            stageName: 'Giai đoạn nảy mầm',
+            order: 1,
+            duration: 14,
+            description: 'Hạt chanh dây nảy mầm sau khoảng 10-15 ngày gieo.',
+            optimalTemperatureMin: 20,
+            optimalTemperatureMax: 30,
+            optimalHumidityMin: 70,
+            optimalHumidityMax: 90,
+            optimalPHMin: 5.5,
+            optimalPHMax: 6.5,
+            optimalLightMin: 0,
+            optimalLightMax: 5000,
+            lightRequirement: 'Thấp',
+            waterRequirement: 'Cao',
+            nutrientRequirement: 'Thấp',
+            careInstructions:
+              'Ngâm hạt nước ấm trước khi gieo để thúc nảy mầm. Gieo hạt vào đất ẩm, phủ lớp mỏng, giữ ẩm và che mát đến khi nảy mầm.',
+            pestSusceptibility:
+              'Hạt dễ thối nếu đất úng hoặc nấm phát triển; dùng đất sạch, thoát nước.',
+          },
+          {
+            stageName: 'Giai đoạn cây con',
+            order: 2,
+            duration: 30,
+            description:
+              'Cây con cao 5-10 cm, có 2-3 lá thật và tua cuốn nhỏ bắt đầu xuất hiện.',
+            optimalTemperatureMin: 20,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 60,
+            optimalHumidityMax: 80,
+            optimalPHMin: 5.5,
+            optimalPHMax: 6.5,
+            optimalLightMin: 5000,
+            optimalLightMax: 10000,
+            lightRequirement: 'Trung bình',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Thấp',
+            careInstructions:
+              'Khi cây cao ~10 cm, chuyển sang chậu có cọc cho leo. Để cây nơi nắng sáng, tưới nước đều giữ ẩm, không để khô héo.',
+            pestSusceptibility:
+              'Có thể bị sâu ăn lá hoặc ốc sên cắn thân; kiểm tra cây con mỗi ngày để loại trừ sâu hại.',
+          },
+          {
+            stageName: 'Giai đoạn sinh trưởng',
+            order: 3,
+            duration: 90,
+            description:
+              'Dây leo phát triển mạnh, tua cuốn bám giàn, nhiều lá xanh phủ kín một vùng.',
+            optimalTemperatureMin: 20,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 80,
+            optimalPHMin: 5.5,
+            optimalPHMax: 6.5,
+            optimalLightMin: 15000,
+            optimalLightMax: 50000,
+            lightRequirement: 'Cao',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Trung bình',
+            careInstructions:
+              'Làm giàn leo chắc chắn. Tưới nước hàng ngày (sáng sớm hoặc chiều mát). Bón phân NPK mỗi tháng để dây leo khỏe, ra nhiều cành. Hướng dây leo tỏa đều trên giàn, cắt tỉa bớt nhánh phụ quá dày.',
+            pestSusceptibility:
+              'Rệp và sâu ăn lá có thể hại đọt non; phun nước tỏi ớt loãng hoặc dầu neem nếu thấy nhiều rệp.',
+          },
+          {
+            stageName: 'Giai đoạn ra hoa',
+            order: 4,
+            duration: 30,
+            description:
+              'Dây leo ra nhiều hoa màu tím trắng đẹp mắt; hoa nở từng đợt và đậu thành quả non tròn.',
+            optimalTemperatureMin: 20,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 80,
+            optimalPHMin: 5.5,
+            optimalPHMax: 6.5,
+            optimalLightMin: 15000,
+            optimalLightMax: 50000,
+            lightRequirement: 'Cao',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Cao',
+            careInstructions:
+              'Đảm bảo giàn chắc chắn khi cây trĩu hoa. Tưới nước đều, tránh để cây thiếu ẩm sẽ rụng hoa. Có thể tự thụ phấn cho hoa bằng bông tăm nếu ong bướm ít.',
+            pestSusceptibility:
+              'Hoa có thể bị kiến, bọ trĩ làm hỏng; kiểm soát bằng cách ngâm gốc giàn trong nước hoặc bôi keo chống kiến.',
+          },
+          {
+            stageName: 'Giai đoạn kết trái và thu hoạch',
+            order: 5,
+            duration: 60,
+            description:
+              'Quả chanh dây lớn nhanh, vỏ cứng chuyển màu tím hoặc vàng khi chín, ruột thơm ngọt.',
+            optimalTemperatureMin: 20,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 80,
+            optimalPHMin: 5.5,
+            optimalPHMax: 6.5,
+            optimalLightMin: 15000,
+            optimalLightMax: 50000,
+            lightRequirement: 'Cao',
+            waterRequirement: 'Cao',
+            nutrientRequirement: 'Cao',
+            careInstructions:
+              'Tưới nước đầy đủ trong suốt quá trình nuôi quả. Nếu quả quá sai, có thể tỉa bớt để cây tập trung nuôi những quả còn lại. Thu hoạch khi vỏ quả đổi màu rõ và quả rụng tự nhiên vài quả (dấu hiệu chín).',
+            pestSusceptibility:
+              'Thường ít sâu hại quả; lưu ý bệnh đốm nâu trên vỏ nếu mưa nhiều, có thể cần phun phòng bằng dung dịch gốc đồng.',
+          },
+        ],
+      },
+    },
+    {
+      plantTypeId: 2,
+      name: 'Táo lùn',
+      scientificName: 'Malus domestica',
+      family: 'Hoa hồng (Rosaceae)',
+      description:
+        'Cây táo lùn trồng chậu, tán cây nhỏ gọn; hoa trắng hoặc hồng nhạt, quả nhỏ màu xanh hoặc vàng, vị ngọt giòn. Thích hợp trồng ban công, sân thượng; vừa làm cảnh vừa cho quả sạch.',
+      growthDuration: 730,
+      growthStages: {
+        create: [
+          {
+            stageName: 'Giai đoạn nảy mầm',
+            order: 1,
+            duration: 21,
+            description:
+              'Hạt táo (đã xử lý lạnh) nảy mầm sau khoảng 2-3 tuần gieo.',
+            optimalTemperatureMin: 10,
+            optimalTemperatureMax: 20,
+            optimalHumidityMin: 70,
+            optimalHumidityMax: 90,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 0,
+            optimalLightMax: 2000,
+            lightRequirement: 'Thấp',
+            waterRequirement: 'Cao',
+            nutrientRequirement: 'Thấp',
+            careInstructions:
+              'Xử lý hạt lạnh trong tủ mát vài tuần, sau đó gieo vào đất ẩm, giữ mát và ẩm đến khi nứt vỏ nảy mầm.',
+            pestSusceptibility:
+              'Hạt nếu không xử lý lạnh có thể không nảy mầm; nấm mốc có thể phát triển nếu hạt quá ẩm và không thoáng.',
+          },
+          {
+            stageName: 'Giai đoạn cây con',
+            order: 2,
+            duration: 60,
+            description: 'Cây con cao 5-10 cm, thân mảnh, 2-3 cặp lá xanh non.',
+            optimalTemperatureMin: 15,
+            optimalTemperatureMax: 25,
+            optimalHumidityMin: 60,
+            optimalHumidityMax: 80,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 5000,
+            optimalLightMax: 10000,
+            lightRequirement: 'Trung bình',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Thấp',
+            careInstructions:
+              'Khi cây con cứng cáp (5-6 lá), chuyển sang chậu riêng. Đặt nơi nắng nhẹ, tưới ẩm vừa phải, tránh úng. Bảo vệ khỏi gió mạnh làm gãy thân.',
+            pestSusceptibility:
+              'Cây con có thể bị nấm thối gốc nếu quá ẩm. Ốc sên và sâu ăn lá nhỏ cần được loại bỏ kịp thời.',
+          },
+          {
+            stageName: 'Giai đoạn sinh trưởng',
+            order: 3,
+            duration: 180,
+            description:
+              'Cây phát triển thành cây nhỏ, cao ~50 cm, nhiều lá, thân dần hóa gỗ.',
+            optimalTemperatureMin: 15,
+            optimalTemperatureMax: 30,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 70,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 15000,
+            optimalLightMax: 50000,
+            lightRequirement: 'Cao',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Trung bình',
+            careInstructions:
+              'Đặt cây nơi có nắng 6-8 giờ/ngày. Tưới nước đều, tránh để đất khô trắng. Bón phân NPK 2 tháng/lần. Tỉa cành tăm, cành vượt để cây có dáng đẹp và thoáng.',
+            pestSusceptibility:
+              'Rệp muội và bọ phấn trắng có thể hại lá non; phun dầu neem hoặc lau sạch lá khi thấy dấu hiệu. Kiểm soát nấm phấn trắng nếu xuất hiện (phun thuốc gốc lưu huỳnh).',
+          },
+          {
+            stageName: 'Giai đoạn ra hoa',
+            order: 4,
+            duration: 10,
+            description:
+              'Cây ra chùm hoa trắng hoặc hồng nhạt, thường vào mùa mát.',
+            optimalTemperatureMin: 15,
+            optimalTemperatureMax: 25,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 70,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 15000,
+            optimalLightMax: 50000,
+            lightRequirement: 'Cao',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Trung bình',
+            careInstructions:
+              'Duy trì tưới nước đều cho cây khi ra hoa, tránh để cây khô sẽ rụng hoa. Nếu có thể, đặt thêm một cây táo khác gần đó để hỗ trợ thụ phấn (nếu không phải giống tự thụ).',
+            pestSusceptibility:
+              'Hoa táo ít bị sâu; chủ yếu chú ý thời tiết (mưa nhiều có thể làm rụng hoa).',
+          },
+          {
+            stageName: 'Giai đoạn kết trái và thu hoạch',
+            order: 5,
+            duration: 120,
+            description:
+              'Quả táo hình thành, lớn dần cỡ 4-6 cm, chín sau vài tháng (vỏ chuyển vàng hoặc đỏ tùy giống).',
+            optimalTemperatureMin: 20,
+            optimalTemperatureMax: 30,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 70,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 15000,
+            optimalLightMax: 50000,
+            lightRequirement: 'Cao',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Cao',
+            careInstructions:
+              'Tỉa bớt quả non nếu một cành đậu quá nhiều quả để các quả còn lại phát triển tốt hơn. Bón thêm phân kali khi quả đang lớn để tăng chất lượng. Thu hoạch khi vỏ quả chuyển màu đặc trưng và quả đạt độ giòn ngọt (có thể nếm thử).',
+            pestSusceptibility:
+              'Ruồi đục quả và sâu đục quả có thể hại táo; bao quả bằng túi giấy khi quả còn xanh để ngăn sâu bệnh.',
+          },
+        ],
+      },
+    },
+    {
+      plantTypeId: 2,
+      name: 'Nhãn mini',
+      scientificName: 'Dimocarpus longan',
+      family: 'Bồ hòn (Sapindaceae)',
+      description:
+        'Cây nhãn mini trồng chậu (thường chiết cành), tán lá nhỏ gọn. Quả mọc thành chùm, vỏ nâu nhạt, cơm trắng thơm ngọt như nhãn thường. Cây dễ trồng, nhanh cho trái nếu được chiết cành từ cây mẹ đã cho quả.',
+      growthDuration: null,
+      growthStages: {
+        create: [
+          {
+            stageName: 'Giai đoạn bén rễ',
+            order: 1,
+            duration: 14,
+            description:
+              'Cành chiết trồng vào chậu bắt đầu ra rễ mới và chồi non.',
+            optimalTemperatureMin: 25,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 70,
+            optimalHumidityMax: 90,
+            optimalPHMin: 5.5,
+            optimalPHMax: 7.0,
+            optimalLightMin: 0,
+            optimalLightMax: 5000,
+            lightRequirement: 'Thấp',
+            waterRequirement: 'Cao',
+            nutrientRequirement: 'Thấp',
+            careInstructions:
+              'Giữ bầu đất cành chiết luôn ẩm, che nắng trực tiếp vài ngày đầu để cành hồi phục. Sau 1-2 tuần, rễ mới mọc giúp cành đứng vững.',
+            pestSusceptibility:
+              'Cành chiết ít bị sâu do không có lá non nhiều; chỉ cần tránh để khô héo.',
+          },
+          {
+            stageName: 'Giai đoạn cây con',
+            order: 2,
+            duration: 60,
+            description:
+              'Cây bắt đầu ra lá mới xanh mướt, rễ bám đất, cao ~20-30 cm.',
+            optimalTemperatureMin: 25,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 70,
+            optimalHumidityMax: 85,
+            optimalPHMin: 5.5,
+            optimalPHMax: 7.0,
+            optimalLightMin: 5000,
+            optimalLightMax: 10000,
+            lightRequirement: 'Trung bình',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Thấp',
+            careInstructions:
+              'Đặt cây nơi nắng sáng nhẹ vài giờ mỗi ngày cho quen, tăng dần lượng nắng sau 2-3 tuần. Tưới nước giữ ẩm, tránh đọng nước lâu. Sau 1-2 tháng, bón phân NPK loãng để kích thích cây phát triển.',
+            pestSusceptibility:
+              'Có thể xuất hiện rệp sáp trên lá non; lau lá bằng khăn ẩm hoặc phun nước xà phòng loãng nếu thấy rệp.',
+          },
+          {
+            stageName: 'Giai đoạn sinh trưởng',
+            order: 3,
+            duration: 180,
+            description:
+              'Cây sinh trưởng tốt, cao ~60-80 cm, tán lá rậm hơn, thân cứng cáp.',
+            optimalTemperatureMin: 25,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 60,
+            optimalHumidityMax: 80,
+            optimalPHMin: 5.5,
+            optimalPHMax: 7.0,
+            optimalLightMin: 15000,
+            optimalLightMax: 50000,
+            lightRequirement: 'Cao',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Trung bình',
+            careInstructions:
+              'Cho cây nhận nắng đầy đủ (6h/ngày) để quang hợp mạnh. Tưới nước đều, không để cây khô héo. Bón phân NPK mỗi 2 tháng, tập trung phân đạm ở giai đoạn này để cây phát triển tán lá. Tỉa bỏ cành yếu, sâu bệnh.',
+            pestSusceptibility:
+              'Lá nhãn có thể bị sâu cuốn lá, nhện đỏ; kiểm tra lá, phun dầu neem hoặc thuốc sinh học khi cần thiết.',
+          },
+          {
+            stageName: 'Giai đoạn ra hoa',
+            order: 4,
+            duration: 14,
+            description:
+              'Cây trổ chùm hoa nhỏ màu vàng nhạt ở đầu cành (thường vào mùa khô mát).',
+            optimalTemperatureMin: 20,
+            optimalTemperatureMax: 30,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 70,
+            optimalPHMin: 5.5,
+            optimalPHMax: 7.0,
+            optimalLightMin: 15000,
+            optimalLightMax: 50000,
+            lightRequirement: 'Cao',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Trung bình',
+            careInstructions:
+              'Hạn chế tưới nhiều trong giai đoạn kích thích ra hoa (một chút khô hạn giúp ra hoa tốt hơn). Khi cây trổ hoa, tưới nhẹ lại, bón thêm phân lân, kali để tăng tỷ lệ đậu quả. Tránh di chuyển hoặc xoay chậu đột ngột khi cây đang ra hoa.',
+            pestSusceptibility:
+              'Hoa nhãn có thể bị bọ xít hoa gây hại, nhưng trên cây chậu nhỏ hiếm gặp; chỉ cần tránh mưa dầm kéo dài dễ làm hoa thối.',
+          },
+          {
+            stageName: 'Giai đoạn kết trái và thu hoạch',
+            order: 5,
+            duration: 120,
+            description:
+              'Quả nhãn phát triển thành chùm, lớn dần cỡ 1,5-2 cm, vỏ xanh chuyển nâu vàng khi chín.',
+            optimalTemperatureMin: 25,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 60,
+            optimalHumidityMax: 80,
+            optimalPHMin: 5.5,
+            optimalPHMax: 7.0,
+            optimalLightMin: 15000,
+            optimalLightMax: 50000,
+            lightRequirement: 'Cao',
+            waterRequirement: 'Cao',
+            nutrientRequirement: 'Cao',
+            careInstructions:
+              'Tưới nước đầy đủ trong suốt thời gian nuôi quả, không để đất quá khô sẽ rụng quả. Nếu chùm quả quá dày, tỉa bớt quả nhỏ khi mới hình thành để quả còn lại to và ngọt hơn. Bón thêm phân kali sau đậu quả. Thu hoạch khi vỏ quả chuyển nâu sáng và cơm nhãn dày ngọt (thường 4 tháng sau khi ra hoa).',
+            pestSusceptibility:
+              'Chú ý bọ xít nhãn và dơi ăn quả chín; có thể thu hoạch sớm phần quả đã đủ ngọt và dùng lưới che buổi tối để hạn chế dơi.',
+          },
+        ],
+      },
+    },
+    {
+      plantTypeId: 2,
+      name: 'Việt quất',
+      scientificName: 'Vaccinium spp.',
+      family: 'Thạch nam (Ericaceae)',
+      description:
+        'Cây việt quất (blueberry) bụi thấp, lá xanh đậm; quả mọng tròn màu xanh tím, vị ngọt dịu, rất giàu chất chống oxy hóa. Cây ưa đất chua (pH 4,5-5,5), khí hậu mát hoặc ôn đới, có thể trồng chậu với đất chuyên biệt.',
+      growthDuration: 365,
+      growthStages: {
+        create: [
+          {
+            stageName: 'Giai đoạn nảy mầm',
+            order: 1,
+            duration: 30,
+            description:
+              'Hạt việt quất (đã xử lý lạnh) nảy mầm chậm sau khoảng 3-4 tuần gieo.',
+            optimalTemperatureMin: 15,
+            optimalTemperatureMax: 25,
+            optimalHumidityMin: 80,
+            optimalHumidityMax: 95,
+            optimalPHMin: 4.5,
+            optimalPHMax: 5.5,
+            optimalLightMin: 0,
+            optimalLightMax: 2000,
+            lightRequirement: 'Thấp',
+            waterRequirement: 'Cao',
+            nutrientRequirement: 'Thấp',
+            careInstructions:
+              'Xử lý hạt bằng cách ủ lạnh vài tuần, rồi gieo trên nền rêu than bùn ẩm (đất chua). Giữ ẩm cao và che sáng nhẹ cho đến khi hạt nứt nanh và nảy mầm.',
+            pestSusceptibility:
+              'Hạt nhỏ dễ bị nấm nếu quá ẩm; cần giá thể sạch, thoáng khí.',
+          },
+          {
+            stageName: 'Giai đoạn cây con',
+            order: 2,
+            duration: 60,
+            description:
+              'Cây con cao 2-3 cm, 2-3 lá màu xanh nhạt, sinh trưởng chậm.',
+            optimalTemperatureMin: 18,
+            optimalTemperatureMax: 25,
+            optimalHumidityMin: 70,
+            optimalHumidityMax: 85,
+            optimalPHMin: 4.5,
+            optimalPHMax: 5.5,
+            optimalLightMin: 5000,
+            optimalLightMax: 10000,
+            lightRequirement: 'Trung bình',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Thấp',
+            careInstructions:
+              'Khi cây có vài lá, chuyển vào chậu nhỏ với đất giàu mùn, chua (trộn than bùn, trấu). Đặt nơi nắng nhẹ, tưới nước không chứa vôi (nước mưa) giữ ẩm, không bón phân mạnh.',
+            pestSusceptibility:
+              'Cây con nhạy cảm pH; lá vàng nếu đất chưa đủ chua (điều chỉnh bằng bột lưu huỳnh). Tránh bón phân quá liều gây cháy rễ.',
+          },
+          {
+            stageName: 'Giai đoạn sinh trưởng',
+            order: 3,
+            duration: 180,
+            description:
+              'Cây phát triển thành bụi 20-30 cm, cành nhánh nhiều, lá xanh đậm dày hơn.',
+            optimalTemperatureMin: 15,
+            optimalTemperatureMax: 30,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 70,
+            optimalPHMin: 4.5,
+            optimalPHMax: 5.5,
+            optimalLightMin: 10000,
+            optimalLightMax: 30000,
+            lightRequirement: 'Cao',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Trung bình',
+            careInstructions:
+              'Đặt cây nơi nắng 4-6 giờ/ngày (tốt nhất nắng sáng). Tưới nước giữ ẩm đất, không để khô hạn nhưng cũng không đọng nước. Bón phân chuyên cho cây ưa chua (phân dành cho việt quất, đỗ quyên) mỗi 2 tháng. Tỉa bớt cành khô, cành yếu để bụi cây thông thoáng.',
+            pestSusceptibility:
+              'Có thể bị rệp, nhện đỏ hoặc bệnh đốm lá trong điều kiện nóng ẩm; quan sát lá, phun dầu neem hoặc thuốc đồng nếu thấy dấu hiệu bệnh. Đảm bảo đất luôn chua để tránh bệnh vàng lá thiếu sắt.',
+          },
+          {
+            stageName: 'Giai đoạn ra hoa',
+            order: 4,
+            duration: 14,
+            description:
+              'Cây ra chùm hoa nhỏ màu trắng hồng hình chuông rủ xuống ở nách lá.',
+            optimalTemperatureMin: 15,
+            optimalTemperatureMax: 25,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 70,
+            optimalPHMin: 4.5,
+            optimalPHMax: 5.5,
+            optimalLightMin: 15000,
+            optimalLightMax: 30000,
+            lightRequirement: 'Cao',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Cao',
+            careInstructions:
+              'Giữ đất ẩm đều cho cây khi ra hoa. Nếu trồng nhiều cây, đặt gần nhau để thụ phấn chéo tốt hơn (nhiều giống việt quất tự thụ kém). Bón thêm phân lân trước khi cây trổ hoa giúp hoa bền và tăng đậu quả.',
+            pestSusceptibility:
+              'Hoa việt quất thường không bị sâu hại đáng kể; chủ yếu cần tránh mưa lớn làm gãy cành hoa mong manh.',
+          },
+          {
+            stageName: 'Giai đoạn kết trái và thu hoạch',
+            order: 5,
+            duration: 60,
+            description:
+              'Quả việt quất đậu thành chùm; lúc đầu xanh nhạt, chín dần chuyển xanh tím rồi tím đậm, căng mọng.',
+            optimalTemperatureMin: 18,
+            optimalTemperatureMax: 30,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 70,
+            optimalPHMin: 4.5,
+            optimalPHMax: 5.5,
+            optimalLightMin: 15000,
+            optimalLightMax: 30000,
+            lightRequirement: 'Cao',
+            waterRequirement: 'Cao',
+            nutrientRequirement: 'Trung bình',
+            careInstructions:
+              'Tăng lượng nước tưới khi cây nuôi quả, không để thiếu nước sẽ rụng trái. Không bón nhiều phân đạm lúc này, chủ yếu giữ ẩm và ánh sáng tốt. Thu hoạch tỉa dần từng quả chín tím (mỗi chùm có thể chín không đồng loạt), tránh để quả chín quá mềm trên cây.',
+            pestSusceptibility:
+              'Chim rất thích ăn việt quất chín; nên phủ lưới lên bụi cây khi quả bắt đầu chuyển màu để bảo vệ. Cũng chú ý bệnh thối quả trong thời tiết ẩm kéo dài, cần thu hoạch kịp thời.',
+          },
+        ],
+      },
+    },
+    {
+      plantTypeId: 2,
+      name: 'Lựu lùn',
+      scientificName: 'Punica granatum',
+      family: 'Lythraceae',
+      description:
+        'Cây lựu lùn trồng chậu, cao 1-1,5 m; hoa đỏ cam rực rỡ; quả tròn nhỏ vỏ đỏ cam, bên trong nhiều hạt mọng nước màu hồng đỏ ngọt thanh. Cây ưa nắng, chịu hạn tốt, vừa làm cảnh phong thủy vừa cho quả ăn.',
+      growthDuration: 365,
+      growthStages: {
+        create: [
+          {
+            stageName: 'Giai đoạn nảy mầm/ra rễ',
+            order: 1,
+            duration: 21,
+            description:
+              'Hạt lựu nảy mầm hoặc cành giâm ra rễ sau khoảng 2-3 tuần.',
+            optimalTemperatureMin: 20,
+            optimalTemperatureMax: 30,
+            optimalHumidityMin: 70,
+            optimalHumidityMax: 90,
+            optimalPHMin: 5.5,
+            optimalPHMax: 7.0,
+            optimalLightMin: 0,
+            optimalLightMax: 5000,
+            lightRequirement: 'Thấp',
+            waterRequirement: 'Cao',
+            nutrientRequirement: 'Thấp',
+            careInstructions:
+              'Gieo hạt trong đất ẩm, thoát nước tốt, đặt nơi ấm áp. Nếu giâm cành, cắm cành trong đất ẩm, che bớt nắng đến khi ra rễ.',
+            pestSusceptibility:
+              'Hạt dễ thối nếu quá ẩm; cành giâm dễ mốc ở vết cắt nếu không dùng thuốc kích rễ và kháng nấm.',
+          },
+          {
+            stageName: 'Giai đoạn cây con',
+            order: 2,
+            duration: 60,
+            description:
+              'Cây con cao 5-10 cm (hoặc cành giâm nảy chồi mới), lá non màu xanh nhạt.',
+            optimalTemperatureMin: 20,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 60,
+            optimalHumidityMax: 80,
+            optimalPHMin: 5.5,
+            optimalPHMax: 7.0,
+            optimalLightMin: 5000,
+            optimalLightMax: 15000,
+            lightRequirement: 'Trung bình',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Thấp',
+            careInstructions:
+              'Chuyển cây con/cành giâm đã ra rễ vào chậu riêng. Đặt nơi nắng nhẹ, tưới giữ ẩm vừa phải, tránh úng. Khi cây cao >10 cm, tập cho nhận nắng nhiều hơn.',
+            pestSusceptibility:
+              'Ốc sên, sâu ăn lá có thể cắn lá non; bảo vệ cây con đặc biệt ban đêm.',
+          },
+          {
+            stageName: 'Giai đoạn sinh trưởng',
+            order: 3,
+            duration: 120,
+            description:
+              'Cây phát triển thành bụi nhỏ, nhiều cành lá, một số cành có gai nhỏ; cao ~50-80 cm tùy điều kiện.',
+            optimalTemperatureMin: 25,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 70,
+            optimalPHMin: 5.5,
+            optimalPHMax: 7.0,
+            optimalLightMin: 15000,
+            optimalLightMax: 50000,
+            lightRequirement: 'Cao',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Trung bình',
+            careInstructions:
+              'Đặt cây nơi nắng >6 giờ/ngày. Tưới nước khi thấy đất mặt khô; lựu chịu hạn tốt nên không cần tưới quá nhiều. Bón phân NPK cân đối mỗi 2 tháng để cây phát triển khỏe, sớm ra hoa. Tỉa bớt cành nhỏ, cành vượt để cây có tán đẹp.',
+            pestSusceptibility:
+              'Có thể bị rệp sáp hoặc bọ phấn trắng trên chồi non; xịt nước xà phòng loãng nếu thấy. Chú ý nấm đốm lá trong mùa mưa, có thể phun phòng bằng dung dịch đồng.',
+          },
+          {
+            stageName: 'Giai đoạn ra hoa',
+            order: 4,
+            duration: 30,
+            description:
+              'Cây ra nhiều nụ và nở hoa đỏ cam rực rỡ, thường tập trung ở đầu cành.',
+            optimalTemperatureMin: 25,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 70,
+            optimalPHMin: 5.5,
+            optimalPHMax: 7.0,
+            optimalLightMin: 20000,
+            optimalLightMax: 50000,
+            lightRequirement: 'Cao',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Cao',
+            careInstructions:
+              'Bón phân lân, kali trước và trong khi cây ra hoa để kích thích nhiều hoa và đậu quả tốt. Tưới nước đều nhưng tránh dư thừa. Tránh di chuyển chậu hoặc đổi hướng cây trong thời gian ra hoa nhiều để hạn chế rụng nụ.',
+            pestSusceptibility:
+              'Hoa lựu có thể bị bọ trĩ chích hút làm thâm nụ; nếu phát hiện, dùng bẫy màu vàng hoặc phun dung dịch tỏi ớt để xua đuổi.',
+          },
+          {
+            stageName: 'Giai đoạn kết trái và thu hoạch',
+            order: 5,
+            duration: 120,
+            description:
+              'Quả lựu phát triển, to khoảng 5-8 cm, vỏ xanh chuyển vàng cam rồi đỏ khi chín; bên trong hạt mọng nước hồng đỏ.',
+            optimalTemperatureMin: 25,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 70,
+            optimalPHMin: 5.5,
+            optimalPHMax: 7.0,
+            optimalLightMin: 20000,
+            optimalLightMax: 50000,
+            lightRequirement: 'Cao',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Trung bình',
+            careInstructions:
+              'Giữ đất hơi khô hơn khi quả sắp chín để tránh nứt quả (nhưng không để cây héo). Nếu cành mang nhiều quả, dùng cọc chống đỡ tránh gãy. Thu hoạch khi vỏ quả đỏ rực và vỗ nghe âm thanh kim loại. Cắt cuống bằng kéo để không làm xước vỏ quả.',
+            pestSusceptibility:
+              'Quả lựu dễ nứt nếu tưới quá thất thường hoặc gặp mưa đột ngột sau hạn. Ruồi đục quả có thể tấn công, nên bao quả từ sớm để có chất lượng tốt.',
+          },
+        ],
+      },
     },
     {
       name: 'Rau mồng tơi',
+      plantTypeId: 3,
       scientificName: 'Basella alba',
       family: 'Basellaceae',
       description: 'Rau leo, lá nhớt, nấu canh hoặc luộc, tính mát.',
@@ -1434,7 +2686,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Trung bình',
             nutrientRequirement: 'Thấp',
             careInstructions: 'Phủ rơm giữ ẩm',
-            pestSusceptibility: 'Sên'
+            pestSusceptibility: 'Sên',
           },
           {
             stageName: 'Cây con',
@@ -1453,7 +2705,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Cao',
             nutrientRequirement: 'Cao',
             careInstructions: 'Cắm giàn leo',
-            pestSusceptibility: 'Sâu ăn lá'
+            pestSusceptibility: 'Sâu ăn lá',
           },
           {
             stageName: 'Sinh trưởng',
@@ -1472,7 +2724,7 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Cao',
             nutrientRequirement: 'Cao',
             careInstructions: 'Thu hoạch ngọn non',
-            pestSusceptibility: 'Sâu ăn lá'
+            pestSusceptibility: 'Sâu ăn lá',
           },
           {
             stageName: 'Thu hoạch',
@@ -1491,15 +2743,896 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
             waterRequirement: 'Cao',
             nutrientRequirement: 'Cao',
             careInstructions: 'Luân phiên cắt từng dây',
-            pestSusceptibility: 'Rệp sáp'
+            pestSusceptibility: 'Rệp sáp',
+          },
+        ],
+      },
+    },
+
+    {
+      plantTypeId: 3,
+      name: 'Húng quế',
+      scientificName: 'Ocimum basilicum',
+      family: 'Hoa môi (Lamiaceae)',
+      description: 'Húng quế là rau thơm phổ biến, thân thảo cao 30-50 cm, lá nhỏ màu xanh, thơm hăng nhẹ mùi hồi. Thường làm gia vị ăn sống (phở, bún) hoặc nấu, dễ trồng bằng hạt hoặc cành.',
+      growthDuration: 120,
+      growthStages: {
+        create: [
+          {
+            stageName: 'Giai đoạn nảy mầm',
+            order: 1,
+            duration: 7,
+            description: 'Hạt húng quế nảy mầm sau khoảng 5-7 ngày gieo.',
+            optimalTemperatureMin: 25,
+            optimalTemperatureMax: 30,
+            optimalHumidityMin: 70,
+            optimalHumidityMax: 85,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 0,
+            optimalLightMax: 1000,
+            lightRequirement: 'Thấp',
+            waterRequirement: 'Cao',
+            nutrientRequirement: 'Thấp',
+            careInstructions: 'Gieo hạt trên đất tơi xốp ẩm, tưới phun sương hàng ngày để giữ ẩm cho đến khi hạt nảy mầm.',
+            pestSusceptibility: 'Hạt nhỏ dễ mốc nếu đất quá úng hoặc bị kiến tha nếu không che chắn.'
+          },
+          {
+            stageName: 'Giai đoạn cây con',
+            order: 2,
+            duration: 21,
+            description: 'Cây con cao 3-5 cm, có 2-4 lá thật màu xanh nhạt.',
+            optimalTemperatureMin: 25,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 60,
+            optimalHumidityMax: 80,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 5000,
+            optimalLightMax: 10000,
+            lightRequirement: 'Trung bình',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Thấp',
+            careInstructions: 'Khi cây có 2-3 cặp lá, tỉa thưa hoặc chuyển sang chậu riêng (cách nhau ~15 cm). Đặt cây nơi nắng sáng nhẹ, tưới vừa đủ ẩm đất.',
+            pestSusceptibility: 'Cây con dễ chết rạp nếu úng nước; ốc sên có thể cắn mầm non vào ban đêm.'
+          },
+          {
+            stageName: 'Giai đoạn sinh trưởng',
+            order: 3,
+            duration: 60,
+            description: 'Cây phát triển nhanh, cao 20-30 cm, nhiều nhánh, lá xanh tốt.',
+            optimalTemperatureMin: 25,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 70,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 10000,
+            optimalLightMax: 30000,
+            lightRequirement: 'Cao',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Trung bình',
+            careInstructions: 'Đặt cây chỗ nắng 6-8 giờ/ngày cho thân chắc, lá thơm. Tưới nước khi đất se khô mặt, bón phân đạm loãng 2 tuần/lần để cây ra nhiều lá. Ngắt đọt thường xuyên để cây phân cành, không cho trổ bông sớm.',
+            pestSusceptibility: 'Rệp xanh, sâu ăn lá có thể hại đọt non; ngắt bỏ phần bị hại và phun chế phẩm sinh học nếu cần.'
+          },
+          {
+            stageName: 'Giai đoạn thu hoạch',
+            order: 4,
+            duration: 30,
+            description: 'Thu hoạch lá khi cây đã phát triển tán lá rộng, trước lúc cây ra hoa.',
+            optimalTemperatureMin: 25,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 70,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 10000,
+            optimalLightMax: 30000,
+            lightRequirement: 'Cao',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Trung bình',
+            careInstructions: 'Dùng kéo cắt ngọn húng quế cách gốc 5-10 cm (chừa lại vài cặp lá gốc để cây tái sinh). Thu hái không quá 1/3 số lá mỗi lần để cây tiếp tục sinh trưởng. Ngắt bỏ chùm hoa nếu xuất hiện để kéo dài thời gian thu hoạch lá.',
+            pestSusceptibility: 'Nếu lá già không kịp thu, cây sẽ ra hoa, lá nhỏ lại và kém thơm. Cây quá rậm có thể bị rệp sáp; tỉa bớt cho thông thoáng.'
+          }
+        ]
+      }
+    },
+    {
+      plantTypeId: 3,
+      name: 'Húng lủi',
+      scientificName: 'Mentha aquatica',
+      family: 'Hoa môi (Lamiaceae)',
+      description: 'Húng lủi (bạc hà) là rau thơm thân bò, lá nhỏ xanh thẫm, mùi thơm the mát. Thường ăn sống kèm gỏi cuốn, bún, làm nước uống. Cây dễ trồng bằng cành, mọc lan nhanh.',
+      growthDuration: null,
+      growthStages: {
+        create: [
+          {
+            stageName: 'Giai đoạn nhân giống',
+            order: 1,
+            duration: 10,
+            description: 'Cành giâm bắt đầu ra rễ (hoặc hạt nảy mầm) sau khoảng 1 tuần.',
+            optimalTemperatureMin: 20,
+            optimalTemperatureMax: 30,
+            optimalHumidityMin: 70,
+            optimalHumidityMax: 90,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 0,
+            optimalLightMax: 2000,
+            lightRequirement: 'Thấp',
+            waterRequirement: 'Cao',
+            nutrientRequirement: 'Thấp',
+            careInstructions: 'Giâm đoạn thân húng lủi vào nước hoặc đất ẩm, giữ nơi râm mát cho đến khi ra rễ trắng. Nếu gieo hạt thì gieo trên đất ẩm bề mặt, hạt nhỏ không phủ đất, giữ ẩm liên tục.',
+            pestSusceptibility: 'Cành giâm có thể thối nếu quá ẩm và thiếu thoáng; điều chỉnh tưới vừa phải.'
+          },
+          {
+            stageName: 'Giai đoạn cây con',
+            order: 2,
+            duration: 20,
+            description: 'Cây con bén rễ, cao 5-7 cm, ra vài lá mới xanh non.',
+            optimalTemperatureMin: 20,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 60,
+            optimalHumidityMax: 80,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 5000,
+            optimalLightMax: 10000,
+            lightRequirement: 'Trung bình',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Thấp',
+            careInstructions: 'Trồng cây con ra chậu, đất tơi xốp nhiều mùn. Đặt nơi có nắng sáng nhẹ, râm mát chiều. Tưới nước đủ ẩm, không để đất khô, nhưng cũng tránh úng lâu.',
+            pestSusceptibility: 'Ốc sên hoặc sâu có thể cắn lá ban đêm; kiểm tra và bắt bỏ kịp thời.'
+          },
+          {
+            stageName: 'Giai đoạn sinh trưởng',
+            order: 3,
+            duration: 60,
+            description: 'Cây mọc lan mạnh, nhiều thân bò và nhánh mới, lá mọc dày, xanh tốt.',
+            optimalTemperatureMin: 20,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 60,
+            optimalHumidityMax: 80,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 5000,
+            optimalLightMax: 20000,
+            lightRequirement: 'Trung bình',
+            waterRequirement: 'Cao',
+            nutrientRequirement: 'Trung bình',
+            careInstructions: 'Đặt chậu nơi có ánh sáng vừa phải (nắng sáng, chiều râm). Tưới nước hàng ngày giữ đất luôn ẩm. Bón phân hữu cơ hoai hoặc phân đạm loãng mỗi tháng 1 lần. Cắt tỉa ngọn dài để cây đâm chồi mới và không lan quá rộng ra ngoài chậu.',
+            pestSusceptibility: 'Húng lủi ít sâu bệnh; đôi khi rệp trắng, nhện đỏ xuất hiện ở đám lá dày, có thể phun nước xà phòng loãng để trị.'
+          },
+          {
+            stageName: 'Giai đoạn thu hoạch',
+            order: 4,
+            duration: 30,
+            description: 'Thu hoạch lá/ngọn húng lủi liên tục khi bụi cây đã phủ kín chậu.',
+            optimalTemperatureMin: 20,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 60,
+            optimalHumidityMax: 80,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 5000,
+            optimalLightMax: 20000,
+            lightRequirement: 'Trung bình',
+            waterRequirement: 'Cao',
+            nutrientRequirement: 'Trung bình',
+            careInstructions: 'Ngắt từng ngọn thân mang lá để sử dụng, chừa lại vài đốt lá gốc trên mỗi thân để cây mọc tiếp. Thu hoạch đều đặn giúp cây luôn ra nhánh và lá non mới. Thay đất hoặc bón phân bổ sung sau vài đợt thu để cây không cằn.',
+            pestSusceptibility: 'Nếu đất khô, cây còi cọc và có thể bị nhện đỏ hại lá; giữ ẩm ổn định giúp cây khỏe và ít sâu bệnh.'
+          }
+        ]
+      }
+    },
+    {
+      plantTypeId: 3,
+      name: 'Tía tô',
+      scientificName: 'Perilla frutescens',
+      family: 'Hoa môi (Lamiaceae)',
+      description: 'Tía tô là cây rau gia vị, thân thảo cao 50-100 cm. Lá hình tim mép răng cưa, mặt trên xanh tím, mặt dưới tím tía, mùi thơm đặc trưng. Lá tía tô ăn sống với gỏi cuốn, làm gia vị và thuốc (giải cảm), dễ trồng bằng hạt.',
+      growthDuration: 120,
+      growthStages: {
+        create: [
+          {
+            stageName: 'Giai đoạn nảy mầm',
+            order: 1,
+            duration: 7,
+            description: 'Hạt tía tô nảy mầm sau khoảng 5-7 ngày gieo.',
+            optimalTemperatureMin: 20,
+            optimalTemperatureMax: 30,
+            optimalHumidityMin: 70,
+            optimalHumidityMax: 85,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 0,
+            optimalLightMax: 1000,
+            lightRequirement: 'Thấp',
+            waterRequirement: 'Cao',
+            nutrientRequirement: 'Thấp',
+            careInstructions: 'Ngâm hạt trong nước ấm vài giờ trước khi gieo để vỏ mềm, dễ nảy mầm. Gieo hạt nông trên đất ẩm, tưới phun sương mỗi ngày giữ ẩm đất.',
+            pestSusceptibility: 'Hạt dễ mốc nếu quá ẩm; gieo thưa để tránh nấm lây lan giữa các mầm.'
+          },
+          {
+            stageName: 'Giai đoạn cây con',
+            order: 2,
+            duration: 21,
+            description: 'Cây con cao 5-10 cm, 2-3 cặp lá thật xanh tím xuất hiện.',
+            optimalTemperatureMin: 20,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 60,
+            optimalHumidityMax: 80,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 5000,
+            optimalLightMax: 10000,
+            lightRequirement: 'Trung bình',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Thấp',
+            careInstructions: 'Khi cây cao ~5 cm và có vài lá, tỉa cây con đảm bảo khoảng cách ~15-20 cm hoặc chuyển cây sang chậu khác. Để cây nơi nắng sáng nhẹ, đất giữ ẩm nhưng thoát nước. Bảo vệ cây con khỏi sâu đất cắn gốc ban đêm.',
+            pestSusceptibility: 'Cây con có thể bị sâu ăn lá nhỏ hoặc dế cắn gốc; nên che chắn gốc vào ban đêm.'
+          },
+          {
+            stageName: 'Giai đoạn sinh trưởng',
+            order: 3,
+            duration: 60,
+            description: 'Cây trưởng thành cao 40-60 cm, tán lá sum suê xanh tím.',
+            optimalTemperatureMin: 20,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 70,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 10000,
+            optimalLightMax: 25000,
+            lightRequirement: 'Trung bình',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Trung bình',
+            careInstructions: 'Đặt cây nơi nắng sáng hoặc nửa ngày nắng. Tưới nước đều, tránh để đất khô khiến lá héo. Bón phân hữu cơ hoặc phân đạm 3 tuần/lần cho cây ra nhiều lá to. Ngắt ngọn khi cây cao ~30 cm để kích thích ra nhánh bên, thu được nhiều lá hơn.',
+            pestSusceptibility: 'Tía tô khá ít sâu bệnh; thỉnh thoảng sâu xanh có thể ăn lá non, bắt sâu kịp thời. Lá dày và có tinh dầu nên sâu bệnh không đáng kể.'
+          },
+          {
+            stageName: 'Giai đoạn thu hoạch',
+            order: 4,
+            duration: 30,
+            description: 'Thu hoạch lá tía tô khi cây tán rộng, chưa ra hoa hoặc mới ra nụ.',
+            optimalTemperatureMin: 20,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 70,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            lightRequirement: 'Trung bình',
+            optimalLightMin: 10000,
+            optimalLightMax: 25000,
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Trung bình',
+            careInstructions: 'Hái lá già phía dưới trước hoặc cắt cả cành ngọn để dùng. Mỗi lần thu hoạch chừa lại ít nhất 1/3 số lá để cây tiếp tục phát triển. Nếu thấy cây ra hoa, nên ngắt bỏ ngay để tập trung nuôi lá. Gieo hạt bổ sung sau 4-5 tháng để có lứa cây mới vì tía tô là cây một năm.',
+            pestSusceptibility: 'Cuối vụ, cây tía tô già có thể bị rệp muội trên ngọn hoa; nên nhổ bỏ cây già khi bắt đầu tàn để tránh sâu bệnh lây lan.'
+          }
+        ]
+      }
+    },
+    {
+      plantTypeId: 3,
+      name: 'Ngò rí (rau mùi)',
+      scientificName: 'Coriandrum sativum',
+      family: 'Hoa tán (Apiaceae)',
+      description: 'Ngò rí (rau mùi) là cây rau thơm thân thảo nhỏ, cao 20-50 cm. Lá nhỏ, xanh lục, xẻ thùy, mùi thơm dễ chịu. Rau mùi thường dùng trang trí và tăng hương thơm cho món ăn (canh, phở), dễ trồng, mau thu hoạch.',
+      growthDuration: 60,
+      growthStages: {
+        create: [
+          {
+            stageName: 'Giai đoạn nảy mầm',
+            order: 1,
+            duration: 7,
+            description: 'Hạt ngò (quả khô) nứt vỏ và nảy mầm sau khoảng 5-7 ngày.',
+            optimalTemperatureMin: 18,
+            optimalTemperatureMax: 30,
+            optimalHumidityMin: 70,
+            optimalHumidityMax: 85,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 0,
+            optimalLightMax: 2000,
+            lightRequirement: 'Thấp',
+            waterRequirement: 'Cao',
+            nutrientRequirement: 'Thấp',
+            careInstructions: 'Trước khi gieo, vò nhẹ cho vỡ đôi vỏ hạt để tăng tỷ lệ nảy mầm. Gieo rải đều, phủ đất mỏng, tưới phun sương giữ ẩm. Đặt khay gieo nơi mát cho đến khi mầm nhú lên.',
+            pestSusceptibility: 'Hạt có thể bị nấm nếu quá ẩm và chật chội; gieo thưa để tránh lở cổ rễ.'
+          },
+          {
+            stageName: 'Giai đoạn cây con',
+            order: 2,
+            duration: 14,
+            description: 'Cây con cao 3-5 cm, mọc thành bụi dày, lá mầm và lá thật đầu tiên xuất hiện.',
+            optimalTemperatureMin: 18,
+            optimalTemperatureMax: 30,
+            optimalHumidityMin: 60,
+            optimalHumidityMax: 80,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 5000,
+            optimalLightMax: 10000,
+            lightRequirement: 'Trung bình',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Thấp',
+            careInstructions: 'Khi cây con có lá thật, tỉa thưa những chỗ mọc quá dày (đảm bảo mỗi cây cách nhau ~5 cm). Cho cây nhận nắng nhẹ buổi sáng, tưới nước vừa phải giữ ẩm, tránh tưới đẫm gây đổ cây con.',
+            pestSusceptibility: 'Nếu cây quá dày và ẩm, dễ bị nấm thối gốc; tỉa thưa và đảm bảo thoáng khí để phòng bệnh.'
+          },
+          {
+            stageName: 'Giai đoạn sinh trưởng',
+            order: 3,
+            duration: 30,
+            description: 'Cây sinh trưởng nhanh, cao 15-30 cm, lá xanh tươi tốt, thân bắt đầu cứng cáp.',
+            optimalTemperatureMin: 18,
+            optimalTemperatureMax: 30,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 70,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 10000,
+            optimalLightMax: 20000,
+            lightRequirement: 'Trung bình',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Trung bình',
+            careInstructions: 'Để cây nơi nắng sáng 4-6 giờ/ngày, tránh nắng gắt trưa nóng (có thể che lưới nếu cần) để cây không sớm trổ ngồng. Tưới nước mỗi ngày giữ ẩm đất. Bón bổ sung phân đạm hoặc phân hữu cơ loãng 1-2 lần trong giai đoạn này để cây cho nhiều lá. Nhổ cỏ dại xung quanh bụi rau.',
+            pestSusceptibility: 'Rau mùi ít sâu; đôi khi rệp xanh có thể bám ở ngọn, rửa đi dễ dàng. Tránh để cây khô héo dễ làm cây ra hoa sớm.'
+          },
+          {
+            stageName: 'Giai đoạn thu hoạch',
+            order: 4,
+            duration: 9,
+            description: 'Thu hoạch rau mùi sau 40-50 ngày, khi cây chưa ra hoa, lá xanh thơm nhất.',
+            optimalTemperatureMin: 15,
+            optimalTemperatureMax: 25,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 70,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 10000,
+            optimalLightMax: 20000,
+            lightRequirement: 'Trung bình',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Thấp',
+            careInstructions: 'Nhổ cả cây hoặc cắt sát gốc để thu hoạch. Nếu tỉa ăn dần, thu cây to trước, để cây nhỏ lại lớn thêm. Thu hoạch vào sáng sớm rau sẽ tươi ngon hơn. Nếu muốn lấy hạt, để một số cây trổ hoa kết hạt rồi thu hạt phơi khô làm giống hoặc gia vị.',
+            pestSusceptibility: 'Nếu để quá lâu không thu, cây ra hoa, lá nhỏ và ít mùi hơn. Khi trổ hoa dễ bị rệp muội; nên thu hoạch trước giai đoạn đó để đảm bảo chất lượng rau.'
+          }
+        ]
+      }
+    },
+    {
+      plantTypeId: 3,
+      name: 'Húng chanh (Tần dày lá)',
+      scientificName: 'Plectranthus amboinicus',
+      family: 'Hoa môi (Lamiaceae)',
+      description: 'Húng chanh (tần dày lá) là cây thân thảo, lá mọng dày, mép răng cưa nhẹ, mùi thơm như chanh. Lá dùng làm thuốc ho, cảm, hoặc ăn như rau gia vị. Cây ưa bóng râm một phần, dễ trồng bằng cành.',
+      growthDuration: null,
+      growthStages: {
+        create: [
+          {
+            stageName: 'Giai đoạn nhân giống',
+            order: 1,
+            duration: 10,
+            description: 'Cành giâm húng chanh ra rễ sau khoảng 1-2 tuần (gieo hạt ít dùng vì nảy mầm kém).',
+            optimalTemperatureMin: 20,
+            optimalTemperatureMax: 30,
+            optimalHumidityMin: 70,
+            optimalHumidityMax: 90,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 0,
+            optimalLightMax: 1000,
+            lightRequirement: 'Thấp',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Thấp',
+            careInstructions: 'Giâm cành trong đất ẩm hoặc nước, để nơi râm mát giữ ẩm. Khi cành ra rễ trắng (sau 1-2 tuần) thì đem trồng vào chậu.',
+            pestSusceptibility: 'Cành giâm có thể bị thối nếu đất quá úng; không tưới đẫm, chỉ phun sương giữ ẩm.'
+          },
+          {
+            stageName: 'Giai đoạn cây con',
+            order: 2,
+            duration: 20,
+            description: 'Cây con cao 5-7 cm, bén rễ, ra lá mới màu xanh nhạt, dày và mọng.',
+            optimalTemperatureMin: 20,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 60,
+            optimalHumidityMax: 80,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 5000,
+            optimalLightMax: 10000,
+            lightRequirement: 'Trung bình',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Thấp',
+            careInstructions: 'Trồng cây con vào chậu đất tơi xốp, nhiều mùn. Để nơi có nắng sáng nhẹ hoặc bóng râm 50%. Tưới nước vừa phải, không để đất khô quá hoặc úng lâu.',
+            pestSusceptibility: 'Ít sâu bệnh; ốc sên có thể ăn lá non mềm, cần bắt bỏ ban đêm.'
+          },
+          {
+            stageName: 'Giai đoạn sinh trưởng',
+            order: 3,
+            duration: 60,
+            description: 'Cây phát triển thành bụi nhỏ cao ~30 cm, nhiều nhánh, lá dày xanh tốt, mùi thơm rõ.',
+            optimalTemperatureMin: 20,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 70,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 10000,
+            optimalLightMax: 20000,
+            lightRequirement: 'Trung bình',
+            waterRequirement: 'Thấp',
+            nutrientRequirement: 'Thấp',
+            careInstructions: 'Đặt cây nơi sáng vừa (nắng sáng, râm chiều). Tưới nước khi mặt đất se khô, húng chanh chịu hạn tốt nên tránh tưới quá nhiều. Bón ít phân hữu cơ 2-3 tháng/lần, cây sẽ xanh tốt. Bấm ngọn nhẹ để kích thích ra nhiều nhánh bên.',
+            pestSusceptibility: 'Hầu như không sâu bệnh do lá có tinh dầu. Tránh để chậu úng nước lâu có thể làm thối rễ.'
+          },
+          {
+            stageName: 'Giai đoạn thu hoạch',
+            order: 4,
+            duration: 30,
+            description: 'Thu hoạch lá húng chanh theo nhu cầu, cây sẽ liên tục đâm chồi và lá mới.',
+            optimalTemperatureMin: 20,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 70,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 10000,
+            optimalLightMax: 20000,
+            lightRequirement: 'Trung bình',
+            waterRequirement: 'Thấp',
+            nutrientRequirement: 'Thấp',
+            careInstructions: 'Ngắt lá già ở gốc dùng làm thuốc hoặc rau gia vị. Mỗi lần thu hoạch không nên hái quá 1/3 số lá để cây tiếp tục quang hợp. Sau khi hái lá, tưới nước và bón thêm chút phân để cây phục hồi nhanh. Nếu cây mọc quá cao, cắt tỉa để cây đẻ nhánh nhiều và gọn đẹp.',
+            pestSusceptibility: 'Ít sâu bệnh; chỉ cần tránh để lá dập nát dễ bị nấm. Thu hoạch thường xuyên giúp cây khỏe mạnh, ít bị sâu hại.'
+          }
+        ]
+      }
+    },
+    {
+      plantTypeId: 3,
+      name: 'Diếp cá',
+      scientificName: 'Houttuynia cordata',
+      family: 'Lizardtail (Saururaceae)',
+      description: 'Diếp cá (giấp cá) là cây thân bò, ưa ẩm ướt. Lá hình tim xanh sẫm, mặt dưới tía nhẹ, mùi tanh như cá. Thường mọc hoang nơi ẩm, lá dùng ăn sống như rau và làm thuốc thanh nhiệt, lợi tiểu.',
+      growthDuration: null,
+      growthStages: {
+        create: [
+          {
+            stageName: 'Giai đoạn tách bụi',
+            order: 1,
+            duration: 7,
+            description: 'Đoạn thân rễ diếp cá bắt đầu ra rễ mới và chồi non sau khoảng 1 tuần trồng.',
+            optimalTemperatureMin: 20,
+            optimalTemperatureMax: 30,
+            optimalHumidityMin: 80,
+            optimalHumidityMax: 100,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 0,
+            optimalLightMax: 1000,
+            lightRequirement: 'Thấp',
+            waterRequirement: 'Cao',
+            nutrientRequirement: 'Thấp',
+            careInstructions: 'Trồng thân/rễ diếp cá vào đất bùn ướt hoặc chậu ngập nước cạn. Đảm bảo môi trường rất ẩm (có thể để chậu trong khay nước). Giữ nơi râm mát hoàn toàn.',
+            pestSusceptibility: 'Ít có sâu hại ở giai đoạn này; quan trọng là giữ ẩm cao để kích thích nảy chồi.'
+          },
+          {
+            stageName: 'Giai đoạn cây con',
+            order: 2,
+            duration: 14,
+            description: 'Chồi non mọc lên, lá diếp cá nhỏ màu xanh nhạt bắt đầu xuất hiện trên mặt đất.',
+            optimalTemperatureMin: 20,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 70,
+            optimalHumidityMax: 90,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 1000,
+            optimalLightMax: 5000,
+            lightRequirement: 'Thấp',
+            waterRequirement: 'Cao',
+            nutrientRequirement: 'Thấp',
+            careInstructions: 'Luôn giữ đất ướt đẫm; tốt nhất đặt chậu trong khay luôn có nước. Để cây nơi râm (dưới bóng mát các cây khác hoặc góc vườn ẩm). Nhổ cỏ nếu mọc chung.',
+            pestSusceptibility: 'Nếu khay nước tù đọng có thể sinh muỗi; thay nước thường xuyên. Lá non có thể cháy nếu tiếp xúc nắng gắt.'
+          },
+          {
+            stageName: 'Giai đoạn sinh trưởng',
+            order: 3,
+            duration: 60,
+            description: 'Cây lan rộng, bò kín mặt chậu, nhiều lá hình tim xanh đậm mọc trải trên mặt đất.',
+            optimalTemperatureMin: 20,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 70,
+            optimalHumidityMax: 90,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 1000,
+            optimalLightMax: 10000,
+            lightRequirement: 'Thấp',
+            waterRequirement: 'Cao',
+            nutrientRequirement: 'Thấp',
+            careInstructions: 'Đảm bảo đất luôn ngập nước hoặc rất sũng ẩm. Không cần bón phân nhiều, diếp cá vẫn mọc khỏe; có thể bổ sung chút phân hữu cơ 3-4 tháng/lần. Nếu cây lan quá dày, tách bớt bụi hoặc tỉa bớt lá để các lá phía dưới không bị úng thối do thiếu sáng và quá ẩm.',
+            pestSusceptibility: 'Hầu như không sâu bệnh; môi trường quá ẩm có thể thu hút ốc sên, nhưng lá diếp cá ít bị chúng ăn vì mùi tanh.'
+          },
+          {
+            stageName: 'Giai đoạn thu hoạch',
+            order: 4,
+            duration: 30,
+            description: 'Thu hoạch lá diếp cá liên tục, cây sẽ tiếp tục mọc lan và ra lá mới.',
+            optimalTemperatureMin: 20,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 70,
+            optimalHumidityMax: 90,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 1000,
+            optimalLightMax: 10000,
+            lightRequirement: 'Thấp',
+            waterRequirement: 'Cao',
+            nutrientRequirement: 'Thấp',
+            careInstructions: 'Ngắt những lá to, già để ăn tươi hoặc làm thuốc, để lại lá non và chồi cho cây mọc tiếp. Diếp cá mọc rất nhanh nên có thể thu hái mỗi tuần. Sau mỗi đợt thu hoạch, tưới bổ sung nhiều nước và có thể bón một ít phân hữu cơ loãng để cây phục hồi nhanh. Nếu chậu quá đầy, tách bớt bụi sang chậu khác.',
+            pestSusceptibility: 'Không có sâu bệnh đáng kể. Duy trì vệ sinh chậu (loại bỏ lá úa thối) để tránh môi trường thu hút ruồi muỗi.'
+          }
+        ]
+      }
+    },
+    {
+      plantTypeId: 3,
+      name: 'Xà lách',
+      scientificName: 'Lactuca sativa',
+      family: 'Cúc (Asteraceae)',
+      description: 'Xà lách (rau diếp) là rau ăn lá thông dụng, lá non mềm màu xanh hoặc tím (tùy giống), vị nhạt. Thường dùng ăn sống (salad) hoặc ăn kèm bánh mì, gỏi cuốn. Cây thân thảo ngắn ngày (~30-45 ngày), ưa khí hậu mát.',
+      growthDuration: 45,
+      growthStages: {
+        create: [
+          {
+            stageName: 'Giai đoạn nảy mầm',
+            order: 1,
+            duration: 4,
+            description: 'Hạt xà lách nảy mầm rất nhanh, chỉ 2-4 ngày sau gieo đã mọc mầm với hai lá mầm nhỏ.',
+            optimalTemperatureMin: 18,
+            optimalTemperatureMax: 25,
+            optimalHumidityMin: 70,
+            optimalHumidityMax: 85,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 0,
+            optimalLightMax: 1000,
+            lightRequirement: 'Thấp',
+            waterRequirement: 'Cao',
+            nutrientRequirement: 'Thấp',
+            careInstructions: 'Gieo hạt nông trên đất tơi xốp, tưới phun sương nhẹ nhàng mỗi ngày để giữ ẩm. Không cần che tối hoàn toàn vì hạt xà lách có thể nảy mầm dưới ánh sáng nhẹ.',
+            pestSusceptibility: 'Tránh để hạt hoặc mầm non bị khô hạn; kiến hoặc chim có thể ăn hạt, nên che chắn nếu cần.'
+          },
+          {
+            stageName: 'Giai đoạn cây con',
+            order: 2,
+            duration: 10,
+            description: 'Cây con 2-3 lá thật, cao 3-5 cm, thân nhỏ mảnh.',
+            optimalTemperatureMin: 18,
+            optimalTemperatureMax: 30,
+            optimalHumidityMin: 60,
+            optimalHumidityMax: 80,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 5000,
+            optimalLightMax: 10000,
+            lightRequirement: 'Trung bình',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Thấp',
+            careInstructions: 'Khi cây con có lá thật, tỉa thưa để các cây cách nhau ~10 cm hoặc chuyển bầu trồng sang chậu/thùng khác. Tưới giữ ẩm, tránh tưới quá mạnh làm đổ cây. Nếu trời nắng gắt, che lưới nhẹ cho cây con.',
+            pestSusceptibility: 'Cây con dễ bị thối gốc nếu quá úng; ốc sên có thể hại cây vào ban đêm. Đảm bảo thoát nước tốt và bảo vệ cây con khỏi ốc.'
+          },
+          {
+            stageName: 'Giai đoạn sinh trưởng',
+            order: 3,
+            duration: 25,
+            description: 'Cây phát triển nhanh, lá xòe rộng hoặc cuộn thành búp (tùy giống), màu xanh tươi.',
+            optimalTemperatureMin: 15,
+            optimalTemperatureMax: 28,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 70,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 10000,
+            optimalLightMax: 20000,
+            lightRequirement: 'Trung bình',
+            waterRequirement: 'Cao',
+            nutrientRequirement: 'Trung bình',
+            careInstructions: 'Cho cây nhận nắng sáng 4-6 giờ/ngày, nhiệt độ quá nóng cần che bớt để lá không bị đắng và cây không trổ bolting sớm. Tưới nước mỗi ngày hoặc hai lần nếu thời tiết khô nóng, đất luôn ẩm. Bón phân đạm hoặc phân hữu cơ loãng hàng tuần để lá phát triển mềm tốt. Nhổ cỏ dại xung quanh gốc.',
+            pestSusceptibility: 'Hay bị rệp xanh hay tụ dưới lá và sâu ăn lá đục lỗ lá. Kiểm tra lá, rửa bằng nước hoặc bắt sâu bằng tay. Ốc sên cũng ưa xà lách, đặt bẫy bia hoặc nhặt ốc buổi tối để bảo vệ cây.'
+          },
+          {
+            stageName: 'Giai đoạn thu hoạch',
+            order: 4,
+            duration: 6,
+            description: 'Thu hoạch xà lách khi lá đã lớn đủ hoặc búp cuộn chắc (tùy loại), trước khi cây trổ ngồng.',
+            optimalTemperatureMin: 15,
+            optimalTemperatureMax: 25,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 70,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 10000,
+            optimalLightMax: 20000,
+            lightRequirement: 'Trung bình',
+            waterRequirement: 'Cao',
+            nutrientRequirement: 'Thấp',
+            careInstructions: 'Dùng dao cắt sát gốc để lấy cả cây (với xà lách cuộn) hoặc hái tỉa lá ngoài trước (với xà lách lá). Nên thu hoạch vào sáng sớm khi rau còn tươi mát. Nếu cắt cả cây, có thể để gốc lại để cây mọc chồi nhỏ dùng làm rau mầm, dù lá tái sinh sẽ nhỏ. Tránh để cây ra hoa làm lá đắng.',
+            pestSusceptibility: 'Nếu thu không kịp, lá già úa có thể thu hút sâu bệnh. Loại bỏ lá già, sâu trước khi ăn. Rau non ít bị sâu hơn rau già.'
+          }
+        ]
+      }
+    },
+    {
+      plantTypeId: 3,
+      name: 'Cải xanh',
+      scientificName: 'Brassica juncea',
+      family: 'Cải (Brassicaceae)',
+      description: 'Cải xanh (cải bẹ xanh) là rau ăn lá phổ biến, lá to màu xanh, vị hơi cay nhẹ. Thường dùng nấu canh, xào hoặc muối dưa. Cây thân thảo, sinh trưởng nhanh (~50 ngày), ưa khí hậu mát, trồng được quanh năm (mùa nóng thu hoạch sớm).',
+      growthDuration: 50,
+      growthStages: {
+        create: [
+          {
+            stageName: 'Giai đoạn nảy mầm',
+            order: 1,
+            duration: 3,
+            description: 'Hạt cải xanh nảy mầm sau 2-3 ngày, mầm trắng đội đất mang hai lá mầm tròn.',
+            optimalTemperatureMin: 20,
+            optimalTemperatureMax: 30,
+            optimalHumidityMin: 70,
+            optimalHumidityMax: 85,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 0,
+            optimalLightMax: 1000,
+            lightRequirement: 'Thấp',
+            waterRequirement: 'Cao',
+            nutrientRequirement: 'Thấp',
+            careInstructions: 'Gieo hạt cải xanh dày trên mặt đất ẩm, phủ lớp đất mỏng. Tưới phun sương 2 lần/ngày để đất luôn ẩm. Mầm thường mọc rất nhanh và dày.',
+            pestSusceptibility: 'Tránh để khay gieo dưới nắng gắt làm khô mầm. Hạt nảy mầm nhanh nên ít bị nấm hơn các loại khác.'
+          },
+          {
+            stageName: 'Giai đoạn cây con',
+            order: 2,
+            duration: 7,
+            description: 'Cây con mọc dày, cao 3-5 cm, lá mầm xanh mở ra, lá thật nhỏ xuất hiện.',
+            optimalTemperatureMin: 18,
+            optimalTemperatureMax: 30,
+            optimalHumidityMin: 60,
+            optimalHumidityMax: 80,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 5000,
+            optimalLightMax: 10000,
+            lightRequirement: 'Trung bình',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Thấp',
+            careInstructions: 'Khi cây con có lá thật, tỉa bớt cho khoảng cách mỗi cây ~5-10 cm (có thể nhổ ăn như rau mầm). Giữ ẩm đất nhưng không để úng tạo điều kiện nấm. Nếu trời mưa to, che chắn tránh cây con bị dập.',
+            pestSusceptibility: 'Mật độ quá dày dễ bị bệnh lở cổ rễ; cần tỉa thưa kịp thời. Sâu ăn lá nhỏ đôi khi xuất hiện, nên bắt sớm.'
+          },
+          {
+            stageName: 'Giai đoạn sinh trưởng',
+            order: 3,
+            duration: 35,
+            description: 'Cây lớn nhanh, cao 20-30 cm, thân mập, lá to xanh nhạt, phiến lá mỏng mọng nước.',
+            optimalTemperatureMin: 18,
+            optimalTemperatureMax: 32,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 70,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 10000,
+            optimalLightMax: 30000,
+            lightRequirement: 'Cao',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Cao',
+            careInstructions: 'Trồng cải xanh ở nơi có nắng cả ngày để cây khỏe, ít sâu bệnh. Tưới nước 1-2 lần/ngày tùy thời tiết, luôn giữ đất ẩm nhưng thoát nước. Bón phân đạm hoặc phân hữu cơ giữa vụ (sau khi tỉa thưa) để cây phát triển nhanh, lá xanh tốt. Tiếp tục tỉa ăn những cây chen chúc để lại những cây khỏe có không gian.',
+            pestSusceptibility: 'Sâu tơ, sâu xanh, rệp muội thường hại cải. Kiểm tra lá (đặc biệt mặt dưới) thường xuyên, bắt sâu bằng tay hoặc dùng thuốc BT sinh học. Giữ luống thông thoáng giảm sâu bệnh.'
+          },
+          {
+            stageName: 'Giai đoạn thu hoạch',
+            order: 4,
+            duration: 5,
+            description: 'Thu hoạch cải xanh khi lá to, thân mập nhưng cây chưa trổ ngồng, thường sau 40-50 ngày.',
+            optimalTemperatureMin: 15,
+            optimalTemperatureMax: 25,
+            optimalHumidityMin: 50,
+            optimalHumidityMax: 80,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 10000,
+            optimalLightMax: 30000,
+            lightRequirement: 'Cao',
+            waterRequirement: 'Cao',
+            nutrientRequirement: 'Cao',
+            careInstructions: 'Nhổ cả cây hoặc cắt sát gốc. Thu vào sáng sớm rau sẽ giòn và tươi lâu hơn. Nếu trồng nhiều, có thể thu hoạch tỉa dần: nhổ những cây to trước, cây nhỏ để lại thêm vài ngày. Sau thu hoạch, dọn lá già, sâu bỏ đi để tránh thu hút sâu bệnh, có thể gieo gối lứa mới.',
+            pestSusceptibility: 'Cần thu hoạch trước khi cây ra hoa (trổ ngồng) vì lúc đó lá sẽ cứng và cay đắng hơn, sâu bệnh cũng dễ tấn công hơn cây non.'
+          }
+        ]
+      }
+    },
+    {
+      plantTypeId: 3,
+      name: 'Mồng tơi',
+      scientificName: 'Basella alba',
+      family: 'Mồng tơi (Basellaceae)',
+      description: 'Mồng tơi là dây leo ăn lá, thân mềm, lá dày có chất nhớt, thường nấu canh. Cây ưa nóng ẩm, leo giàn nhanh, có thể trồng làm giàn che mát. Thích hợp trồng vụ hè, thu hoạch liên tục.',
+      growthDuration: 80,
+      growthStages: {
+        create: [
+          {
+            stageName: 'Giai đoạn nảy mầm',
+            order: 1,
+            duration: 5,
+            description: 'Hạt mồng tơi nảy mầm sau 3-5 ngày, mầm mập trắng đội đất mang hai lá mầm tròn.',
+            optimalTemperatureMin: 25,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 70,
+            optimalHumidityMax: 90,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 0,
+            optimalLightMax: 1000,
+            lightRequirement: 'Thấp',
+            waterRequirement: 'Cao',
+            nutrientRequirement: 'Thấp',
+            careInstructions: 'Ngâm hạt trong nước ấm vài giờ trước khi gieo để vỏ mềm. Gieo hạt sâu ~1 cm trong đất ẩm, tưới phun giữ ẩm. Mầm xuất hiện sau vài ngày.',
+            pestSusceptibility: 'Hạt có vỏ dày, cần ẩm liên tục; nếu khô hạt sẽ không nảy. Kiến có thể tha hạt, nên trộn hạt với cát ẩm để gieo.'
+          },
+          {
+            stageName: 'Giai đoạn cây con',
+            order: 2,
+            duration: 15,
+            description: 'Cây con cao 5-7 cm, lá mầm tròn xanh, lá thật đầu tiên mọc ra, thân bắt đầu vươn dài.',
+            optimalTemperatureMin: 25,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 60,
+            optimalHumidityMax: 85,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 5000,
+            optimalLightMax: 10000,
+            lightRequirement: 'Trung bình',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Thấp',
+            careInstructions: 'Khi cây con 5-7 cm, trồng sang chỗ cố định có giàn hoặc cọc cho leo. Tránh nắng gắt ngay sau trồng, tưới nước mỗi ngày giữ ẩm. Nếu mọc quá dày, tỉa bớt cây con, trồng dời ra 1 chỗ khác.',
+            pestSusceptibility: 'Ốc sên hoặc sâu nhỏ có thể cắn lá mầm; dùng tro hoặc vỏ trứng rắc quanh gốc để xua đuổi ốc.'
+          },
+          {
+            stageName: 'Giai đoạn sinh trưởng',
+            order: 3,
+            duration: 60,
+            description: 'Dây mồng tơi leo mạnh, thân bò dài hàng mét, lá xanh dày, giàn lá phủ xanh tốt.',
+            optimalTemperatureMin: 25,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 60,
+            optimalHumidityMax: 90,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 15000,
+            optimalLightMax: 50000,
+            lightRequirement: 'Cao',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Trung bình',
+            careInstructions: 'Làm giàn hoặc dây cho mồng tơi leo. Tưới nước ngày 1-2 lần tùy trời nắng để đất luôn ẩm. Bón phân hữu cơ hoặc phân đạm loãng mỗi 2 tuần để cây ra nhiều lá non. Tỉa lá vàng gốc để cây thông thoáng, giảm sâu bệnh.',
+            pestSusceptibility: 'Ít sâu bệnh; có thể có sâu xanh, sâu róm ăn lá trên giàn, nên bắt bỏ. Giàn quá rậm có thể thu hút rệp muội, tỉa bớt dây cho thông thoáng.'
+          },
+          {
+            stageName: 'Giai đoạn thu hoạch',
+            order: 4,
+            duration: 30,
+            description: 'Thu hoạch ngọn và lá mồng tơi khi giàn dây leo đã phủ kín, lá nhiều và xanh mướt.',
+            optimalTemperatureMin: 25,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 60,
+            optimalHumidityMax: 90,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 15000,
+            optimalLightMax: 50000,
+            lightRequirement: 'Cao',
+            waterRequirement: 'Trung bình',
+            nutrientRequirement: 'Trung bình',
+            careInstructions: 'Dùng kéo cắt ngọn mồng tơi dài 20-30 cm (có khoảng 6-8 lá) để nấu canh. Nên thu hoạch trước khi dây ra hoa kết hạt để rau non và ít nhớt. Sau mỗi lần cắt, bón bổ sung phân đạm và tưới nước đủ để cây nhanh ra chồi mới, có thể thu hoạch đợt tiếp theo sau 2-3 tuần. Một vụ mồng tơi có thể thu nhiều lần cho đến khi trời lạnh cây tàn.',
+            pestSusceptibility: 'Thu hái thường xuyên giúp cây khỏe mạnh, ít sâu bệnh. Nếu để dây già ra hoa, lá nhỏ đi và cây có thể bị bệnh nấm trắng; nên trồng gối đợt mới khi thấy dây cũ kém năng suất.'
+          }
+        ]
+      }
+    },
+    {
+      plantTypeId: 3,
+      name: 'Rau muống',
+      scientificName: 'Ipomoea aquatica',
+      family: 'Bìm bìm (Convolvulaceae)',
+      description: 'Rau muống là rau ăn lá phổ biến, thân rỗng, bò hoặc mọc nổi trên nước. Lá xanh hình mác, vị ngon mát. Cây dễ trồng, ưa nước, thu hoạch nhanh (~30-40 ngày), có thể trồng thủy canh hoặc đất ẩm.',
+      growthDuration: 30,
+      growthStages: {
+        create: [
+          {
+            stageName: 'Giai đoạn nảy mầm',
+            order: 1,
+            duration: 3,
+            description: 'Hạt rau muống nứt vỏ và mọc mầm sau 2-3 ngày, mầm trắng nâng hai lá mầm dài màu xanh nhạt.',
+            optimalTemperatureMin: 25,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 80,
+            optimalHumidityMax: 100,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 0,
+            optimalLightMax: 1000,
+            lightRequirement: 'Thấp',
+            waterRequirement: 'Cao',
+            nutrientRequirement: 'Thấp',
+            careInstructions: 'Ngâm hạt trong nước ấm 6 giờ trước khi gieo để vỏ hạt mềm. Gieo dày trên đất bùn ướt hoặc khay nước. Giữ ngập nước cạn để hỗ trợ nảy mầm. Mầm mọc rất nhanh.',
+            pestSusceptibility: 'Chú ý che chắn để chim sẻ không ăn mầm non mới nhú.'
+          },
+          {
+            stageName: 'Giai đoạn cây con',
+            order: 2,
+            duration: 7,
+            description: 'Cây con cao 5-10 cm, thân nhỏ màu xanh nhạt, lá mầm dài, lá thật bắt đầu hình thành.',
+            optimalTemperatureMin: 25,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 70,
+            optimalHumidityMax: 90,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 10000,
+            optimalLightMax: 20000,
+            lightRequirement: 'Cao',
+            waterRequirement: 'Cao',
+            nutrientRequirement: 'Thấp',
+            careInstructions: 'Đảm bảo đất luôn sũng nước (nếu trồng cạn thì tưới rất thường xuyên, hoặc đặt khay nước bên dưới). Cho cây con nhận nắng tối đa để thân cứng, lá xanh. Nếu quá dày, tách bớt cây con trồng sang chỗ khác cho thoáng.',
+            pestSusceptibility: 'Cây con nếu thiếu nước sẽ còi cọc ngay. Giai đoạn này ít sâu bệnh, chỉ cần đề phòng cây bị khô hạn.'
+          },
+          {
+            stageName: 'Giai đoạn sinh trưởng',
+            order: 3,
+            duration: 20,
+            description: 'Rau muống phát triển mạnh, thân bò dài 20-30 cm, lá xanh mướt, có thể phủ kín mặt luống.',
+            optimalTemperatureMin: 25,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 60,
+            optimalHumidityMax: 85,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 15000,
+            optimalLightMax: 50000,
+            lightRequirement: 'Cao',
+            waterRequirement: 'Cao',
+            nutrientRequirement: 'Cao',
+            careInstructions: 'Rau muống ưa nắng và nước: luôn giữ đất ngập ẩm (trên cạn tưới 2 lần/ngày, dưới nước giữ mực nước ổn định). Bón phân đạm hoặc phân hữu cơ ngâm loãng hàng tuần để cây mọc nhanh, thân lá mập. Nếu trồng trên cạn, đặt khay nước bên dưới để giữ ẩm liên tục.',
+            pestSusceptibility: 'Có thể bị sâu ăn lá (sâu khoang) hoặc rầy mềm trên đọt; nếu thấy, bắt sâu bằng tay hoặc phun thuốc sinh học BT. Bệnh thường ít nếu cây đủ nước.'
+          },
+          {
+            stageName: 'Giai đoạn thu hoạch',
+            order: 4,
+            duration: 5,
+            description: 'Thu hoạch rau muống lứa đầu khoảng 4-5 tuần sau gieo, khi thân dài 30-40 cm và lá còn non xanh.',
+            optimalTemperatureMin: 25,
+            optimalTemperatureMax: 35,
+            optimalHumidityMin: 60,
+            optimalHumidityMax: 85,
+            optimalPHMin: 6.0,
+            optimalPHMax: 7.0,
+            optimalLightMin: 15000,
+            optimalLightMax: 50000,
+            lightRequirement: 'Cao',
+            waterRequirement: 'Cao',
+            nutrientRequirement: 'Cao',
+            careInstructions: 'Dùng dao cắt thân rau muống cách gốc 5-10 cm để chừa lại đoạn gốc cho cây nảy mầm mới. Sau khi cắt, xới nhẹ đất, bón bổ sung phân đạm, tiếp tục giữ đất ngập nước để rau tái sinh (sau khoảng 2-3 tuần có thể thu đợt tiếp). Thu hoạch trước khi thân quá già (lúc đó thân cứng, lá nhỏ).',
+            pestSusceptibility: 'Thu hoạch đúng lúc giúp rau non, ít xơ và ít sâu bệnh. Nếu để quá lâu không cắt, cây ra hoa, thân gỗ hóa, sâu bệnh dễ phát sinh hơn và rau cũng mất ngon.'
           }
         ]
       }
     }
   ];
 
-  for (const pt of plantTypes) {
-    await prisma.plantType.upsert({
+  for (const pt of plants) {
+    await prisma.plant.upsert({
       where: { name: pt.name },
       update: {},
       create: {
@@ -1508,10 +3641,10 @@ export async function seedPlantTypes(prisma: PrismaClient): Promise<void> {
         family: pt.family,
         description: pt.description,
         growthDuration: pt.growthDuration,
-        growthStages: pt.growthStages
-      }
+        growthStages: pt.growthStages,
+      },
     });
   }
 
-  console.log('✅ Seed 30 loại cây thành công.');
+  console.log('✅ Seed 30 dữ liệu cây thành công.');
 }

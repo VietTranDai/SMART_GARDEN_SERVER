@@ -34,13 +34,7 @@ import {
 } from '../dto/bulk-sensor-data.dto';
 import { GetUser } from 'src/modules/auth/decorators/get-user.decorator';
 import { Public } from 'src/modules/auth/decorators/public.decorators';
-
-interface JwtPayload {
-  sub: number;
-  email: string;
-  iat?: number;
-  exp?: number;
-}
+import { JwtPayload } from '../../../auth/dto/jwt-payload.interface';
 
 @Controller('sensor')
 @ApiTags('Sensor')

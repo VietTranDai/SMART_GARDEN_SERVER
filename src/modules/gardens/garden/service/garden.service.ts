@@ -4,20 +4,78 @@ import {
   NotFoundException,
   ForbiddenException,
   ConflictException,
-  InternalServerErrorException,
+  InternalServerErrorException, BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../../../../prisma/prisma.service';
-import { Garden, GardenStatus, GardenType, Prisma } from '@prisma/client';
+import { ExperienceLevel, Garden, Gardener, GardenStatus, GardenType, Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
 import { CreateGardenDto } from '../dto/create-garden.dto';
 import { UpdateGardenDto } from '../dto/update-garden.dto';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { GardenDto } from '../dto/garden.dto';
+import { GardenerDto } from '../../../users/gardener/dto';
 
 @Injectable()
 export class GardenService {
   private readonly logger = new Logger(GardenService.name);
-
   constructor(private readonly prisma: PrismaService) {}
+
+  /**
+   * Chuyển một Garden entity sang GardenDto đầy đủ thông tin, không sử dụng generic map
+   */
+  async mapToGardenDto(garden: Garden): Promise<GardenDto> {
+    // Lấy thông tin gardener
+    const gardener: Gardener | null = await this.prisma.gardener.findUnique({
+      where: { userId: garden.gardenerId },
+    });
+    if (!gardener) {
+      throw new BadRequestException(`Gardener with userId ${garden.gardenerId} not found`);
+    }
+
+    // Lấy thông tin cấp độ kinh nghiệm
+    const level: ExperienceLevel | null = await this.prisma.experienceLevel.findUnique({
+      where: { id: gardener.experienceLevelId },
+    });
+    if (!level) {
+      throw new BadRequestException(`ExperienceLevel with id ${gardener.experienceLevelId} not found`);
+    }
+
+    // Xây dựng GardenerDto
+    const gardenerDto = new GardenerDto();
+    gardenerDto.userId = gardener.userId;
+    gardenerDto.experiencePoints = gardener.experiencePoints ?? 0;
+    gardenerDto.experienceLevel = {
+      id: level.id,
+      level: level.level,
+      title: level.title,
+      description: level.description ?? undefined,
+      icon: level.icon,
+    };
+
+    // Xây dựng GardenDto
+    const dto = new GardenDto();
+    dto.id = garden.id;
+    dto.gardenKey = garden.gardenKey;
+    dto.name = garden.name;
+    dto.street = garden.street;
+    dto.ward = garden.ward;
+    dto.district = garden.district;
+    dto.city = garden.city;
+    dto.lat = garden.lat;
+    dto.lng = garden.lng;
+    dto.gardenerId = garden.gardenerId;
+    dto.gardener = gardenerDto;
+    dto.type = garden.type;
+    dto.status = garden.status;
+    dto.plantName = garden.plantName;
+    dto.plantGrowStage = garden.plantGrowStage;
+    dto.plantStartDate = garden.plantStartDate;
+    dto.plantDuration = garden.plantDuration;
+    dto.createdAt = garden.createdAt;
+    dto.updatedAt = garden.updatedAt;
+
+    return dto;
+  }
 
   async create(
     gardenerId: number,

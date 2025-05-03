@@ -23,11 +23,7 @@ import {
 import { GetUser } from 'src/modules/auth/decorators/get-user.decorator';
 import { FollowDto, FollowerListDto, FollowingListDto } from './dto/follow.dto';
 import { Public } from 'src/common/decorators/public.decorator';
-
-interface JwtPayload {
-  sub: number;
-  email: string;
-}
+import { JwtPayload } from '../../auth/dto/jwt-payload.interface';
 
 @ApiTags('Follows')
 @Controller('follows')

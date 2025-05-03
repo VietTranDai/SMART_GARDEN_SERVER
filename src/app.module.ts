@@ -11,6 +11,7 @@ import { GardenModule } from 'src/modules/gardens/garden/garden.module';
 import { SensorModule } from 'src/modules/gardens/sensor/sensor.module';
 import { PlantsModule } from 'src/modules/plants/plants.module';
 import { SocialModule } from './modules/social/social.module';
+import { LocationModule } from './modules/location/location.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { SocialModule } from './modules/social/social.module';
     SensorModule,
     PlantsModule,
     SocialModule,
+    LocationModule,
   ],
   controllers: [],
   providers: [

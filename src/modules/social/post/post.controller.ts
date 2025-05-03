@@ -26,11 +26,7 @@ import {
 import { PostDto, PostPaginationDto } from './dto/post.dto';
 import { GetUser } from 'src/modules/auth/decorators/get-user.decorator';
 import { Public } from 'src/common/decorators/public.decorator';
-
-interface JwtPayload {
-  sub: number;
-  email: string;
-}
+import { JwtPayload } from 'src/modules/auth/dto/jwt-payload.interface';
 
 @ApiTags('Posts')
 @Controller('posts')

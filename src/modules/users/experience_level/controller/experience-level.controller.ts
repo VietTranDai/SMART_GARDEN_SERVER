@@ -68,23 +68,6 @@ export class ExperienceLevelController {
     return this.experienceLevelService.findOne(id);
   }
 
-  @Get('level/:level')
-  @ApiOperation({ summary: 'Get experience level by level number' })
-  @ApiResponse({
-    status: 200,
-    description: 'Return the experience level with the given level number',
-    type: ExperienceLevelDto,
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Experience level not found',
-  })
-  findByLevel(
-    @Param('level', ParseIntPipe) level: number,
-  ): Promise<ExperienceLevelDto> {
-    return this.experienceLevelService.findByLevel(level);
-  }
-
   @Put(':id')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update an experience level' })

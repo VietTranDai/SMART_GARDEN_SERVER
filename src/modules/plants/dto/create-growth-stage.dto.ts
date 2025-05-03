@@ -11,10 +11,10 @@ import {
 } from 'class-validator';
 
 export class CreateGrowthStageDto {
-  @ApiProperty({ description: 'ID of the related PlantType', example: 1 })
-  @IsInt()
-  @IsPositive()
-  plantTypeId: number;
+  @ApiProperty({ description: 'ID of the related Plant', example: 1 })
+  @IsNumber()
+  @IsNotEmpty()
+  plantId: number;
 
   @ApiProperty({ description: 'Stage name', example: 'Seeding' })
   @IsString()
@@ -23,12 +23,14 @@ export class CreateGrowthStageDto {
 
   @ApiProperty({ description: 'Stage order', example: 1 })
   @IsInt()
+  @IsNotEmpty()
   @Min(1)
   order: number;
 
   @ApiProperty({ description: 'Duration of the stage in days', example: 7 })
   @IsInt()
-  @IsPositive()
+  @IsNotEmpty()
+  @Min(1)
   duration: number;
 
   @ApiPropertyOptional({
@@ -39,34 +41,54 @@ export class CreateGrowthStageDto {
   @IsOptional()
   description?: string;
 
-  @ApiProperty({ description: 'Minimum optimal temperature (°C)', example: 20 })
+  @ApiProperty({
+    description: 'Minimum optimal temperature (°C)',
+    example: 20,
+  })
   @IsNumber()
+  @IsNotEmpty()
   optimalTemperatureMin: number;
 
-  @ApiProperty({ description: 'Maximum optimal temperature (°C)', example: 30 })
+  @ApiProperty({
+    description: 'Maximum optimal temperature (°C)',
+    example: 30,
+  })
   @IsNumber()
+  @IsNotEmpty()
   optimalTemperatureMax: number;
 
   @ApiProperty({ description: 'Minimum optimal humidity (%)', example: 60 })
   @IsNumber()
+  @IsNotEmpty()
   @Min(0)
   @Max(100)
   optimalHumidityMin: number;
 
   @ApiProperty({ description: 'Maximum optimal humidity (%)', example: 80 })
   @IsNumber()
+  @IsNotEmpty()
   @Min(0)
   @Max(100)
   optimalHumidityMax: number;
 
-  @ApiPropertyOptional({ description: 'Minimum optimal soil pH', example: 5.5 })
+  @ApiPropertyOptional({
+    description: 'Minimum optimal soil pH',
+    example: 5.5,
+  })
   @IsNumber()
   @IsOptional()
+  @Min(0)
+  @Max(14)
   optimalPHMin?: number;
 
-  @ApiPropertyOptional({ description: 'Maximum optimal soil pH', example: 6.5 })
+  @ApiPropertyOptional({
+    description: 'Maximum optimal soil pH',
+    example: 6.5,
+  })
   @IsNumber()
   @IsOptional()
+  @Min(0)
+  @Max(14)
   optimalPHMax?: number;
 
   @ApiPropertyOptional({
@@ -75,6 +97,7 @@ export class CreateGrowthStageDto {
   })
   @IsNumber()
   @IsOptional()
+  @Min(0)
   optimalLightMin?: number;
 
   @ApiPropertyOptional({
@@ -83,6 +106,7 @@ export class CreateGrowthStageDto {
   })
   @IsNumber()
   @IsOptional()
+  @Min(0)
   optimalLightMax?: number;
 
   @ApiPropertyOptional({

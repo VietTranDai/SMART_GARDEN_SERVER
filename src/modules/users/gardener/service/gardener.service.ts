@@ -1,14 +1,13 @@
 import {
-  Injectable,
-  NotFoundException,
   BadRequestException,
   ConflictException,
+  Injectable,
+  NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { ExperienceLevelService } from '../../experience_level/service/experience-level.service';
-import { CreateGardenerDto } from '../dto/create-gardener.dto';
-import { UpdateGardenerDto } from '../dto/update-gardener.dto';
-import { Prisma } from '@prisma/client';
+import { ExperienceLevelService } from '../../experience_level';
+import { CreateGardenerDto } from '../dto';
+import { UpdateGardenerDto } from '../dto';
 
 @Injectable()
 export class GardenerService {
@@ -17,10 +16,7 @@ export class GardenerService {
     private experienceLevelService: ExperienceLevelService,
   ) {}
 
-  // CRUD Operations
-
   async create(createGardenerDto: CreateGardenerDto) {
-    // Check if user exists
     const user = await this.prisma.user.findUnique({
       where: { id: createGardenerDto.userId },
     });
@@ -31,7 +27,6 @@ export class GardenerService {
       );
     }
 
-    // Check if gardener already exists for this user
     const existingGardener = await this.prisma.gardener.findUnique({
       where: { userId: createGardenerDto.userId },
     });
@@ -42,7 +37,6 @@ export class GardenerService {
       );
     }
 
-    // Check if experience level exists
     const experienceLevel = await this.prisma.experienceLevel.findUnique({
       where: { id: createGardenerDto.experienceLevelId },
     });
@@ -53,8 +47,7 @@ export class GardenerService {
       );
     }
 
-    // Create gardener
-    const gardener = await this.prisma.gardener.create({
+    return this.prisma.gardener.create({
       data: {
         userId: createGardenerDto.userId,
         experiencePoints: createGardenerDto.experiencePoints || 0,
@@ -73,8 +66,6 @@ export class GardenerService {
         },
       },
     });
-
-    return gardener;
   }
 
   async findAll(
@@ -142,10 +133,8 @@ export class GardenerService {
   }
 
   async update(userId: number, updateGardenerDto: UpdateGardenerDto) {
-    // Check if gardener exists
     await this.findById(userId);
 
-    // Check if experience level exists if provided
     if (updateGardenerDto.experienceLevelId) {
       const experienceLevel = await this.prisma.experienceLevel.findUnique({
         where: { id: updateGardenerDto.experienceLevelId },
@@ -196,12 +185,10 @@ export class GardenerService {
     // Calculate new experience points
     const newExperiencePoints = gardener.experiencePoints + points;
 
-    // Determine if level has changed
     const oldLevel = gardener.experienceLevel;
     const newLevel =
       await this.experienceLevelService.calculateLevel(newExperiencePoints);
 
-    // Update gardener record
     const updatedGardener = await this.prisma.gardener.update({
       where: { userId },
       data: {
@@ -221,7 +208,6 @@ export class GardenerService {
       },
     });
 
-    // Return result with level up information
     return {
       gardener: updatedGardener,
       levelUp: oldLevel.id !== newLevel.id,
@@ -255,7 +241,6 @@ export class GardenerService {
   async getLevelUpProgress(userId: number) {
     const gardener = await this.findById(userId);
 
-    // Get current level
     const currentLevel = gardener.experienceLevel;
 
     // Get next level
@@ -275,7 +260,6 @@ export class GardenerService {
       };
     }
 
-    // Calculate points needed for next level
     const totalPointsNeeded = nextLevel.minXP - currentLevel.minXP;
     const pointsEarned = gardener.experiencePoints - currentLevel.minXP;
     const progress = Math.floor((pointsEarned / totalPointsNeeded) * 100);

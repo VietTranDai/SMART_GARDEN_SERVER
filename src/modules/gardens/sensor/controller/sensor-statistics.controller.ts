@@ -22,13 +22,7 @@ import { SensorStatisticsService } from '../service/sensor-statistics.service';
 import { SensorStatisticsDto } from '../dto/sensor-statistics.dto';
 import { SensorAnalyticsDto } from '../dto/sensor-analytics.dto';
 import { GetUser } from 'src/modules/auth/decorators/get-user.decorator';
-
-interface JwtPayload {
-  sub: number;
-  email: string;
-  iat?: number;
-  exp?: number;
-}
+import { JwtPayload } from '../../../auth/dto/jwt-payload.interface';
 
 @Controller('sensor-statistics')
 @ApiTags('Sensor Statistics')

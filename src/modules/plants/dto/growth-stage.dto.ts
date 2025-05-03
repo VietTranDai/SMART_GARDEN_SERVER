@@ -4,8 +4,8 @@ export class GrowthStageDto {
   @ApiProperty({ description: 'GrowthStage ID', example: 1 })
   id: number;
 
-  @ApiProperty({ description: 'ID of the related PlantType', example: 1 })
-  plantTypeId: number;
+  @ApiProperty({ description: 'ID of the related Plant', example: 1 })
+  plantId: number;
 
   @ApiProperty({ description: 'Stage name', example: 'Seeding' })
   stageName: string;

@@ -9,11 +9,7 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { GetUser } from 'src/modules/auth/decorators/get-user.decorator';
-
-interface JwtPayload {
-  sub: number;
-  email: string;
-}
+import { JwtPayload } from '../../auth/dto/jwt-payload.interface';
 
 @ApiTags('Votes')
 @Controller('votes')
