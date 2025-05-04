@@ -12,10 +12,13 @@ import { SensorModule } from 'src/modules/gardens/sensor/sensor.module';
 import { PlantsModule } from 'src/modules/plants/plants.module';
 import { SocialModule } from './modules/social/social.module';
 import { LocationModule } from './modules/location/location.module';
+import { WeatherModule } from './modules/weathers/weather.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
+    ScheduleModule.forRoot(),
     PrismaModule,
     UsersModule,
     AuthModule,
@@ -26,6 +29,7 @@ import { LocationModule } from './modules/location/location.module';
     PlantsModule,
     SocialModule,
     LocationModule,
+    WeatherModule
   ],
   controllers: [],
   providers: [

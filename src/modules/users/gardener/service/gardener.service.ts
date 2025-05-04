@@ -6,8 +6,13 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ExperienceLevelService } from '../../experience_level';
-import { CreateGardenerDto } from '../dto';
+import { CreateGardenerDto, GardenerDto } from '../dto';
 import { UpdateGardenerDto } from '../dto';
+import { GardenStatus, GardenType, TaskStatus } from '@prisma/client';
+import {
+  GardenerProfileDto,
+  mapToGardenerProfileDto,
+} from '../dto/gardener-stats.dto';
 
 @Injectable()
 export class GardenerService {
@@ -273,4 +278,158 @@ export class GardenerService {
       isMaxLevel: false,
     };
   }
+
+  async getGardenerProfile(
+    currentUserId: number,
+    gardenerId: number,
+  ): Promise<GardenerProfileDto> {
+    const userEntity = await this.prisma.user.findUnique({
+      where: { id: gardenerId },
+      include: { role: true, gardener: { include: { experienceLevel: true } } },
+    });
+    if (!userEntity || !userEntity.gardener) {
+      throw new NotFoundException(`Gardener ${gardenerId} not found`);
+    }
+
+    const stats = await this.computeStats(
+      currentUserId,
+      gardenerId,
+      userEntity.gardener.experiencePoints,
+      userEntity.createdAt,
+    );
+
+    return mapToGardenerProfileDto(
+      {
+        id: userEntity.id,
+        firstName: userEntity.firstName,
+        lastName: userEntity.lastName,
+        email: userEntity.email,
+        username: userEntity.username,
+        phoneNumber: userEntity.phoneNumber || undefined,
+        dateOfBirth: userEntity.dateOfBirth || undefined,
+        lastLogin: userEntity.lastLogin || undefined,
+        profilePicture: userEntity.profilePicture || undefined,
+        address: userEntity.address || undefined,
+        bio: userEntity.bio || undefined,
+        createdAt: userEntity.createdAt,
+        updatedAt: userEntity.updatedAt,
+        role: {
+          id: userEntity.role.id,
+          name: userEntity.role.name,
+          description: userEntity.role.description || undefined,
+        },
+      },
+      {
+        experiencePoints: userEntity.gardener.experiencePoints,
+        experienceLevel: userEntity.gardener.experienceLevel,
+      },
+      stats,
+    );
+  }
+
+  private async computeStats(
+    currentUserId: number,
+    gardenerId: number,
+    xp: number,
+    joinedDate: Date,
+  ): Promise<Omit<GardenerProfileDto, keyof GardenerDto>> {
+    // Count gardens and breakdown
+    const gardens = await this.prisma.garden.count({ where: { gardenerId } });
+    const activeGardens = await this.prisma.garden.count({ where: { gardenerId, status: GardenStatus.ACTIVE } });
+    const inactiveGardens = gardens - activeGardens;
+    const indoorGardens = await this.prisma.garden.count({ where: { gardenerId, type: 'INDOOR' } });
+    const outdoorGardens = await this.prisma.garden.count({ where: { gardenerId, type: 'OUTDOOR' } });
+
+    // Count posts
+    const posts = await this.prisma.post.count({ where: { gardenerId } });
+
+    // Followers / Following
+    const followers = await this.prisma.follow.count({ where: { followedId: gardenerId } });
+    const following = await this.prisma.follow.count({ where: { followerId: gardenerId } });
+
+    // Activities grouping
+    const activityGroups = await this.prisma.gardenActivity.groupBy({
+      by: ['activityType'],
+      where: { gardenerId },
+      _count: { activityType: true },
+    });
+    const activitiesByType = activityGroups.reduce((acc, cur) => {
+      acc[cur.activityType] = cur._count.activityType;
+      return acc;
+    }, {} as Record<string, number>);
+    const totalActivities = activityGroups.reduce((sum, cur) => sum + cur._count.activityType, 0);
+
+    // Tasks grouping
+    const taskGroups = await this.prisma.task.groupBy({
+      by: ['status'],
+      where: { gardenerId },
+      _count: { status: true },
+    });
+    const completedTasks = taskGroups.find(t => t.status === 'COMPLETED')?._count.status || 0;
+    const pendingTasks = taskGroups.find(t => t.status === 'PENDING')?._count.status || 0;
+    const skippedTasks = taskGroups.find(t => t.status === 'SKIPPED')?._count.status || 0;
+    const totalTasks = completedTasks + pendingTasks + skippedTasks;
+    const taskCompletionRate = totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+    // Community stats
+    const votesAgg = await this.prisma.post.aggregate({
+      where: { gardenerId },
+      _sum: { total_vote: true },
+    });
+    const totalVotesReceived = votesAgg._sum.total_vote || 0;
+    const totalCommentsReceived = await this.prisma.comment.count({ where: { post: { gardenerId } } });
+    const averagePostRating = posts ? totalVotesReceived / posts : 0;
+    const totalPhotoEvaluations = await this.prisma.photoEvaluation.count({ where: { gardenerId } });
+
+    // Plant stats
+    const plantGroups = await this.prisma.gardenActivity.groupBy({
+      by: ['plantName'],
+      where: { gardenerId, plantName: { not: null } },
+      _count: { plantName: true },
+    });
+    const plantTypesCount = plantGroups.length;
+    const maxCount = Math.max(...plantGroups.map(g => g._count.plantName), 0);
+    const mostGrownPlantTypes = plantGroups.filter(g => g._count.plantName === maxCount).map(g => g.plantName!);
+
+    // Experience progress
+    const gardener = await this.prisma.gardener.findUnique({ where: { userId: gardenerId } });
+    if (!gardener) throw new NotFoundException(`Gardener with ID ${gardenerId} not found`);
+    const level = await this.prisma.experienceLevel.findUnique({ where: { id: gardener.experienceLevelId } });
+    if (!level) throw new NotFoundException( `Level with ID ${gardener.experienceLevelId} not found` );
+    const experiencePointsToNextLevel = level.maxXP - xp;
+    const experienceLevelProgress = level.maxXP > level.minXP
+      ? Math.round(((xp - level.minXP) / (level.maxXP - level.minXP)) * 100)
+      : 100;
+
+    // Follow status
+    const isFollowing = !!await this.prisma.follow.findUnique({ where: { followerId_followedId: { followerId: currentUserId, followedId: gardenerId } } });
+
+    return {
+      gardens,
+      posts,
+      followers,
+      following,
+      activeGardens,
+      inactiveGardens,
+      indoorGardens,
+      outdoorGardens,
+      totalActivities,
+      activitiesByType,
+      completedTasks,
+      pendingTasks,
+      skippedTasks,
+      taskCompletionRate,
+      totalVotesReceived,
+      totalCommentsReceived,
+      averagePostRating,
+      totalPhotoEvaluations,
+      plantTypesCount,
+      mostGrownPlantTypes,
+      experiencePointsToNextLevel,
+      experienceLevelProgress,
+      joinedSince: joinedDate.toISOString(),
+      isFollowing,
+    };
+  }
 }
+

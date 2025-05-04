@@ -49,7 +49,7 @@ export class JwtRefreshStrategy extends PassportStrategy(
     if (!payload.sub) {
       throw new UnauthorizedException('Invalid refresh token payload');
     }
-    const user = await this.userService.getUserEntity(payload.sub);
+    const user = await this.userService.findUser(payload.sub);
     if (!user) {
       throw new UnauthorizedException('User not found');
     }

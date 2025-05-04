@@ -1,29 +1,29 @@
 import {
+  BadRequestException,
   Controller,
   Get,
-  Param,
-  ParseIntPipe,
-  Logger,
-  Post,
   HttpCode,
   HttpStatus,
+  Logger,
+  Param,
+  ParseIntPipe,
+  Post,
   Query,
-  BadRequestException,
 } from '@nestjs/common';
 import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiParam,
   ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
   ApiQuery,
+  ApiResponse,
+  ApiTags,
 } from '@nestjs/swagger';
 import { WeatherService } from './weather.service';
 import { RefreshWeatherResponseDto } from './dto/refresh-weather-response.dto';
 import {
-  WeatherObservationDto,
-  HourlyForecastDto,
   DailyForecastDto,
+  HourlyForecastDto,
+  WeatherObservationDto,
 } from './dto/weather-response.dto';
 
 @ApiTags('Weather')
@@ -251,9 +251,7 @@ export class WeatherController {
 
     // Service will throw specific exceptions (NotFound, Conflict, InternalServer)
     // The return type matches RefreshWeatherResponseDto now
-    const result =
-      await this.weatherService.refreshWeatherForGardenById(gardenId);
-    return result;
+    return await this.weatherService.refreshWeatherForGardenById(gardenId);
   }
 
   @Get('clear-cache/:gardenId')

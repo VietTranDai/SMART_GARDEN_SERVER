@@ -113,8 +113,6 @@ interface WeatherAPIForecastDay {
     windchill_f: number;
     heatindex_c: number;
     heatindex_f: number;
-    dewpoint_c: number;
-    dewpoint_f: number;
     will_it_rain: number;
     chance_of_rain: number;
     will_it_snow: number;
@@ -153,8 +151,6 @@ interface OWMCurrentWeather {
   feels_like: number;
   pressure: number;
   humidity: number;
-  dew_point: number;
-  uvi: number;
   clouds: number;
   visibility: number;
   wind_speed: number;
@@ -171,8 +167,6 @@ interface OWMHourlyForecast {
   feels_like: number;
   pressure: number;
   humidity: number;
-  dew_point: number;
-  uvi: number;
   clouds: number;
   visibility: number;
   wind_speed: number;
@@ -208,7 +202,6 @@ interface OWMDailyForecast {
   };
   pressure: number;
   humidity: number;
-  dew_point: number;
   wind_speed: number;
   wind_deg: number;
   wind_gust?: number;
@@ -217,7 +210,6 @@ interface OWMDailyForecast {
   pop: number;
   rain?: number;
   snow?: number;
-  uvi: number;
 }
 
 interface OWMOneCallResponse {
@@ -438,8 +430,6 @@ export function mapWeatherAPIToOWM(
     feels_like: current.feelslike_c,
     pressure: current.pressure_mb,
     humidity: current.humidity,
-    dew_point: 0, // Not directly available, we'd need to calculate it
-    uvi: current.uv,
     clouds: current.cloud,
     visibility: current.vis_km * 1000, // Convert km to meters
     wind_speed: current.wind_kph / 3.6, // Convert kph to m/s
@@ -480,8 +470,6 @@ export function mapWeatherAPIToOWM(
         feels_like: hour.feelslike_c,
         pressure: hour.pressure_mb,
         humidity: hour.humidity,
-        dew_point: hour.dewpoint_c,
-        uvi: hour.uv,
         clouds: hour.cloud,
         visibility: hour.vis_km * 1000, // Convert km to meters
         wind_speed: hour.wind_kph / 3.6, // Convert kph to m/s
@@ -557,7 +545,6 @@ export function mapWeatherAPIToOWM(
       },
       pressure: dayTime?.pressure_mb || 1015, // Default if not available
       humidity: day.day.avghumidity,
-      dew_point: dayTime?.dewpoint_c || 0,
       wind_speed: day.day.maxwind_kph / 3.6, // Convert kph to m/s
       wind_deg: dayTime?.wind_degree || 0,
       weather: [
@@ -577,7 +564,6 @@ export function mapWeatherAPIToOWM(
       pop: convertProbability(
         Math.max(day.day.daily_chance_of_rain, day.day.daily_chance_of_snow),
       ),
-      uvi: day.day.uv,
     };
 
     // Add precipitation if present

@@ -471,14 +471,12 @@ model WeatherObservation {
   // Temperature Group
   temp      Float // Temperature in Celsius (°C)
   feelsLike Float // Feels-like temperature in Celsius (°C)
-  dewPoint  Float // Dew point temperature in Celsius (°C)
 
   // Atmospheric Conditions Group
   pressure   Int // Atmospheric pressure at sea level in hPa
   humidity   Int // Humidity in percentage (%)
   clouds     Int // Cloudiness in percentage (%)
   visibility Int // Average visibility in meters (m)
-  uvi        Float // UV index (no unit, dimensionless)
 
   // Wind Group
   windSpeed Float // Wind speed in meters per second (m/s)
@@ -514,14 +512,12 @@ model HourlyForecast {
   // Temperature Group
   temp      Float // Forecasted temperature in Celsius (°C)
   feelsLike Float // Forecasted feels-like temperature in Celsius (°C)
-  dewPoint  Float // Forecasted dew point temperature in Celsius (°C)
 
   // Atmospheric Conditions Group
   pressure   Int // Forecasted atmospheric pressure at sea level in hPa
   humidity   Int // Forecasted humidity in percentage (%)
   clouds     Int // Forecasted cloudiness in percentage (%)
   visibility Int // Forecasted average visibility in meters (m)
-  uvi        Float // Forecasted UV index (no unit, dimensionless)
   pop        Float // Probability of precipitation (0 to 1)
 
   // Wind Group
@@ -558,13 +554,11 @@ model DailyForecast {
   tempMax      Float // Forecasted maximum temperature in Celsius (°C)
   tempNight    Float // Forecasted nighttime temperature in Celsius (°C)
   feelsLikeDay Float // Forecasted daytime feels-like temperature in Celsius (°C)
-  dewPoint     Float // Forecasted dew point temperature in Celsius (°C)
 
   // Atmospheric Conditions Group
   pressure Int // Forecasted atmospheric pressure at sea level in hPa
   humidity Int // Forecasted humidity in percentage (%)
   clouds   Int // Forecasted cloudiness in percentage (%)
-  uvi      Float // Forecasted UV index (no unit, dimensionless)
   pop      Float // Probability of precipitation (0 to 1)
 
   // Wind Group

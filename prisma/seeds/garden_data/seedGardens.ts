@@ -15,7 +15,8 @@ export async function seedGardens(prisma: PrismaClient): Promise<void> {
   const gardens = [
     {
       name: 'Vườn Rau Sạch',
-      profilePicture: '/picture/gardens/muong-rau.png',
+      gardenKey: '1',
+      profilePicture: '/pictures/gardens/muong-rau.png',
       description: 'Vườn rau hữu cơ không hóa chất, cung cấp rau tươi sạch mỗi ngày.',
       street: '268 Lý Thường Kiệt',
       ward: 'Phường 14',
@@ -32,7 +33,8 @@ export async function seedGardens(prisma: PrismaClient): Promise<void> {
     },
     {
       name: 'Vườn Hoa Ban Công',
-      profilePicture: '/picture/gardens/rose-ban.png',
+      gardenKey: '2',
+      profilePicture: '/pictures/gardens/rose-ban.png',
       description: 'Ban công rực rỡ hoa hồng, tạo không gian thơ mộng và dễ chăm sóc.',
       street: '268 Lý Thường Kiệt',
       ward: 'Phường 14',
@@ -49,7 +51,8 @@ export async function seedGardens(prisma: PrismaClient): Promise<void> {
     },
     {
       name: 'Vườn Gia Vị Trong Nhà',
-      profilePicture: '/picture/gardens/hung-que.png',
+      gardenKey: '3',
+      profilePicture: '/pictures/gardens/hung-que.png',
       description: 'Vườn gia vị trong nhà với húng quế thơm, giúp tăng hương vị món ăn.',
       street: '268 Lý Thường Kiệt',
       ward: 'Phường 14',
@@ -67,19 +70,15 @@ export async function seedGardens(prisma: PrismaClient): Promise<void> {
   ];
 
   for (const gardenData of gardens) {
-    const key = `garden_${superGardenerUser.gardener.userId}_${gardenData.name
-      .replace(/\s+/g, '_')
-      .toLowerCase()}`;
-
     await prisma.garden.upsert({
-      where: { gardenKey: key },
+      where: { gardenKey: gardenData.gardenKey },
       update: {
         name: gardenData.name,
         status: gardenData.status,
         description: gardenData.description,
       },
       create: {
-        gardenKey: key,
+        gardenKey: gardenData.gardenKey,
         name: gardenData.name,
         description: gardenData.description,
         profilePicture: gardenData.profilePicture,

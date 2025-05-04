@@ -8,6 +8,7 @@ import { ThresholdAlertController } from './controller/threshold-alert.controlle
 import { GardenModule } from '../garden/garden.module';
 import { SensorService } from './service/sensor.service';
 import { SensorController } from './controller/sensor.controller';
+import { SensorDataGeneratorService } from './service/sensor-data-generator.service';
 
 @Module({
   imports: [PrismaModule, GardenModule],
@@ -21,6 +22,7 @@ import { SensorController } from './controller/sensor.controller';
     SensorMetadataService,
     SensorStatisticsService,
     ThresholdAlertService,
+    SensorDataGeneratorService,
   ],
   exports: [SensorService],
 })

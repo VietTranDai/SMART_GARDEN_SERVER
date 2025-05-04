@@ -17,9 +17,6 @@ export class WeatherObservationDto {
   @ApiProperty({ example: 23.1 })
   feelsLike: number;
 
-  @ApiProperty({ example: 15.2 })
-  dewPoint: number;
-
   @ApiProperty({ example: 1013 })
   pressure: number;
 
@@ -32,8 +29,6 @@ export class WeatherObservationDto {
   @ApiProperty({ example: 10000 })
   visibility: number;
 
-  @ApiProperty({ example: 4.2 })
-  uvi: number;
 
   @ApiProperty({ example: 3.5 })
   windSpeed: number;
@@ -79,9 +74,6 @@ export class HourlyForecastDto {
   @ApiProperty({ example: 22.1 })
   feelsLike: number;
 
-  @ApiProperty({ example: 14.8 })
-  dewPoint: number;
-
   @ApiProperty({ example: 1012 })
   pressure: number;
 
@@ -93,9 +85,6 @@ export class HourlyForecastDto {
 
   @ApiProperty({ example: 9000 })
   visibility: number;
-
-  @ApiProperty({ example: 3.8 })
-  uvi: number;
 
   @ApiProperty({ example: 0.3 })
   pop: number;
@@ -153,8 +142,6 @@ export class DailyForecastDto {
   @ApiProperty({ example: 25.1 })
   feelsLikeDay: number;
 
-  @ApiProperty({ example: 16.2 })
-  dewPoint: number;
 
   @ApiProperty({ example: 1010 })
   pressure: number;
@@ -164,9 +151,6 @@ export class DailyForecastDto {
 
   @ApiProperty({ example: 30 })
   clouds: number;
-
-  @ApiProperty({ example: 7.5 })
-  uvi: number;
 
   @ApiProperty({ example: 0.2 })
   pop: number;

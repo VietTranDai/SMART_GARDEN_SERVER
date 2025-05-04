@@ -6,9 +6,12 @@ import { WeatherService } from './weather.service';
 export class WeatherScheduler {
   private readonly logger = new Logger(WeatherScheduler.name);
 
+  async onModuleInit() {
+    await this.handleCronUpdateWeather();
+  }
+
   constructor(private readonly weatherService: WeatherService) {}
 
-  // Run every 10 minutes
   @Cron(CronExpression.EVERY_10_MINUTES)
   async handleCronUpdateWeather() {
     this.logger.log('Triggering scheduled weather update...');
@@ -19,8 +22,8 @@ export class WeatherScheduler {
     }
   }
 
-  // Run daily at midnight UTC
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, { timeZone: 'UTC' })
+  // @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT, { timeZone: 'UTC' })
+  @Cron(CronExpression.EVERY_10_MINUTES)
   async handleCronCleanupForecasts() {
     this.logger.log('Triggering scheduled forecast cleanup...');
     try {
@@ -30,12 +33,11 @@ export class WeatherScheduler {
     }
   }
 
-  // Run on the 1st day of every month at 1 AM UTC
-  @Cron('0 1 1 * *', { timeZone: 'UTC' })
-  async handleCronCleanupObservations() {
+  @Cron(CronExpression.EVERY_10_MINUTES)
+  async handleCronCleanupObservations()
+  {
     this.logger.log('Triggering scheduled observation cleanup...');
     try {
-      // Default is 6 months, can be configured if needed
       await this.weatherService.cleanupOldObservations();
     } catch (error) {
       this.logger.error('Error during scheduled observation cleanup:', error);

@@ -8,16 +8,12 @@ import {
   Param,
   Query,
   ParseIntPipe,
-  UseGuards,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
 import { GardenerService } from '../service/gardener.service';
 import {
   GardenerDto,
-  ExperienceAddedResponseDto,
-  LevelProgressDto,
-  AddExperienceDto,
   CreateGardenerDto,
   UpdateGardenerDto,
 } from '../dto';
@@ -26,9 +22,10 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
-  ApiParam,
-  ApiQuery,
+  ApiQuery, ApiParam, ApiOkResponse,
 } from '@nestjs/swagger';
+import { GardenerProfileDto } from '../dto/gardener-stats.dto';
+import { GetUser } from '../../../auth/decorators/get-user.decorator';
 
 @ApiTags('gardeners')
 @Controller('gardeners')
@@ -74,6 +71,17 @@ export class GardenerController {
     @Query('sortOrder') sortOrder?: 'asc' | 'desc',
   ) {
     return this.gardenerService.findAll(page, limit, sortBy, sortOrder);
+  }
+
+  @Get(':gardenerId')
+  @ApiOperation({ summary: 'Get gardener profile with stats' })
+  @ApiParam({ name: 'gardenerId', type: Number })
+  @ApiOkResponse({ type: GardenerProfileDto })
+  async getProfile(
+    @GetUser('id') userId: number,
+    @Param('gardenerId', ParseIntPipe) gardenerId: number,
+  ): Promise<GardenerProfileDto> {
+    return this.gardenerService.getGardenerProfile(userId, gardenerId);
   }
 
   @Get('leaderboard')
@@ -140,44 +148,5 @@ export class GardenerController {
   })
   remove(@Param('userId', ParseIntPipe) userId: number) {
     return this.gardenerService.remove(userId);
-  }
-
-  // ---- Experience Points Management ----
-
-  @Get(':userId/progress')
-  @ApiOperation({ summary: 'Get gardener level progress' })
-  @ApiResponse({
-    status: 200,
-    description: 'Return the gardener level progress',
-    type: LevelProgressDto,
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Gardener not found',
-  })
-  getLevelProgress(@Param('userId', ParseIntPipe) userId: number) {
-    return this.gardenerService.getLevelUpProgress(userId);
-  }
-
-  @Post(':userId/experience')
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Add experience points to gardener' })
-  @ApiResponse({
-    status: 200,
-    description: 'Experience points added successfully',
-    type: ExperienceAddedResponseDto,
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Gardener not found',
-  })
-  addExperience(
-    @Param('userId', ParseIntPipe) userId: number,
-    @Body() addExperienceDto: AddExperienceDto,
-  ) {
-    return this.gardenerService.addExperiencePoints(
-      userId,
-      addExperienceDto.points,
-    );
   }
 }

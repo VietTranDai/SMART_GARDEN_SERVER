@@ -1,6 +1,7 @@
+// src/garden/dto/garden.dto.ts
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { GardenStatus, GardenType } from '@prisma/client';
-import { GardenerDto } from '../../../users/gardener/dto';
+import { GardenStatus, GardenType, Garden as GardenModel, Gardener, User, Role, ExperienceLevel } from '@prisma/client';
+import { GardenerDto, mapToGardenerDto } from '../../../users/gardener/dto';
 
 export class GardenDto {
   @ApiProperty({
@@ -32,7 +33,7 @@ export class GardenDto {
     example: 'My Balcony Garden',
   })
   description: string | null;
-  
+
   @ApiPropertyOptional({
     description: 'Street address of the garden',
     example: '123 Garden Street',
@@ -77,21 +78,21 @@ export class GardenDto {
 
   @ApiProperty({
     description: 'Gardener information',
-    type: GardenerDto,
+    type: () => GardenerDto,
   })
   gardener: GardenerDto;
 
   @ApiProperty({
     description: 'Type of garden',
     enum: GardenType,
-    example: 'BALCONY',
+    example: GardenType.BALCONY,
   })
   type: GardenType;
 
   @ApiProperty({
     description: 'Current status of the garden',
     enum: GardenStatus,
-    example: 'ACTIVE',
+    example: GardenStatus.ACTIVE,
   })
   status: GardenStatus;
 
@@ -136,4 +137,46 @@ export class GardenDto {
     format: 'date-time',
   })
   updatedAt: Date;
+}
+
+/**
+ * Chuyển đổi entity Garden thành GardenDto
+ */
+export function mapToGardenDto(
+  garden: GardenModel & {
+    gardener: Gardener & {
+      user: User & { role: Role };
+      experienceLevel: ExperienceLevel;
+    };
+  }
+): GardenDto {
+  const dto = new GardenDto();
+
+  dto.id = garden.id;
+  dto.gardenKey = garden.gardenKey;
+  dto.name = garden.name;
+  dto.profilePicture = garden.profilePicture;
+  dto.description = garden.description;
+  dto.street = garden.street;
+  dto.ward = garden.ward;
+  dto.district = garden.district;
+  dto.city = garden.city;
+  dto.lat = garden.lat;
+  dto.lng = garden.lng;
+
+  dto.gardenerId = garden.gardenerId;
+  dto.gardener = mapToGardenerDto(garden.gardener as any);
+
+  dto.type = garden.type;
+  dto.status = garden.status;
+
+  dto.plantName = garden.plantName;
+  dto.plantGrowStage = garden.plantGrowStage;
+  dto.plantStartDate = garden.plantStartDate;
+  dto.plantDuration = garden.plantDuration;
+
+  dto.createdAt = garden.createdAt;
+  dto.updatedAt = garden.updatedAt;
+
+  return dto;
 }

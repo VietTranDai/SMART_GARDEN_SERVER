@@ -30,7 +30,7 @@ import { CreateGardenDto } from '../dto/create-garden.dto';
 import { UpdateGardenDto } from '../dto/update-garden.dto';
 import { GardenDto } from '../dto/garden.dto';
 import { GetUser } from 'src/modules/auth/decorators/get-user.decorator';
-import { GardenStatus, GardenType } from '@prisma/client';
+import { GardenStatus } from '@prisma/client';
 
 @ApiTags('Garden')
 @Controller('gardens')
@@ -189,13 +189,13 @@ export class GardenController {
   })
   async updatePlantInfo(
     @GetUser('id') userId: number,
-    @Param('id', ParseIntPipe) id: number,
+    @Param('gardenId', ParseIntPipe) gardenId: number,
     @Query('plantName') plantName: string,
     @Query('plantGrowStage') plantGrowStage?: string,
   ) {
     return this.gardenService.updatePlantInfo(
       userId,
-      id,
+      gardenId,
       plantName,
       plantGrowStage,
     );

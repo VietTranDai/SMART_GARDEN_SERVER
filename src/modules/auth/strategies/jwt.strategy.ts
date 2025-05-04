@@ -26,7 +26,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   // payload là object mà bạn sign ở AuthService (sub, username, role…)
   async validate(payload: JwtPayload): Promise<User> {
     // tìm full User entity từ DB
-    const user: User = await this.userService.getUserEntity(payload.sub);
+    const user: User = await this.userService.findUser(payload.sub);
     if (!user) {
       throw new UnauthorizedException('User not found');
     }

@@ -17,7 +17,6 @@ import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { SensorMetadataService } from './sensor-metadata.service';
 import { UpdateSensorDto } from '../dto/update-sensor.dto';
 
-// Define the return type explicitly to include unit
 export type SensorWithMetadata = Sensor & {
   name?: string;
   description?: string;

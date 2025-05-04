@@ -45,9 +45,8 @@ export class UserController {
   @ApiOperation({ summary: 'Get all users with filtering and pagination' })
   @ApiResponse({ status: 200, description: 'List of users', type: UserDto, isArray: true })
   async findAll(@Query() filter: UserFilterDto) {
-    const { data, meta } = await this.userService.findAllEntities(filter);
-    const dtos = data.map(user => this.userService.mapToUserDto(user));
-    return { data: dtos, meta };
+    // Trả thẳng về { data, meta }
+    return this.userService.findAll(filter);
   }
 
   @Get('me')
@@ -55,8 +54,7 @@ export class UserController {
   @ApiOperation({ summary: "Get current user's profile" })
   @ApiResponse({ status: 200, type: UserDto })
   async getProfile(@GetUser('id') id: number) {
-    const user = await this.userService.findOneEntity(id);
-    return this.userService.mapToUserDto(user);
+    return this.userService.findOne(id);
   }
 
   @Get(':id')
@@ -66,8 +64,7 @@ export class UserController {
   @ApiResponse({ status: 200, type: UserDto })
   @ApiResponse({ status: 404, description: 'User not found' })
   async findOne(@Param('id', ParseIntPipe) id: number) {
-    const user = await this.userService.findOneEntity(id);
-    return this.userService.mapToUserDto(user);
+    return this.userService.findOne(id);
   }
 
   @Post()
@@ -76,9 +73,9 @@ export class UserController {
   @ApiResponse({ status: 201, type: UserDto })
   @ApiResponse({ status: 400, description: 'Invalid input' })
   @ApiResponse({ status: 409, description: 'Conflict (username/email)' })
+  @HttpCode(HttpStatus.CREATED)
   async create(@Body() dto: CreateUserDto) {
-    const user = await this.userService.createEntity(dto);
-    return this.userService.mapToUserDto(user);
+    return this.userService.create(dto);
   }
 
   @Post(':id/upload-avatar')
@@ -91,8 +88,8 @@ export class UserController {
     FileInterceptor('file', {
       storage: diskStorage({
         destination: join(process.cwd(), 'pictures/avatars'),
-        filename: (req, file, cb) => {
-          const id = req.params.id;
+        filename: (_req, file, cb) => {
+          const id = (_req as any).params.id;
           cb(null, `user-${id}-${Date.now()}${extname(file.originalname)}`);
         },
       }),
@@ -109,8 +106,9 @@ export class UserController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     const url = `/pictures/avatars/${file.filename}`;
-    const user = await this.userService.updateProfilePictureEntity(id, url);
-    return this.userService.mapToUserDto(user);
+    // Cập nhật file trên disk, rồi lấy lại DTO đầy đủ
+    await this.userService.updateProfilePictureEntity(id, url);
+    return this.userService.findOne(id);
   }
 
   @Put(':id')
@@ -124,8 +122,7 @@ export class UserController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateUserDto,
   ) {
-    const user = await this.userService.updateEntity(id, dto);
-    return this.userService.mapToUserDto(user);
+    return this.userService.update(id, dto);
   }
 
   @Put('me/profile')
@@ -137,9 +134,9 @@ export class UserController {
     @GetUser('id') id: number,
     @Body() dto: UpdateUserDto,
   ) {
-    const { roleId, ...safeDto } = dto;
-    const user = await this.userService.updateEntity(id, safeDto);
-    return this.userService.mapToUserDto(user);
+    // Người dùng không được đổi roleId
+    delete (dto as any).roleId;
+    return this.userService.update(id, dto);
   }
 
   @Put('me/password')
@@ -151,8 +148,7 @@ export class UserController {
     @GetUser('id') id: number,
     @Body() dto: UpdatePasswordDto,
   ) {
-    const user = await this.userService.updatePasswordEntity(id, dto);
-    return this.userService.mapToUserDto(user);
+    return this.userService.updatePassword(id, dto);
   }
 
   @Put(':id/password')
@@ -165,8 +161,7 @@ export class UserController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdatePasswordDto,
   ) {
-    const user = await this.userService.updatePasswordEntity(id, dto);
-    return this.userService.mapToUserDto(user);
+    return this.userService.updatePassword(id, dto);
   }
 
   @Delete(':id')
@@ -177,6 +172,6 @@ export class UserController {
   @ApiResponse({ status: 204, description: 'Deleted successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
   async remove(@Param('id', ParseIntPipe) id: number) {
-    await this.userService.removeEntity(id);
+    await this.userService.remove(id);
   }
 }

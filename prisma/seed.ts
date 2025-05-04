@@ -8,6 +8,7 @@ import { seedExperienceLevels } from './seeds/seed_experience_levels/seed-experi
 import { seedPlantTypes } from './seeds/plant_data/seedPlantTypes';
 import { seedGardens } from './seeds/garden_data/seedGardens';
 import { seedGardeners } from './seeds/user_data/seedGardeners';
+import { seedSensors } from './seeds/garden_data/seedSensors';
 
 const prisma = new PrismaClient();
 
@@ -19,7 +20,8 @@ async function main() {
   await seedGardeners(prisma)
   await seedPlantTypes(prisma);
   await seedPlants(prisma);
-  await seedGardens(prisma)
+  await seedGardens(prisma);
+  await seedSensors(prisma);
 
   console.log('Tất cả dữ liệu đã được seed thành công!');
 }

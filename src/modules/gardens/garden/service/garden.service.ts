@@ -1,350 +1,150 @@
+// src/garden/garden.service.ts
 import {
   Injectable,
   Logger,
   NotFoundException,
   ForbiddenException,
   ConflictException,
-  InternalServerErrorException, BadRequestException,
+  InternalServerErrorException,
 } from '@nestjs/common';
-import { PrismaService } from '../../../../prisma/prisma.service';
-import { ExperienceLevel, Garden, Gardener, GardenStatus, GardenType, Prisma } from '@prisma/client';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { randomUUID } from 'crypto';
 import { CreateGardenDto } from '../dto/create-garden.dto';
 import { UpdateGardenDto } from '../dto/update-garden.dto';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
-import { GardenDto } from '../dto/garden.dto';
-import { GardenerDto } from '../../../users/gardener/dto';
+import { GardenDto, mapToGardenDto } from '../dto/garden.dto';
+import { Garden, GardenStatus } from '@prisma/client';
 
 @Injectable()
 export class GardenService {
   private readonly logger = new Logger(GardenService.name);
   constructor(private readonly prisma: PrismaService) {}
 
-  /**
-   * Chuyển một Garden entity sang GardenDto đầy đủ thông tin, không sử dụng generic map
-   */
-  async mapToGardenDto(garden: Garden): Promise<GardenDto> {
-    // Lấy thông tin gardener
-    const gardener: Gardener | null = await this.prisma.gardener.findUnique({
-      where: { userId: garden.gardenerId },
-    });
-    if (!gardener) {
-      throw new BadRequestException(`Gardener with userId ${garden.gardenerId} not found`);
-    }
-
-    // Lấy thông tin cấp độ kinh nghiệm
-    const level: ExperienceLevel | null = await this.prisma.experienceLevel.findUnique({
-      where: { id: gardener.experienceLevelId },
-    });
-    if (!level) {
-      throw new BadRequestException(`ExperienceLevel with id ${gardener.experienceLevelId} not found`);
-    }
-
-    // Xây dựng GardenerDto
-    const gardenerDto = new GardenerDto();
-    gardenerDto.userId = gardener.userId;
-    gardenerDto.experiencePoints = gardener.experiencePoints ?? 0;
-    gardenerDto.experienceLevel = {
-      id: level.id,
-      level: level.level,
-      title: level.title,
-      description: level.description ?? undefined,
-      icon: level.icon,
-    };
-
-    // Xây dựng GardenDto
-    const dto = new GardenDto();
-    dto.id = garden.id;
-    dto.gardenKey = garden.gardenKey;
-    dto.name = garden.name;
-    dto.street = garden.street;
-    dto.ward = garden.ward;
-    dto.district = garden.district;
-    dto.city = garden.city;
-    dto.lat = garden.lat;
-    dto.lng = garden.lng;
-    dto.gardenerId = garden.gardenerId;
-    dto.gardener = gardenerDto;
-    dto.type = garden.type;
-    dto.status = garden.status;
-    dto.plantName = garden.plantName;
-    dto.plantGrowStage = garden.plantGrowStage;
-    dto.plantStartDate = garden.plantStartDate;
-    dto.plantDuration = garden.plantDuration;
-    dto.createdAt = garden.createdAt;
-    dto.updatedAt = garden.updatedAt;
-
-    return dto;
-  }
+  private readonly defaultInclude = {
+    gardener: {
+      include: {
+        user: { include: { role: true } },
+        experienceLevel: true,
+      },
+    },
+  } as const;
 
   async create(
-    gardenerId: number,
-    createGardenDto: CreateGardenDto,
-  ): Promise<Garden> {
+    userId: number,
+    dto: CreateGardenDto,
+  ): Promise<GardenDto> {
     try {
-      // Generate a unique key for the garden
-      const gardenKey = this.generateGardenKey();
-
-      // Create the garden with the generated key
+      const gardenKey = `garden_${randomUUID()}`;
       const garden = await this.prisma.garden.create({
-        data: {
-          ...createGardenDto,
-          gardenKey,
-          gardenerId,
-          status: 'ACTIVE',
-        },
-        include: {
-          gardener: {
-            select: {
-              userId: true,
-              experiencePoints: true,
-              experienceLevelId: true,
-              experienceLevel: true,
-            },
-          },
-        },
+        data: { ...dto, gardenKey, gardenerId: userId, status: GardenStatus.ACTIVE },
+        include: this.defaultInclude,
       });
-
-      this.logger.log(`Garden created successfully with ID: ${garden.id}`);
-      return garden;
-    } catch (error) {
-      this.logger.error(
-        `Failed to create garden for gardener ${gardenerId}`,
-        error.stack,
-      );
-      if (error instanceof PrismaClientKnownRequestError) {
-        // Handle unique constraint violations
-        if (error.code === 'P2002') {
-          throw new ConflictException(
-            'A garden with this information already exists',
-          );
-        }
-        // Handle foreign key constraints
-        if (error.code === 'P2003') {
-          throw new NotFoundException(
-            `Gardener with ID ${gardenerId} not found`,
-          );
-        }
+      this.logger.log(`Garden created ${garden.id}`);
+      return mapToGardenDto(garden);
+    } catch (error: any) {
+      this.logger.error('Create failed', error.stack);
+      if (error.code === 'P2002') {
+        throw new ConflictException('Garden already exists');
       }
-      throw new InternalServerErrorException('Failed to create garden');
+      throw new InternalServerErrorException();
     }
   }
 
-  async findAll(gardenerId: number): Promise<Garden[]> {
-    try {
-      return this.prisma.garden.findMany({
-        where: {
-          gardenerId,
-        },
-        include: {
-          gardener: {
-            select: {
-              userId: true,
-              experiencePoints: true,
-              experienceLevel: true,
-            },
-          },
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-      });
-    } catch (error) {
-      this.logger.error(
-        `Failed to fetch garden for gardener ${gardenerId}`,
-        error.stack,
-      );
-      throw new InternalServerErrorException('Failed to fetch garden');
-    }
+  async findAll(userId: number): Promise<GardenDto[]> {
+    const gardens = await this.prisma.garden.findMany({
+      where: { gardenerId: userId },
+      include: this.defaultInclude,
+    });
+    return gardens.map(mapToGardenDto);
   }
 
-  async findOne(id: number): Promise<Garden> {
+  async findOne(id: number): Promise<GardenDto> {
     const garden = await this.prisma.garden.findUnique({
       where: { id },
-      include: {
-        gardener: {
-          select: {
-            userId: true,
-            experiencePoints: true,
-            experienceLevel: true,
-          },
-        },
-      },
+      include: this.defaultInclude,
     });
-
-    if (!garden) {
-      this.logger.warn(`Garden with ID ${id} not found`);
-      throw new NotFoundException(`Garden with ID ${id} not found`);
-    }
-
-    return garden;
+    if (!garden) throw new NotFoundException(`Garden ${id} not found`);
+    return mapToGardenDto(garden);
   }
 
-  async findOneByGardenKey(gardenKey: string): Promise<Garden> {
+  async findOneByGardenKey(key: string): Promise<GardenDto> {
     const garden = await this.prisma.garden.findUnique({
-      where: { gardenKey },
-      include: {
-        gardener: {
-          select: {
-            userId: true,
-            experiencePoints: true,
-            experienceLevel: true,
-          },
-        },
-      },
+      where: { gardenKey: key },
+      include: this.defaultInclude,
+    });
+    if (!garden) throw new NotFoundException(`Garden key ${key} not found`);
+    return mapToGardenDto(garden);
+  }
+
+  async checkGardenOwnership(
+    gardenerId: number,
+    gardenId: number,
+  ): Promise<boolean> {
+    const garden = await this.prisma.garden.findUnique({
+      where: { id: gardenId },
+      select: { gardenerId: true },
     });
 
     if (!garden) {
-      this.logger.warn(`Garden with key ${gardenKey} not found`);
-      throw new NotFoundException(`Garden with key ${gardenKey} not found`);
+      throw new NotFoundException(`Garden with ID ${gardenId} not found`);
     }
 
-    return garden;
+    return garden.gardenerId === gardenerId;
   }
 
   async update(
-    gardenerId: number,
-    gardenId: number,
-    updateGardenDto: UpdateGardenDto,
-  ): Promise<Garden> {
-    try {
-      // First check if garden exists and belongs to the gardener
-      const garden = await this.prisma.garden.findUnique({
-        where: { id: gardenId },
-        select: { gardenerId: true },
-      });
+    userId: number,
+    id: number,
+    dto: UpdateGardenDto,
+  ): Promise<GardenDto> {
+    const existing = await this.prisma.garden.findUnique({
+      where: { id },
+      select: { gardenerId: true },
+    });
+    if (!existing) throw new NotFoundException(`Garden ${id} not found`);
+    if (existing.gardenerId !== userId) throw new ForbiddenException();
 
-      if (!garden) {
-        throw new NotFoundException(`Garden with ID ${gardenId} not found`);
-      }
-
-      if (garden.gardenerId !== gardenerId) {
-        this.logger.warn(
-          `Unauthorized access attempt: Gardener ${gardenerId} tried to update garden ${gardenId}`,
-        );
-        throw new ForbiddenException(
-          'You do not have permission to update this garden',
-        );
-      }
-
-      return this.prisma.garden.update({
-        where: { id: gardenId },
-        data: updateGardenDto,
-        include: {
-          gardener: {
-            select: {
-              userId: true,
-              experiencePoints: true,
-              experienceLevel: true,
-            },
-          },
-        },
-      });
-    } catch (error) {
-      if (
-        error instanceof NotFoundException ||
-        error instanceof ForbiddenException
-      ) {
-        throw error;
-      }
-      this.logger.error(`Failed to update garden ${gardenId}`, error.stack);
-      throw new InternalServerErrorException('Failed to update garden');
-    }
+    const updated = await this.prisma.garden.update({
+      where: { id },
+      data: dto,
+      include: this.defaultInclude,
+    });
+    return mapToGardenDto(updated);
   }
 
-  async remove(gardenerId: number, gardenId: number): Promise<void> {
-    try {
-      // First check if garden exists and belongs to the gardener
-      const garden = await this.prisma.garden.findUnique({
-        where: { id: gardenId },
-        select: { gardenerId: true },
-      });
+  async remove(userId: number, id: number): Promise<void> {
+    const existing = await this.prisma.garden.findUnique({
+      where: { id },
+      select: { gardenerId: true },
+    });
+    if (!existing) throw new NotFoundException(`Garden ${id} not found`);
+    if (existing.gardenerId !== userId) throw new ForbiddenException();
 
-      if (!garden) {
-        throw new NotFoundException(`Garden with ID ${gardenId} not found`);
-      }
-
-      if (garden.gardenerId !== gardenerId) {
-        this.logger.warn(
-          `Unauthorized access attempt: Gardener ${gardenerId} tried to delete garden ${gardenId}`,
-        );
-        throw new ForbiddenException(
-          'You do not have permission to delete this garden',
-        );
-      }
-
-      await this.prisma.garden.delete({
-        where: { id: gardenId },
-      });
-
-      this.logger.log(`Garden with ID ${gardenId} deleted successfully`);
-    } catch (error) {
-      if (
-        error instanceof NotFoundException ||
-        error instanceof ForbiddenException
-      ) {
-        throw error;
-      }
-      this.logger.error(`Failed to delete garden ${gardenId}`, error.stack);
-      throw new InternalServerErrorException('Failed to delete garden');
-    }
+    await this.prisma.garden.delete({ where: { id } });
+    this.logger.log(`Garden ${id} deleted`);
   }
 
   async updateGardenStatus(
-    gardenerId: number,
-    gardenId: number,
+    userId: number,
+    id: number,
     status: GardenStatus,
-  ): Promise<Garden> {
-    try {
-      // First check if garden exists and belongs to the gardener
-      const garden = await this.prisma.garden.findUnique({
-        where: { id: gardenId },
-        select: { gardenerId: true },
-      });
+  ): Promise<GardenDto> {
+    const existing = await this.prisma.garden.findUnique({
+      where: { id },
+      select: { gardenerId: true },
+    });
+    if (!existing) throw new NotFoundException(`Garden ${id} not found`);
+    if (existing.gardenerId !== userId) throw new ForbiddenException();
 
-      if (!garden) {
-        throw new NotFoundException(`Garden with ID ${gardenId} not found`);
-      }
-
-      if (garden.gardenerId !== gardenerId) {
-        this.logger.warn(
-          `Unauthorized access attempt: Gardener ${gardenerId} tried to update status of garden ${gardenId}`,
-        );
-        throw new ForbiddenException(
-          'You do not have permission to update this garden',
-        );
-      }
-
-      return this.prisma.garden.update({
-        where: { id: gardenId },
-        data: { status },
-        include: {
-          gardener: {
-            select: {
-              userId: true,
-              experiencePoints: true,
-              experienceLevel: true,
-            },
-          },
-        },
-      });
-    } catch (error) {
-      if (
-        error instanceof NotFoundException ||
-        error instanceof ForbiddenException
-      ) {
-        throw error;
-      }
-      this.logger.error(
-        `Failed to update garden status ${gardenId}`,
-        error.stack,
-      );
-      throw new InternalServerErrorException('Failed to update garden status');
-    }
+    const updated = await this.prisma.garden.update({
+      where: { id },
+      data: { status },
+      include: this.defaultInclude,
+    });
+    return mapToGardenDto(updated);
   }
 
   async updatePlantInfo(
-    gardenerId: number,
+    userId: number,
     gardenId: number,
     plantName: string,
     plantGrowStage?: string,
@@ -352,7 +152,6 @@ export class GardenService {
     plantDuration?: number,
   ): Promise<Garden> {
     try {
-      // First check if garden exists and belongs to the gardener
       const garden = await this.prisma.garden.findUnique({
         where: { id: gardenId },
         select: { gardenerId: true },
@@ -362,9 +161,9 @@ export class GardenService {
         throw new NotFoundException(`Garden with ID ${gardenId} not found`);
       }
 
-      if (garden.gardenerId !== gardenerId) {
+      if (garden.gardenerId !== userId) {
         this.logger.warn(
-          `Unauthorized access attempt: Gardener ${gardenerId} tried to update plant info of garden ${gardenId}`,
+          `Unauthorized access attempt: Gardener ${userId} tried to update plant info of garden ${gardenId}`,
         );
         throw new ForbiddenException(
           'You do not have permission to update this garden',
@@ -406,25 +205,7 @@ export class GardenService {
     }
   }
 
-  private generateGardenKey(): string {
-    // Generate a unique identifier for the garden
-    // This could be a UUID or a custom format
-    return `garden_${randomUUID()}`;
-  }
-
-  async checkGardenOwnership(
-    gardenerId: number,
-    gardenId: number,
-  ): Promise<boolean> {
-    const garden = await this.prisma.garden.findUnique({
-      where: { id: gardenId },
-      select: { gardenerId: true },
-    });
-
-    if (!garden) {
-      throw new NotFoundException(`Garden with ID ${gardenId} not found`);
-    }
-
-    return garden.gardenerId === gardenerId;
-  }
+  // private generateGardenKey(): string {
+  //   return `garden_${randomUUID()}`;
+  // }
 }

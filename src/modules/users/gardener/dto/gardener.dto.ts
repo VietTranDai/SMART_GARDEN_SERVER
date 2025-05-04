@@ -1,123 +1,59 @@
+// src/gardener/dto/gardener.dto.ts
 import { ApiProperty } from '@nestjs/swagger';
-import { ExperienceLevelDto } from '../../experience_level';
+import { UserDto } from '../../user/dto';
+import { ExperienceLevelDto, mapToExperienceLevelDto } from '../../experience_level';
+import { ExperienceLevel, Gardener, Role, User } from '@prisma/client';
+import { mapToRoleDto } from '../../role/dto/role.dto';
 
-export class GardenerUserDto {
-  @ApiProperty({ description: 'First name', example: 'John' })
-  firstName: string;
-
-  @ApiProperty({ description: 'Last name', example: 'Doe' })
-  lastName: string;
-
-  @ApiProperty({ description: 'Username', example: 'johndoe' })
-  username: string;
-
-  @ApiProperty({ description: 'Email address', example: 'john@example.com' })
-  email: string;
-
+export class GardenerDto extends UserDto {
   @ApiProperty({
-    description: 'Profile picture URL',
-    example: 'https://example.com/images/profile.jpg',
-    required: false,
-  })
-  profilePicture?: string;
-}
-
-export class GardenerDto {
-  @ApiProperty({ description: 'User ID', example: 1 })
-  userId: number;
-
-  @ApiProperty({ description: 'Experience points', example: 150 })
-  experiencePoints: number;
-
-  @ApiProperty({ description: 'Experience level ID', example: 2 })
-  experienceLevelId: number;
-
-  @ApiProperty({
-    description: 'Experience level information',
-    type: ExperienceLevelDto,
-  })
-  experienceLevel: ExperienceLevelDto;
-
-  @ApiProperty({
-    description: 'User information',
-    type: GardenerUserDto,
-  })
-  user: GardenerUserDto;
-}
-
-export class ExperienceAddedResponseDto {
-  @ApiProperty({
-    description: 'Gardener information after XP update',
-    type: GardenerDto,
-  })
-  gardener: GardenerDto;
-
-  @ApiProperty({
-    description: 'Whether the gardener leveled up',
-    example: true,
-  })
-  levelUp: boolean;
-
-  @ApiProperty({
-    description: 'Previous experience level',
-    type: ExperienceLevelDto,
-  })
-  oldLevel: ExperienceLevelDto;
-
-  @ApiProperty({
-    description: 'New experience level',
-    type: ExperienceLevelDto,
-  })
-  newLevel: ExperienceLevelDto;
-
-  @ApiProperty({
-    description: 'Experience points added',
-    example: 50,
-  })
-  pointsAdded: number;
-
-  @ApiProperty({
-    description: 'Total experience points after update',
-    example: 200,
-  })
-  totalPoints: number;
-}
-
-export class LevelProgressDto {
-  @ApiProperty({
-    description: 'Current experience level',
-    type: ExperienceLevelDto,
-  })
-  currentLevel: ExperienceLevelDto;
-
-  @ApiProperty({
-    description: 'Next experience level',
-    type: ExperienceLevelDto,
-    nullable: true,
-  })
-  nextLevel: ExperienceLevelDto | null;
-
-  @ApiProperty({
-    description: 'Current experience points',
+    description: 'Total experience points accumulated by the gardener',
     example: 150,
   })
-  currentXP: number;
+  experiencePoints: number;
 
   @ApiProperty({
-    description: 'Experience points needed to reach next level',
-    example: 50,
+    description: 'Detailed experience level information',
+    type: () => ExperienceLevelDto,
   })
-  xpToNextLevel: number;
+  experienceLevel: ExperienceLevelDto;
+}
 
-  @ApiProperty({
-    description: 'Progress percentage towards next level',
-    example: 75,
-  })
-  progress: number;
+/**
+ * Chuyển đổi entity Gardener thành GardenerDto
+ */
+export function mapToGardenerDto(
+  gardener: Gardener & {
+    user: User & { role: Role };
+    experienceLevel: ExperienceLevel;
+  }
+): GardenerDto {
+  const dto = new GardenerDto();
 
-  @ApiProperty({
-    description: 'Whether gardener is at maximum level',
-    example: false,
-  })
-  isMaxLevel: boolean;
+  // Map các trường UserDto
+  dto.id = gardener.user.id;
+  dto.username = gardener.user.username;
+  dto.firstName = gardener.user.firstName;
+  dto.lastName = gardener.user.lastName;
+  dto.email = gardener.user.email;
+  dto.phoneNumber = gardener.user.phoneNumber ?? undefined;
+  dto.dateOfBirth = gardener.user.dateOfBirth
+    ? gardener.user.dateOfBirth.toISOString().split('T')[0]
+    : undefined;
+  dto.profilePicture = gardener.user.profilePicture ?? undefined;
+  dto.address = gardener.user.address ?? undefined;
+  dto.bio = gardener.user.bio ?? undefined;
+  dto.roleId = gardener.user.roleId;
+  dto.role = mapToRoleDto(gardener.user.role);
+  dto.lastLogin = gardener.user.lastLogin
+    ? gardener.user.lastLogin.toISOString()
+    : undefined;
+  dto.createdAt = gardener.user.createdAt.toISOString();
+  dto.updatedAt = gardener.user.updatedAt.toISOString();
+
+  // Map các trường riêng của Gardener
+  dto.experiencePoints = gardener.experiencePoints;
+  dto.experienceLevel = mapToExperienceLevelDto(gardener.experienceLevel);
+
+  return dto;
 }
