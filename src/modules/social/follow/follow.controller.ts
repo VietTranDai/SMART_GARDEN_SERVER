@@ -1,142 +1,54 @@
-import {
-  Controller,
-  Post,
-  Delete,
-  Get,
-  Param,
-  Body,
-  ParseIntPipe,
-  DefaultValuePipe,
-  Query,
-  HttpCode,
-  HttpStatus,
-} from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, ParseIntPipe, HttpCode } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { FollowService } from './follow.service';
-import { CreateFollowDto } from './dto/create-follow.dto';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiQuery,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
-import { GetUser } from 'src/common/decorators/get-user.decorator';
-import { FollowDto, FollowerListDto, FollowingListDto } from './dto/follow.dto';
-import { Public } from 'src/common/decorators/public.decorator';
-import { JwtPayload } from '../../auth/dto/jwt-payload.interface';
+import { GetUser } from '../../../common/decorators/get-user.decorator';
+import { FollowDto, mapToFollowDto } from './dto/follow.dto';
 
-@ApiTags('Follows')
-@Controller('follows')
+@ApiTags('Follow')
+@Controller('follow')
 @ApiBearerAuth()
 export class FollowController {
   constructor(private readonly followService: FollowService) {}
 
-  @Post()
-  @ApiOperation({ summary: 'Theo dõi một người làm vườn' })
-  @ApiResponse({
-    status: 201,
-    description: 'Theo dõi thành công.',
-    type: FollowDto,
-  })
-  @ApiResponse({ status: 400, description: 'Dữ liệu không hợp lệ.' })
-  @ApiResponse({ status: 404, description: 'Không tìm thấy người làm vườn.' })
-  @ApiResponse({ status: 409, description: 'Đã theo dõi người này rồi.' })
-  follow(
-    @GetUser() user: JwtPayload,
-    @Body() createFollowDto: CreateFollowDto,
+  @Get('followers/:gardenerId')
+  @ApiOperation({ summary: 'Get followers of a gardener' })
+  @ApiParam({ name: 'gardenerId', required: true, description: 'ID of the gardener', example: 1 })
+  async getFollowers(
+    @Param('gardenerId', ParseIntPipe) gardenerId: number,
+  ): Promise<FollowDto[]> {
+    const follows = await this.followService.getFollowers(gardenerId);
+    return follows.map(mapToFollowDto);
+  }
+
+  @Get('following/:gardenerId')
+  @ApiOperation({ summary: 'Get users that a gardener is following' })
+  @ApiParam({ name: 'gardenerId', required: true, description: 'ID of the gardener', example: 1 })
+  async getFollowing(
+    @Param('gardenerId', ParseIntPipe) gardenerId: number,
+  ): Promise<FollowDto[]> {
+    const follows = await this.followService.getFollowing(gardenerId);
+    return follows.map(mapToFollowDto);
+  }
+
+  @Post(':gardenerId')
+  @ApiOperation({ summary: 'Follow a user' })
+  @ApiParam({ name: 'gardenerId', required: true, description: 'ID of the gardener to follow', example: 1 })
+  async followUser(
+    @GetUser('id') userId: number,
+    @Param('gardenerId', ParseIntPipe) gardenerId: number,
   ): Promise<FollowDto> {
-    return this.followService.follow(user.sub, createFollowDto);
+    const follow = await this.followService.followUser(userId, gardenerId);
+    return mapToFollowDto(follow);
   }
 
-  @Delete(':followedId')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Hủy theo dõi một người làm vườn' })
-  @ApiResponse({
-    status: 204,
-    description: 'Hủy theo dõi thành công.',
-  })
-  @ApiResponse({ status: 404, description: 'Chưa theo dõi người này.' })
-  unfollow(
-    @GetUser() user: JwtPayload,
-    @Param('followedId', ParseIntPipe) followedId: number,
+  @Delete(':gardenerId')
+  @HttpCode(204)
+  @ApiOperation({ summary: 'Unfollow a user' })
+  @ApiParam({ name: 'gardenerId', required: true, description: 'ID of the gardener to unfollow', example: 1 })
+  async unfollowUser(
+    @GetUser('id') userId: number,
+    @Param('gardenerId', ParseIntPipe) gardenerId: number,
   ): Promise<void> {
-    return this.followService.unfollow(user.sub, followedId);
-  }
-
-  // @Get('followers/:gardenerId')
-  // @Public()
-  // @ApiOperation({
-  //   summary: 'Lấy danh sách người theo dõi của một người làm vườn',
-  // })
-  // @ApiResponse({
-  //   status: 200,
-  //   description: 'Danh sách người theo dõi.',
-  //   type: FollowerListDto,
-  // })
-  // @ApiQuery({
-  //   name: 'page',
-  //   required: false,
-  //   type: Number,
-  //   description: 'Trang',
-  // })
-  // @ApiQuery({
-  //   name: 'limit',
-  //   required: false,
-  //   type: Number,
-  //   description: 'Số lượng người theo dõi trên một trang',
-  // })
-  // getFollowers(
-  //   @Param('gardenerId', ParseIntPipe) gardenerId: number,
-  //   @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-  //   @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
-  // ): Promise<FollowerListDto> {
-  //   return this.followService.getFollowers(gardenerId, page, limit);
-  // }
-
-  // @Get('following/:gardenerId')
-  // @Public()
-  // @ApiOperation({
-  //   summary: 'Lấy danh sách người mà một người làm vườn đang theo dõi',
-  // })
-  // @ApiResponse({
-  //   status: 200,
-  //   description: 'Danh sách người đang theo dõi.',
-  //   type: FollowingListDto,
-  // })
-  // @ApiQuery({
-  //   name: 'page',
-  //   required: false,
-  //   type: Number,
-  //   description: 'Trang',
-  // })
-  // @ApiQuery({
-  //   name: 'limit',
-  //   required: false,
-  //   type: Number,
-  //   description: 'Số lượng người đang theo dõi trên một trang',
-  // })
-  // getFollowing(
-  //   @Param('gardenerId', ParseIntPipe) gardenerId: number,
-  //   @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-  //   @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
-  // ): Promise<FollowingListDto> {
-  //   return this.followService.getFollowing(gardenerId, page, limit);
-  // }
-
-  @Get('status/:followedId')
-  @ApiOperation({ summary: 'Kiểm tra trạng thái theo dõi' })
-  @ApiResponse({
-    status: 200,
-    description: 'Trạng thái theo dõi.',
-    schema: {
-      type: 'boolean',
-      example: true,
-    },
-  })
-  checkFollowStatus(
-    @GetUser() user: JwtPayload,
-    @Param('followedId', ParseIntPipe) followedId: number,
-  ): Promise<boolean> {
-    return this.followService.checkFollowStatus(user.sub, followedId);
+    await this.followService.unfollowUser(userId, gardenerId);
   }
 }

@@ -1,38 +1,34 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Body, Controller, Param, ParseIntPipe, Post } from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { VoteService } from './vote.service';
-import { CreateVoteDto } from './dto/create-vote.dto';
-import { VoteDto } from './dto/vote.dto';
-import {
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
-import { GetUser } from 'src/common/decorators/get-user.decorator';
-import { JwtPayload } from '../../auth/dto/jwt-payload.interface';
+import { GetUser } from '../../../common/decorators/get-user.decorator';
+import { CreateVoteDto } from './dto/vote.dto';
 
-@ApiTags('Votes')
-@Controller('votes')
+@ApiTags('Vote')
+@Controller('vote')
 @ApiBearerAuth()
 export class VoteController {
   constructor(private readonly voteService: VoteService) {}
 
-  @Post()
-  @ApiOperation({ summary: 'Thực hiện bình chọn cho bài viết hoặc bình luận' })
-  @ApiResponse({
-    status: 201,
-    description: 'Bình chọn đã được thực hiện thành công.',
-    type: VoteDto,
-  })
-  @ApiResponse({ status: 400, description: 'Dữ liệu không hợp lệ.' })
-  @ApiResponse({
-    status: 404,
-    description: 'Không tìm thấy đối tượng bình chọn.',
-  })
-  vote(
-    @GetUser() user: JwtPayload,
-    @Body() createVoteDto: CreateVoteDto,
-  ): Promise<VoteDto> {
-    return this.voteService.vote(user.sub, createVoteDto);
+  @Post('posts/:postId')
+  @ApiOperation({ summary: 'Vote on a post' })
+  @ApiParam({ name: 'postId', required: true, description: 'ID of the post', example: 1 })
+  async votePost(
+    @GetUser('id') userId: number,
+    @Param('postId', ParseIntPipe) postId: number,
+    @Body() dto: CreateVoteDto,
+  ): Promise<{ total_vote: number; userVote: number }> {
+    return this.voteService.votePost(userId, postId, dto);
+  }
+
+  @Post('comments/:commentId')
+  @ApiOperation({ summary: 'Vote on a comment' })
+  @ApiParam({ name: 'commentId', required: true, description: 'ID of the comment', example: 1 })
+  async voteComment(
+    @GetUser('id') userId: number,
+    @Param('commentId', ParseIntPipe) commentId: number,
+    @Body() dto: CreateVoteDto,
+  ): Promise<{ score: number; userVote: number }> {
+    return this.voteService.voteComment(userId, commentId, dto);
   }
 }
