@@ -25,7 +25,7 @@ import {
   ApiQuery, ApiParam, ApiOkResponse,
 } from '@nestjs/swagger';
 import { GardenerProfileDto } from '../dto/gardener-stats.dto';
-import { GetUser } from '../../../auth/decorators/get-user.decorator';
+import { GetUser } from '../../../../common/decorators/get-user.decorator';
 
 @ApiTags('gardeners')
 @Controller('gardeners')
@@ -55,6 +55,7 @@ export class GardenerController {
   }
 
   @Get()
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all gardeners with pagination' })
   @ApiResponse({
     status: 200,
@@ -74,6 +75,7 @@ export class GardenerController {
   }
 
   @Get(':gardenerId')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get gardener profile with stats' })
   @ApiParam({ name: 'gardenerId', type: Number })
   @ApiOkResponse({ type: GardenerProfileDto })
@@ -85,6 +87,7 @@ export class GardenerController {
   }
 
   @Get('leaderboard')
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get gardener leaderboard' })
   @ApiResponse({
     status: 200,
@@ -98,40 +101,6 @@ export class GardenerController {
   })
   getLeaderboard(@Query('limit') limit?: number) {
     return this.gardenerService.getLeaderboard(limit);
-  }
-
-  @Get(':userId')
-  @ApiOperation({ summary: 'Get gardener by user ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Return the gardener with the specified user ID',
-    type: GardenerDto,
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Gardener not found',
-  })
-  findOne(@Param('userId', ParseIntPipe) userId: number) {
-    return this.gardenerService.findById(userId);
-  }
-
-  @Put(':userId')
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Update a gardener' })
-  @ApiResponse({
-    status: 200,
-    description: 'The gardener has been successfully updated',
-    type: GardenerDto,
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Gardener not found',
-  })
-  update(
-    @Param('userId', ParseIntPipe) userId: number,
-    @Body() updateGardenerDto: UpdateGardenerDto,
-  ) {
-    return this.gardenerService.update(userId, updateGardenerDto);
   }
 
   @Delete(':userId')

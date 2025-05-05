@@ -7,13 +7,12 @@ import { UsersModule } from 'src/modules/users/users.module';
 import { AuthModule } from 'src/modules/auth/auth.module';
 import { HealthModule } from 'src/health/health.module';
 import { GardensModule } from './modules/gardens/gardens.module';
-import { GardenModule } from 'src/modules/gardens/garden/garden.module';
-import { SensorModule } from 'src/modules/gardens/sensor/sensor.module';
 import { PlantsModule } from 'src/modules/plants/plants.module';
 import { SocialModule } from './modules/social/social.module';
 import { LocationModule } from './modules/location/location.module';
 import { WeatherModule } from './modules/weathers/weather.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ActivitiesModule } from './modules/activities/activities.module';
 
 @Module({
   imports: [
@@ -24,12 +23,11 @@ import { ScheduleModule } from '@nestjs/schedule';
     AuthModule,
     HealthModule,
     GardensModule,
-    GardenModule,
-    SensorModule,
     PlantsModule,
     SocialModule,
     LocationModule,
-    WeatherModule
+    WeatherModule,
+    ActivitiesModule
   ],
   controllers: [],
   providers: [

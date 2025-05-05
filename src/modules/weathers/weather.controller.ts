@@ -28,7 +28,7 @@ import {
 
 @ApiTags('Weather')
 @ApiBearerAuth() // Indicate JWT Bearer auth is expected (applied globally)
-@Controller('api/weather')
+@Controller('weather')
 export class WeatherController {
   private readonly logger = new Logger(WeatherController.name);
 
@@ -141,21 +141,21 @@ export class WeatherController {
     try {
       if (startDateStr) {
         startDate = new Date(startDateStr);
-        // Check if date is valid
+        // Check if the date is valid
         if (isNaN(startDate.getTime())) {
           throw new BadRequestException(
             'Invalid startDate format. Use YYYY-MM-DD',
           );
         }
       } else {
-        // Default to 7 days ago
+        // Defaulted to 7 days ago
         startDate = new Date();
         startDate.setDate(startDate.getDate() - 7);
       }
 
       if (endDateStr) {
         endDate = new Date(endDateStr);
-        // Check if date is valid
+        // Check if the date is valid
         if (isNaN(endDate.getTime())) {
           throw new BadRequestException(
             'Invalid endDate format. Use YYYY-MM-DD',
@@ -166,7 +166,7 @@ export class WeatherController {
         endDate = new Date();
       }
 
-      // Set time to start/end of day
+      // Set time to start/end of the day
       startDate.setHours(0, 0, 0, 0);
       endDate.setHours(23, 59, 59, 999);
 
@@ -175,7 +175,7 @@ export class WeatherController {
         throw new BadRequestException('startDate must be before endDate');
       }
 
-      // Limit to maximum 30 days range to prevent performance issues
+      // Limit to the maximum 30-day range to prevent performance issues
       const dayDiff = Math.ceil(
         (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
       );
@@ -214,7 +214,7 @@ export class WeatherController {
     status: 200,
     description: 'Weather data refresh initiated successfully.',
     type: RefreshWeatherResponseDto,
-  }) // Use DTO for response type
+  })
   @ApiResponse({ status: 404, description: 'Garden not found.' })
   @ApiResponse({
     status: 409,
@@ -227,7 +227,7 @@ export class WeatherController {
   })
   // Example Rate Limiting Decorator (implementation needed)
   // @UseGuards(RateLimiterGuard)
-  // @RateLimit({ keyPrefix: 'weather:refresh', limit: 1, ttl: 300 }) // 1 request per 5 minutes (300s)
+  // @RateLimit({ keyPrefix: 'weather:refresh', limit: 1, ttl: 300 }) // 1 request per 5 minutes (300 s)
   async refreshWeatherForGarden(
     @Param('gardenId', ParseIntPipe) gardenId: number,
   ): Promise<RefreshWeatherResponseDto> {
@@ -236,21 +236,6 @@ export class WeatherController {
       `Received request to refresh weather for garden ${gardenId}`,
     );
 
-    // --- Rate Limiting Logic Placeholder ---
-    // If using Redis:
-    // const key = `weather:refresh:${gardenId}`;
-    // const count = await this.redisService.incr(key);
-    // if (count === 1) {
-    //   await this.redisService.expire(key, 300); // Set TTL only on first request in window
-    // }
-    // if (count > 1) { // Or check against a configured limit
-    //   this.logger.warn(`Rate limit exceeded for garden ${gardenId}`);
-    //   throw new HttpException('Rate limit exceeded. Please try again later.', HttpStatus.TOO_MANY_REQUESTS);
-    // }
-    // --- End Placeholder ---
-
-    // Service will throw specific exceptions (NotFound, Conflict, InternalServer)
-    // The return type matches RefreshWeatherResponseDto now
     return await this.weatherService.refreshWeatherForGardenById(gardenId);
   }
 

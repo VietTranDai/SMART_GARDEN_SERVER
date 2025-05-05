@@ -6,7 +6,7 @@ import {
   HttpCode,
   Body,
   HttpStatus,
-  UnauthorizedException, Req,
+  Req,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -22,11 +22,11 @@ import { LoginDto } from './dto/login.dto';
 import { RegisterUserDto } from './dto/register-user.dto';
 import { TokensResponseDto } from './dto/tokens-response.dto';
 import { LocalAuthGuard } from '../../common/guards/local-auth.guard';
-import { Public } from './decorators/public.decorators';
-import { GetUser } from './decorators/get-user.decorator';
+import { GetUser } from '../../common/decorators/get-user.decorator';
 import { User } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/guards';
 import { JwtRefreshGuard } from '../../common/guards/jwt-refresh.guard';
+import { Public } from 'src/common/decorators/public.decorator'
 
 @Public()
 @ApiTags('Authentication')

@@ -14,7 +14,6 @@ import {
   Prisma,
   AlertType,
   AlertStatus,
-  NotificationMethod,
 } from '@prisma/client';
 import { firstValueFrom } from 'rxjs';
 import { AxiosError } from 'axios';
@@ -281,6 +280,12 @@ export class WeatherService implements OnModuleInit {
   }
 
   private async handleFailure(gardenId: number, msg: string) {
+    const garden = await this.prisma.garden.findUnique({
+      where: { id: gardenId },
+    })
+    if (!garden) {
+      throw new NotFoundException(`Garden with ID ${gardenId} not found.`);
+    }
     const existing = await this.prisma.alert.findFirst({
       where: { gardenId, type: AlertType.WEATHER, status: AlertStatus.PENDING },
     });
@@ -288,12 +293,11 @@ export class WeatherService implements OnModuleInit {
       await this.prisma.alert.create({
         data: {
           gardenId,
+          userId: garden.gardenerId,
           type: AlertType.WEATHER,
           message: msg.slice(0, 200),
           suggestion: 'Check API key, coordinates and network.',
-          timestamp: new Date(),
           status: AlertStatus.PENDING,
-          notificationMethod: NotificationMethod.EMAIL,
         },
       });
     }

@@ -14,7 +14,7 @@ import {
   ApiOperation,
   ApiBody,
   ApiResponse,
-  ApiParam,
+  ApiParam, ApiBearerAuth,
 } from '@nestjs/swagger';
 import { ThresholdAlertService } from '../service/threshold-alert.service';
 import {
@@ -22,11 +22,12 @@ import {
   ThresholdAlertDto,
   UpdateThresholdAlertDto,
 } from '../dto/threshold-alert.dto';
-import { GetUser } from 'src/modules/auth/decorators/get-user.decorator';
+import { GetUser } from 'src/common/decorators/get-user.decorator';
 import { JwtPayload } from '../../../auth/dto/jwt-payload.interface';
 
 @Controller('threshold-alerts')
 @ApiTags('Threshold Alert')
+@ApiBearerAuth()
 export class ThresholdAlertController {
   private readonly logger = new Logger(ThresholdAlertController.name);
 

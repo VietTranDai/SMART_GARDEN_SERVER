@@ -1,7 +1,22 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { CommentDto } from '../../comment/dto/comment.dto';
-import { TagDto } from '../../tag/dto/tag.dto';
-import { PostImageDto } from '../../post_image/dto/post-image.dto';
+import { CommentDto, mapToCommentDto } from '../../comment/dto/comment.dto';
+import { mapToTagDto, TagDto } from '../../tag/dto/tag.dto';
+import { Post, PostImage, Tag, Comment, Gardener, User, ExperienceLevel } from '@prisma/client';
+import { CommunityUserDto, mapToCommunityUserDto } from './community-user.dto';
+
+export class PostImageDto {
+  @ApiProperty({ description: 'ID của hình ảnh', example: 1 })
+  id: number;
+
+  @ApiProperty({ description: 'ID của bài viết', example: 1 })
+  postId: number;
+
+  @ApiProperty({
+    description: 'URL của hình ảnh',
+    example: 'https://example.com/images/tomato.jpg',
+  })
+  url: string;
+}
 
 export class PostDto {
   @ApiProperty({ description: 'ID của bài viết', example: 1 })
@@ -12,6 +27,12 @@ export class PostDto {
     example: 1,
   })
   gardenerId: number;
+
+  @ApiProperty({
+    description: 'Thông tin người dùng tạo bài viết',
+    type: CommunityUserDto,
+  })
+  userdata: CommunityUserDto;
 
   @ApiProperty({
     description: 'Tiêu đề bài viết',
@@ -71,16 +92,42 @@ export class PostDto {
   userVote?: number;
 }
 
-export class PostPaginationDto {
-  @ApiProperty({ description: 'Danh sách bài viết', type: [PostDto] })
-  items: PostDto[];
+export function mapToPostImageDto(image: PostImage): PostImageDto {
+  return {
+    id: image.id,
+    postId: image.postId,
+    url: image.url,
+  };
+}
 
-  @ApiProperty({ description: 'Tổng số bài viết', example: 100 })
-  total: number;
-
-  @ApiProperty({ description: 'Trang hiện tại', example: 1 })
-  page: number;
-
-  @ApiProperty({ description: 'Số lượng bài viết trên một trang', example: 10 })
-  limit: number;
+export function mapToPostDto(
+  post: Post & {
+    tags?: { tag: Tag }[];
+    images?: PostImage[];
+    comments?: Comment[];
+    gardener: Gardener & {
+      user: User & {
+        gardener?: Gardener & { experienceLevel?: ExperienceLevel };
+      };
+    };
+    userVote?: number;
+  },
+): PostDto {
+  return {
+    id: post.id,
+    gardenerId: post.gardenerId,
+    userdata: mapToCommunityUserDto(post.gardener.user),
+    gardenId: post.gardenId ?? undefined,
+    plantName: post.plantName ?? undefined,
+    plantGrowStage: post.plantGrowStage ?? undefined,
+    title: post.title,
+    content: post.content,
+    total_vote: post.total_vote,
+    createdAt: post.createdAt,
+    updatedAt: post.updatedAt,
+    tags: post.tags?.map((t) => mapToTagDto(t.tag)) ?? [],
+    comments: post.comments?.map(mapToCommentDto) ?? [],
+    images: post.images?.map(mapToPostImageDto) ?? [],
+    userVote: post.userVote ?? undefined,
+  };
 }

@@ -1,10 +1,15 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { SensorType } from '@prisma/client';
+import { Sensor, SensorType } from '@prisma/client';
 
 @Injectable()
 export class SensorDataGeneratorService implements OnModuleInit {
+  private readonly logger = new Logger(SensorDataGeneratorService.name);
+
+  // Cache toàn bộ sensor cần tạo data
+  private sensors: Sensor[] = [];
+
   constructor(private readonly prisma: PrismaService) {}
 
   private generateRandomValue(type: SensorType): number {
@@ -16,51 +21,57 @@ export class SensorDataGeneratorService implements OnModuleInit {
       case SensorType.LIGHT:
         return parseFloat((Math.random() * 10000).toFixed(2)); // 0 lux - 10000 lux
       case SensorType.WATER_LEVEL:
-        return parseFloat((Math.random() * 100).toFixed(2)); // 0% - 100% (mức nước)
+        return parseFloat((Math.random() * 100).toFixed(2)); // 0% - 100%
       case SensorType.RAINFALL:
-        return parseFloat((Math.random() * 50).toFixed(2)); // 0 mm - 50 mm (lượng mưa)
+        return parseFloat((Math.random() * 50).toFixed(2)); // 0 mm - 50 mm
       case SensorType.SOIL_MOISTURE:
-        return parseFloat((Math.random() * 100).toFixed(2)); // 0% - 100% (độ ẩm đất)
+        return parseFloat((Math.random() * 100).toFixed(2)); // 0% - 100%
       case SensorType.SOIL_PH:
-        return parseFloat((Math.random() * (14)).toFixed(2)); // 0 - 14 (độ pH)
+        return parseFloat((Math.random() * 14).toFixed(2)); // 0 - 14
     }
   }
 
-  @Cron(CronExpression.EVERY_5_SECONDS)
-  private async createSensorData() {
-    const gardenKeys = ['1', '2', '3'];
-    const allSensorTypes = Object.values(SensorType);
-
-    const validSensorKeys = gardenKeys.flatMap(gardenKey =>
-      allSensorTypes.map(type => `sensor_${gardenKey}_${type.toLowerCase()}`)
-    );
-
-    const sensors = await this.prisma.sensor.findMany({
+  /** Chạy một lần khi module init để load danh sách sensors */
+  async onModuleInit() {
+    this.sensors = await this.prisma.sensor.findMany({
+      // Nếu bạn chỉ muốn những sensor theo gardenKeys cụ thể:
       where: {
         sensorKey: {
-          in: validSensorKeys,
+          in: ['1', '2', '3']
+            .flatMap(gk =>
+              (Object.values(SensorType) as SensorType[]).map(
+                t => `sensor_${gk}_${t.toLowerCase()}`,
+              ),
+            ),
         },
       },
     });
 
-    for (const sensor of sensors) {
-      const value = this.generateRandomValue(sensor.type);
-      const timestamp = new Date();
-
-      await this.prisma.sensorData.create({
-        data: {
-          sensorId: sensor.id,
-          timestamp,
-          value,
-          gardenId: sensor.gardenId || null,
-        },
-      });
-    }
-
-    console.log(`✅ Đã tạo dữ liệu cho ${sensors.length} sensor lúc ${new Date().toISOString()}`);
+    this.logger.log(
+      `Loaded ${this.sensors.length} sensors, sẽ tạo data mỗi 5s.`,
+    );
   }
 
-  onModuleInit() {
-    console.log('SensorDataGeneratorService đã khởi động. Tạo dữ liệu sensor mỗi 5 giây.');
+  @Cron(CronExpression.EVERY_5_SECONDS)
+  private async createSensorData() {
+    const timestamp = new Date();
+
+    const creates = this.sensors.map(sensor => {
+      const value = this.generateRandomValue(sensor.type);
+      return this.prisma.sensorData.create({
+        data: {
+          sensorId: sensor.id,
+          gardenId: sensor.gardenId,
+          timestamp,
+          value,
+        },
+      });
+    });
+
+    await Promise.all(creates);
+
+    this.logger.log(
+      `✅ Đã tạo dữ liệu cho ${this.sensors.length} sensor lúc ${timestamp.toISOString()}`,
+    );
   }
 }

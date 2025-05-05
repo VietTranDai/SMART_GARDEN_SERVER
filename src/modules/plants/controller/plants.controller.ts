@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { PlantsService } from '../service/plants.service';
 
-import { GetUser } from 'src/modules/auth/decorators/get-user.decorator';
+import { GetUser } from 'src/common/decorators/get-user.decorator';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { PlantTypeDto } from '../dto/plant-type.dto';
 import { CreatePlantTypeDto } from '../dto/create-plant-type.dto';

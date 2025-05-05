@@ -1,174 +1,96 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Param,
+  Controller,
   Delete,
-  Put,
-  Query,
+  Get,
+  Param,
   ParseIntPipe,
-  DefaultValuePipe,
+  Patch,
+  Post,
+  Query,
+  UploadedFiles,
+  UseInterceptors,
   HttpCode,
-  HttpStatus,
-  SetMetadata,
 } from '@nestjs/common';
-import { PostService } from './post.service';
-import { CreatePostDto } from './dto/create-post.dto';
-import { UpdatePostDto } from './dto/update-post.dto';
 import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiQuery,
   ApiBearerAuth,
+  ApiConsumes,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiTags,
 } from '@nestjs/swagger';
-import { PostDto, PostPaginationDto } from './dto/post.dto';
-import { GetUser } from 'src/modules/auth/decorators/get-user.decorator';
-import { Public } from 'src/common/decorators/public.decorator';
-import { JwtPayload } from 'src/modules/auth/dto/jwt-payload.interface';
+import { CreatePostDto } from './dto/create-post.dto';
+import { GetUser } from '../../../common/decorators/get-user.decorator';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { PostDto, mapToPostDto } from './dto/post.dto';
+import { PostService } from './post.service';
 
-@ApiTags('Posts')
+@ApiTags('Post')
 @Controller('posts')
 @ApiBearerAuth()
 export class PostController {
   constructor(private readonly postService: PostService) {}
 
-  @Post()
-  @ApiOperation({ summary: 'Tạo bài viết mới' })
-  @ApiResponse({
-    status: 201,
-    description: 'Bài viết đã được tạo thành công.',
-    type: PostDto,
-  })
-  create(
-    @GetUser() user: JwtPayload,
-    @Body() createPostDto: CreatePostDto,
-  ): Promise<PostDto> {
-    return this.postService.create(user.sub, createPostDto);
-  }
-
-  @Get()
-  @Public()
-  @ApiOperation({ summary: 'Lấy danh sách bài viết' })
-  @ApiResponse({
-    status: 200,
-    description: 'Danh sách bài viết.',
-    type: PostPaginationDto,
-  })
-  @ApiQuery({
-    name: 'page',
-    required: false,
-    type: Number,
-    description: 'Trang',
-  })
-  @ApiQuery({
-    name: 'limit',
-    required: false,
-    type: Number,
-    description: 'Số lượng bài viết trên một trang',
-  })
-  @ApiQuery({
-    name: 'sortBy',
-    required: false,
-    enum: ['createdAt', 'total_vote'],
-    description: 'Sắp xếp theo',
-  })
-  @ApiQuery({
-    name: 'order',
-    required: false,
-    enum: ['asc', 'desc'],
-    description: 'Thứ tự sắp xếp',
-  })
-  @ApiQuery({
-    name: 'gardenerId',
-    required: false,
-    type: Number,
-    description: 'ID của người làm vườn',
-  })
-  @ApiQuery({
-    name: 'gardenId',
-    required: false,
-    type: Number,
-    description: 'ID của khu vườn',
-  })
-  @ApiQuery({
-    name: 'tagId',
-    required: false,
-    type: Number,
-    description: 'ID của thẻ',
-  })
-  @ApiQuery({
-    name: 'search',
-    required: false,
-    type: String,
-    description: 'Từ khóa tìm kiếm',
-  })
-  findAll(
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
-    @Query('sortBy') sortBy: 'createdAt' | 'total_vote' = 'createdAt',
-    @Query('order') order: 'asc' | 'desc' = 'desc',
-    @Query('gardenerId', ParseIntPipe) gardenerId?: number,
-    @Query('gardenId', ParseIntPipe) gardenId?: number,
-    @Query('tagId', ParseIntPipe) tagId?: number,
-    @Query('search') search?: string,
-    @GetUser() user?: JwtPayload,
-  ): Promise<PostPaginationDto> {
-    return this.postService.findAll(
-      page,
-      limit,
-      sortBy,
-      order,
-      gardenerId,
-      gardenId,
-      tagId,
-      search,
-      user?.sub,
-    );
-  }
-
-  @Get(':id')
-  @Public()
-  @ApiOperation({ summary: 'Lấy thông tin chi tiết của bài viết' })
-  @ApiResponse({
-    status: 200,
-    description: 'Thông tin chi tiết của bài viết.',
-    type: PostDto,
-  })
-  findOne(
-    @Param('id', ParseIntPipe) id: number,
-    @GetUser() user?: JwtPayload,
-  ): Promise<PostDto> {
-    return this.postService.findOne(id, user?.sub);
-  }
-
-  @Put(':id')
-  @ApiOperation({ summary: 'Cập nhật bài viết' })
-  @ApiResponse({
-    status: 200,
-    description: 'Bài viết đã được cập nhật thành công.',
-    type: PostDto,
-  })
-  update(
-    @Param('id', ParseIntPipe) id: number,
-    @GetUser() user: JwtPayload,
-    @Body() updatePostDto: UpdatePostDto,
-  ): Promise<PostDto> {
-    return this.postService.update(id, user.sub, updatePostDto);
-  }
-
-  @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Xóa bài viết' })
-  @ApiResponse({
-    status: 204,
-    description: 'Bài viết đã được xóa thành công.',
-  })
-  remove(
-    @Param('id', ParseIntPipe) id: number,
-    @GetUser() user: JwtPayload,
-  ): Promise<void> {
-    return this.postService.remove(id, user.sub);
-  }
+  // @Get()
+  // @ApiOperation({ summary: 'Get all posts with optional filters' })
+  // @ApiQuery({ name: 'tag', required: false })
+  // @ApiQuery({ name: 'search', required: false })
+  // @ApiQuery({ name: 'gardenerId', required: false })
+  // @ApiQuery({ name: 'plantName', required: false })
+  // @ApiQuery({ name: 'page', required: false })
+  // @ApiQuery({ name: 'limit', required: false })
+  // async getPosts(@Query() query: any): Promise<PostDto[]> {
+  //   const result = await this.postService.getPosts(query);
+  //   return result.map(mapToPostDto);
+  // }
+  //
+  // @Get(':id')
+  // @ApiOperation({ summary: 'Get post details by ID' })
+  // @ApiParam({ name: 'id' })
+  // async getPostById(@Param('id', ParseIntPipe) id: number): Promise<PostDto> {
+  //   const result = await this.postService.getPostById(id);
+  //   return mapToPostDto(result);
+  // }
+  //
+  // @Post()
+  // @ApiOperation({ summary: 'Create a new post' })
+  // @ApiConsumes('multipart/form-data')
+  // @UseInterceptors(FileFieldsInterceptor([{ name: 'images', maxCount: 10 }]))
+  // async createPost(
+  //   @GetUser('id') userId: number,
+  //   @Body() body: any,
+  //   @UploadedFiles() files: { images?: Express.Multer.File[] },
+  // ): Promise<PostDto> {
+  //   const result = await this.postService.createPost(userId, body, files?.images || []);
+  //   return mapToPostDto(result);
+  // }
+  //
+  // @Patch(':id')
+  // @ApiOperation({ summary: 'Update a post' })
+  // async updatePost(
+  //   @GetUser('id') userId: number,
+  //   @Param('id', ParseIntPipe) id: number,
+  //   @Body() body: Partial<CreatePostDto>,
+  // ): Promise<PostDto> {
+  //   const result = await this.postService.updatePost(userId, id, body);
+  //   return mapToPostDto(result);
+  // }
+  //
+  // @Delete(':id')
+  // @ApiOperation({ summary: 'Delete a post' })
+  // @HttpCode(204)
+  // async deletePost(
+  //   @GetUser('id') userId: number,
+  //   @Param('id', ParseIntPipe) id: number,
+  // ): Promise<void> {
+  //   return this.postService.deletePost(userId, id);
+  // }
+  //
+  // @Get(':id/comments')
+  // @ApiOperation({ summary: 'Get comments of a post' })
+  // @ApiParam({ name: 'id' })
+  // async getComments(@Param('id', ParseIntPipe) id: number) {
+  //   return this.postService.getCommentsByPostId(id);
+  // }
 }

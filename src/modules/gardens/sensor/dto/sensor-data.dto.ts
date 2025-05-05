@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { SensorType } from '@prisma/client';
+import { SensorData, SensorType } from '@prisma/client';
+import { SensorDto } from './sensor.dto';
 
 export class SensorDataDto {
   @ApiProperty({
@@ -45,66 +46,6 @@ export class SensorDataDto {
   updatedAt: Date;
 }
 
-export class SensorDto {
-  @ApiProperty({
-    description: 'Unique ID of the sensor',
-    example: 1,
-  })
-  id: number;
-
-  @ApiProperty({
-    description: 'Unique key for the sensor',
-    example: 'sensor_1a2b3c4d',
-  })
-  sensorKey: string;
-
-  @ApiProperty({
-    description: 'Type of sensor',
-    enum: SensorType,
-    example: 'HUMIDITY',
-  })
-  type: SensorType;
-
-  @ApiProperty({
-    description: 'ID of the garden where the sensor is installed',
-    example: 1,
-  })
-  gardenId: number;
-
-  @ApiPropertyOptional({
-    description: 'Name of the sensor',
-    example: 'Main Garden Humidity Sensor',
-  })
-  name?: string;
-
-  @ApiPropertyOptional({
-    description: 'Description of the sensor',
-    example: 'Measures soil humidity in the main garden area',
-  })
-  description?: string;
-
-  @ApiPropertyOptional({
-    description: 'Location of the sensor within the garden',
-    example: 'North corner, near the tomato plants',
-  })
-  location?: string;
-
-  @ApiProperty({
-    description: 'Timestamp when the sensor was created',
-    example: '2023-09-20T10:15:00.000Z',
-    type: String,
-    format: 'date-time',
-  })
-  createdAt: Date;
-
-  @ApiProperty({
-    description: 'Timestamp when the sensor was last updated',
-    example: '2023-09-25T08:30:00.000Z',
-    type: String,
-    format: 'date-time',
-  })
-  updatedAt: Date;
-}
 
 export class LatestSensorDataDto {
   @ApiProperty({
@@ -118,4 +59,25 @@ export class LatestSensorDataDto {
     type: SensorDataDto,
   })
   latestData: SensorDataDto;
+}
+
+/**
+ * Map a Prisma SensorData model to SensorDataDto
+ */
+export function mapToSensorDataDto(data: SensorData): SensorDataDto {
+  return {
+    id: data.id,
+    sensorId: data.sensorId,
+    timestamp: data.timestamp,
+    value: data.value,
+    createdAt: data.createdAt,
+    updatedAt: data.updatedAt,
+  };
+}
+
+/**
+ * Map an array of Prisma SensorData models to SensorDataDto[]
+ */
+export function mapToSensorDataDtoList(dataList: SensorData[]): SensorDataDto[] {
+  return dataList.map(mapToSensorDataDto);
 }

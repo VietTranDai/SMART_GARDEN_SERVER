@@ -43,6 +43,7 @@ model User {
   admin              Admin?
   gardener           Gardener?
   activityEvaluation ActivityEvaluation[]
+  alert              Alert[]
 
   @@index([lastLogin]) // Creates an index for queries by last login time
 }
@@ -95,10 +96,10 @@ model Gardener {
   comments           Comment[]
   follow             Follow[]             @relation("Follower")
   following          Follow[]             @relation("Followed")
-  Task               Task[]
-  GardenActivity     GardenActivity[]
-  ActivityEvaluation ActivityEvaluation[]
-  PhotoEvaluation    PhotoEvaluation[]
+  task               Task[]
+  gardenActivity     GardenActivity[]
+  activityEvaluation ActivityEvaluation[]
+  photoEvaluation    PhotoEvaluation[]
 
   @@index([experiencePoints])
   @@index([experienceLevelId])
@@ -174,20 +175,30 @@ enum SensorType {
   SOIL_PH // Sensor for measuring soil pH
 }
 
+enum SensorUnit {
+  PERCENT /// phần trăm (ví dụ: độ ẩm)
+  CELSIUS /// độ C (nhiệt độ)
+  LUX /// đơn vị chiếu sáng
+  METER /// mét (mực nước)
+  MILLIMETER /// milimét (lượng mưa)
+  PH /// độ pH (độ chua, độ kiềm)
+}
+
 model Sensor {
-  // Identification Group
-  id        Int        @id @default(autoincrement()) // Unique ID for the sensor
-  sensorKey String     @unique // Unique UUID for the sensor
-  type      SensorType // Type of sensor (e.g., HUMIDITY, TEMPERATURE)
+  /// Identification Group
+  id        Int    @id @default(autoincrement()) // Unique ID for the sensor
+  sensorKey String @unique // Unique UUID for the sensor
 
-  // Relation Group
-  gardenId   Int // ID of the related Garden
-  garden     Garden       @relation(fields: [gardenId], references: [id]) // Relation to Garden
-  sensorData SensorData[] // Relation to sensor data collected by this sensor
+  type SensorType
+  unit SensorUnit
+  name String
 
-  // Timestamp Group
-  createdAt DateTime @default(now()) // Timestamp when the record was created
-  updatedAt DateTime @updatedAt // Timestamp when the record was last updated
+  gardenId   Int
+  garden     Garden       @relation(fields: [gardenId], references: [id])
+  sensorData SensorData[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model SensorData {
@@ -341,10 +352,10 @@ model WateringSchedule {
   garden   Garden @relation(fields: [gardenId], references: [id])
 
   scheduledAt DateTime // Thời gian lịch tưới
-  amount      Float? // Lượng nước đề xuất (ví dụ: lít)
+  amount      Float? // Lượng nước đề xuất (ví dụ: lí`t)
 
-  status String @default("PENDING") // PENDING, COMPLETED, SKIPPED
-
+  status    String   @default("PENDING") // PENDING, COMPLETED, SKIPPED
+  notes     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -367,6 +378,7 @@ model PhotoEvaluation {
   photoUrl   String // URL của ảnh tải lên (ví dụ: lưu trong Firebase Storage)
   aiFeedback String? // Phản hồi AI (ví dụ: "Lá bị vàng, kiểm tra tưới quá nước")
   confidence Float? // Độ tin cậy của AI (0 đến 1)
+  notes      String?
 
   evaluatedAt DateTime?
   createdAt   DateTime  @default(now())
@@ -667,43 +679,47 @@ enum AlertType {
   OTHER // Miscellaneous alerts not covered by other types
 }
 
-// Enum for the status of an alert
 enum AlertStatus {
-  PENDING // Alert is awaiting action
-  IN_PROGRESS // Alert is being addressed
-  RESOLVED // Alert has been resolved
-  IGNORED // Alert has been dismissed
-  ESCALATED // Alert has been escalated to a higher level
+  PENDING
+  IN_PROGRESS
+  RESOLVED
+  IGNORED
+  ESCALATED
 }
 
-// Enum for the notification method
-enum NotificationMethod {
-  EMAIL // Sent via email
-  SMS // Sent via SMS
-  PUSH // Sent as a push notification
-  IN_APP // Displayed in the app without notification
-  NONE // No notification sent, only logged
+enum Severity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
 }
 
 model Alert {
-  // Identification Group
-  id       Int    @id @default(autoincrement()) // Unique identifier for the alert
-  gardenId Int // Foreign key linking to Garden
-  garden   Garden @relation(fields: [gardenId], references: [id]) // Relation to the associated garden
+  id Int @id @default(autoincrement())
 
-  // Alert Details Group
-  type       AlertType // Type of the alert (e.g., WEATHER, SENSOR_ERROR)
-  message    String // Detailed message describing the alert
-  suggestion String? // Optional suggestion for resolving the alert
-  timestamp  DateTime // Time when the alert event occurred
+  // gardenId có thể null, quan hệ garden cũng optional
+  gardenId Int?
+  garden   Garden? @relation(fields: [gardenId], references: [id], onDelete: Cascade)
 
-  // Status and Notification Group
-  status             AlertStatus // Current status of the alert (e.g., PENDING, RESOLVED)
-  notificationMethod NotificationMethod? // Method used to notify users (e.g., EMAIL, SMS), optional
+  // Liên kết tới gardener (vẫn bắt buộc)
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  // Timestamp Group
-  createdAt DateTime @default(now()) // Time when the alert was created
-  updatedAt DateTime @updatedAt // Time when the alert was last updated
+  // Chi tiết alert
+  type       AlertType
+  message    String
+  suggestion String?
+
+  // Trạng thái và mức độ ưu tiên
+  status   AlertStatus @default(PENDING)
+  severity Severity    @default(LOW)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([gardenId])
+  @@index([status])
 }
 
 // Social network accounts linked to users
@@ -736,7 +752,7 @@ model Post {
   @@index([createdAt])
   @@index([total_vote])
   @@index([gardenerId])
-  @@index([title]) // Thêm chỉ mục cho tìm kiếm theo tiêu đề
+  @@index([title])
 }
 
 // Mô hình bình luận

@@ -1,64 +1,53 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { CommunityUserDto, mapToCommunityUserDto } from '../../post/dto/community-user.dto';
 
-export class CommentReplyDto {
-  @ApiProperty({ description: 'ID của bình luận', example: 1 })
+export class CommentDto {
+  @ApiProperty({ example: 101, description: 'ID của bình luận' })
   id: number;
 
-  @ApiProperty({ description: 'ID của người làm vườn', example: 1 })
+  @ApiProperty({ example: 1, description: 'ID bài viết liên quan' })
+  postId: number;
+
+  @ApiPropertyOptional({ example: 55, description: 'ID của bình luận cha nếu là phản hồi' })
+  parentId?: number;
+
+  @ApiProperty({ example: 10, description: 'ID người làm vườn đã viết bình luận' })
   gardenerId: number;
 
-  @ApiProperty({ description: 'Tên người làm vườn', example: 'Nguyễn Văn A' })
-  gardenerName: string;
+  @ApiProperty({ description: 'Thông tin người bình luận' })
+  userdata: CommunityUserDto;
 
-  @ApiProperty({
-    description: 'Nội dung bình luận',
-    example: 'Bài viết rất hữu ích!',
-  })
+  @ApiProperty({ example: 'Cây của bạn phát triển tốt quá!', description: 'Nội dung bình luận' })
   content: string;
 
-  @ApiProperty({ description: 'Số điểm của bình luận', example: 5 })
+  @ApiProperty({ example: 12, description: 'Tổng điểm vote của bình luận' })
   score: number;
 
-  @ApiProperty({ description: 'Thời gian tạo bình luận' })
+  @ApiProperty({ description: 'Thời điểm tạo bình luận' })
   createdAt: Date;
 
-  @ApiProperty({ description: 'Thời gian cập nhật bình luận' })
+  @ApiProperty({ description: 'Thời điểm cập nhật bình luận' })
   updatedAt: Date;
 
-  @ApiPropertyOptional({
-    description: 'Trạng thái vote của người dùng hiện tại',
-    example: 1,
-  })
+  @ApiPropertyOptional({ type: [CommentDto], description: 'Danh sách phản hồi cho bình luận này' })
+  replies?: CommentDto[];
+
+  @ApiPropertyOptional({ example: 1, description: 'Vote hiện tại của người dùng: 1 (up), -1 (down), 0 (chưa vote)' })
   userVote?: number;
 }
 
-export class CommentDto extends CommentReplyDto {
-  @ApiProperty({ description: 'ID của bài viết', example: 1 })
-  postId: number;
-
-  @ApiPropertyOptional({ description: 'ID của bình luận cha', example: 5 })
-  parentId?: number;
-
-  @ApiPropertyOptional({
-    description: 'Danh sách các trả lời',
-    type: [CommentReplyDto],
-  })
-  replies?: CommentReplyDto[];
-}
-
-export class CommentPaginationDto {
-  @ApiProperty({ description: 'Danh sách bình luận', type: [CommentDto] })
-  items: CommentDto[];
-
-  @ApiProperty({ description: 'Tổng số bình luận', example: 100 })
-  total: number;
-
-  @ApiProperty({ description: 'Trang hiện tại', example: 1 })
-  page: number;
-
-  @ApiProperty({
-    description: 'Số lượng bình luận trên một trang',
-    example: 10,
-  })
-  limit: number;
+export function mapToCommentDto(comment: any): CommentDto {
+  return {
+    id: comment.id,
+    postId: comment.postId,
+    parentId: comment.parentId ?? undefined,
+    gardenerId: comment.gardenerId,
+    userdata: mapToCommunityUserDto(comment.gardener?.user),
+    content: comment.content,
+    score: comment.score,
+    createdAt: comment.createdAt,
+    updatedAt: comment.updatedAt,
+    replies: comment.replies?.map(mapToCommentDto),
+    userVote: comment.userVote ?? 0,
+  };
 }

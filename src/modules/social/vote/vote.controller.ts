@@ -8,7 +8,7 @@ import {
   ApiTags,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { GetUser } from 'src/modules/auth/decorators/get-user.decorator';
+import { GetUser } from 'src/common/decorators/get-user.decorator';
 import { JwtPayload } from '../../auth/dto/jwt-payload.interface';
 
 @ApiTags('Votes')

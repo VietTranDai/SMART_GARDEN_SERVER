@@ -6,10 +6,6 @@ import { WeatherService } from './weather.service';
 export class WeatherScheduler {
   private readonly logger = new Logger(WeatherScheduler.name);
 
-  async onModuleInit() {
-    await this.handleCronUpdateWeather();
-  }
-
   constructor(private readonly weatherService: WeatherService) {}
 
   @Cron(CronExpression.EVERY_10_MINUTES)

@@ -18,6 +18,8 @@ import { UserDto } from '../dto';
 import { GardenerDto, mapToGardenerDto } from '../../gardener/dto';
 import { rmSync } from 'fs';
 import { join } from 'path';
+import { ExperienceProgressDto, RecentActivityDto } from '../dto/experience-progress.dto';
+import { ExperienceLevelDto, mapToExperienceLevelDto } from '../../experience_level';
 
 type AppUserDto = UserDto | GardenerDto;
 
@@ -245,5 +247,65 @@ export class UserService {
   async remove(id: number): Promise<void> {
     await this.getUser(id);
     await this.prisma.user.delete({ where: { id } });
+  }
+
+  async getExperienceProgress(userId: number): Promise<ExperienceProgressDto> {
+    // Lấy gardener kèm level
+    const gardener = await this.prisma.gardener.findUnique({
+      where: { userId },
+      include: { experienceLevel: true },
+    });
+    if (!gardener) {
+      throw new NotFoundException(`Gardener with userId ${userId} not found`);
+    }
+
+    const { experiencePoints, experienceLevel } = gardener;
+
+    // Tìm level tiếp theo (nếu có)
+    const nextLevel = await this.prisma.experienceLevel.findUnique({
+      where: { level: experienceLevel.level + 1 },
+    });
+
+    // Tính toán điểm đến level tiếp theo và phần trăm tiến độ
+    let pointsToNextLevel: number | undefined;
+    let percentToNextLevel: number;
+    if (nextLevel) {
+      pointsToNextLevel = nextLevel.minXP - experiencePoints;
+      const range = nextLevel.minXP - experienceLevel.minXP;
+      percentToNextLevel = Math.round(
+        ((experiencePoints - experienceLevel.minXP) / range) * 100,
+      );
+    } else {
+      // Nếu đã là max level
+      percentToNextLevel = 100;
+    }
+
+    // Lấy 5 hoạt động gần nhất
+    const activities = await this.prisma.gardenActivity.findMany({
+      where: { gardenerId: userId },
+      orderBy: { timestamp: 'desc' },
+      take: 10,
+    });
+
+    // Map RecentActivityDto (giả sử mỗi activity được 10 điểm — bạn có thể thay logic điểm tùy nhu cầu)
+    const recentActivities: RecentActivityDto[] = activities.map(act => ({
+      id: act.id,
+      name: act.name,
+      timestamp: act.timestamp.toISOString(),
+      points: 10,
+    }));
+
+    // Build DTO
+    const dto = new ExperienceProgressDto();
+    dto.currentPoints = experiencePoints;
+    dto.currentLevel = mapToExperienceLevelDto(experienceLevel)
+    if (nextLevel) {
+      dto.nextLevel = mapToExperienceLevelDto(nextLevel);
+      dto.pointsToNextLevel = pointsToNextLevel;
+    }
+    dto.percentToNextLevel = percentToNextLevel;
+    dto.recentActivities = recentActivities;
+
+    return dto;
   }
 }

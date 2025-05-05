@@ -16,16 +16,17 @@ import {
   ApiParam,
   ApiOperation,
   ApiTags,
-  ApiResponse,
+  ApiResponse, ApiBearerAuth,
 } from '@nestjs/swagger';
 import { SensorStatisticsService } from '../service/sensor-statistics.service';
 import { SensorStatisticsDto } from '../dto/sensor-statistics.dto';
 import { SensorAnalyticsDto } from '../dto/sensor-analytics.dto';
-import { GetUser } from 'src/modules/auth/decorators/get-user.decorator';
+import { GetUser } from 'src/common/decorators/get-user.decorator';
 import { JwtPayload } from '../../../auth/dto/jwt-payload.interface';
 
 @Controller('sensor-statistics')
 @ApiTags('Sensor Statistics')
+@ApiBearerAuth()
 export class SensorStatisticsController {
   private readonly logger = new Logger(SensorStatisticsController.name);
 

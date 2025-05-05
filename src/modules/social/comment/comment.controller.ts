@@ -1,31 +1,26 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Param,
+  Controller,
   Delete,
-  Put,
-  Query,
+  Get,
+  Param,
   ParseIntPipe,
-  DefaultValuePipe,
+  Patch,
+  Post,
+  Query,
   HttpCode,
-  HttpStatus,
 } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
+import { GetUser } from '../../../common/decorators/get-user.decorator';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
-import { UpdateCommentDto } from './dto/update-comment.dto';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiQuery,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
-import { CommentDto, CommentPaginationDto } from './dto/comment.dto';
-import { GetUser } from 'src/modules/auth/decorators/get-user.decorator';
-import { Public } from 'src/common/decorators/public.decorator';
-import { JwtPayload } from '../../auth/dto/jwt-payload.interface';
+import { CommentDto, mapToCommentDto } from './dto/comment.dto';
 
 @ApiTags('Comments')
 @Controller('comments')
@@ -33,119 +28,75 @@ import { JwtPayload } from '../../auth/dto/jwt-payload.interface';
 export class CommentController {
   constructor(private readonly commentService: CommentService) {}
 
+  @Get()
+  @ApiOperation({ summary: 'Get comments for a post' })
+  @ApiQuery({ name: 'postId', required: true, description: 'Post ID' })
+  async getPostComments(
+    @Query('postId', ParseIntPipe) postId: number,
+  ): Promise<CommentDto[]> {
+    const comments = await this.commentService.getPostComments(postId);
+    return comments.map(mapToCommentDto);
+  }
+
   @Post()
-  @ApiOperation({ summary: 'Tạo bình luận mới' })
-  @ApiResponse({
-    status: 201,
-    description: 'Bình luận đã được tạo thành công.',
-    type: CommentDto,
-  })
-  create(
-    @GetUser() user: JwtPayload,
-    @Body() createCommentDto: CreateCommentDto,
+  @ApiOperation({ summary: 'Create a new comment or reply' })
+  async createComment(
+    @GetUser('id') gardenerId: number,
+    @Body() dto: CreateCommentDto,
   ): Promise<CommentDto> {
-    return this.commentService.create(user.sub, createCommentDto);
-  }
-
-  @Get('post/:postId')
-  @Public()
-  @ApiOperation({ summary: 'Lấy danh sách bình luận của một bài viết' })
-  @ApiResponse({
-    status: 200,
-    description: 'Danh sách bình luận.',
-    type: CommentPaginationDto,
-  })
-  @ApiQuery({
-    name: 'page',
-    required: false,
-    type: Number,
-    description: 'Trang',
-  })
-  @ApiQuery({
-    name: 'limit',
-    required: false,
-    type: Number,
-    description: 'Số lượng bình luận trên một trang',
-  })
-  findAllByPost(
-    @Param('postId', ParseIntPipe) postId: number,
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
-    @GetUser() user?: JwtPayload,
-  ): Promise<CommentPaginationDto> {
-    return this.commentService.findAllByPost(postId, page, limit, user?.sub);
-  }
-
-  @Get(':commentId/replies')
-  @Public()
-  @ApiOperation({ summary: 'Lấy danh sách trả lời cho một bình luận' })
-  @ApiResponse({
-    status: 200,
-    description: 'Danh sách trả lời.',
-    type: CommentPaginationDto,
-  })
-  @ApiQuery({
-    name: 'page',
-    required: false,
-    type: Number,
-    description: 'Trang',
-  })
-  @ApiQuery({
-    name: 'limit',
-    required: false,
-    type: Number,
-    description: 'Số lượng trả lời trên một trang',
-  })
-  findReplies(
-    @Param('commentId', ParseIntPipe) commentId: number,
-    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
-    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
-    @GetUser() user?: JwtPayload,
-  ): Promise<CommentPaginationDto> {
-    return this.commentService.findReplies(commentId, page, limit, user?.sub);
+    const comment = await this.commentService.createComment(
+      gardenerId,
+      dto.postId,
+      dto.content,
+      dto.parentId,
+    );
+    return mapToCommentDto(comment);
   }
 
   @Get(':id')
-  @Public()
-  @ApiOperation({ summary: 'Lấy thông tin chi tiết của bình luận' })
-  @ApiResponse({
-    status: 200,
-    description: 'Thông tin chi tiết của bình luận.',
-    type: CommentDto,
-  })
-  findOne(
+  @ApiOperation({ summary: 'Get comment details by ID' })
+  @ApiParam({ name: 'id', description: 'Comment ID' })
+  async getCommentById(
     @Param('id', ParseIntPipe) id: number,
-    @GetUser() user?: JwtPayload,
   ): Promise<CommentDto> {
-    return this.commentService.findOne(id, user?.sub);
+    const comment = await this.commentService.getCommentById(id);
+    return mapToCommentDto(comment);
   }
 
-  @Put(':id')
-  @ApiOperation({ summary: 'Cập nhật bình luận' })
-  @ApiResponse({
-    status: 200,
-    description: 'Bình luận đã được cập nhật thành công.',
-    type: CommentDto,
-  })
-  update(
+  @Get(':id/replies')
+  @ApiOperation({ summary: 'Get replies for a comment' })
+  @ApiParam({ name: 'id', description: 'Parent comment ID' })
+  async getReplies(
     @Param('id', ParseIntPipe) id: number,
-    @GetUser() user: JwtPayload,
-    @Body() updateCommentDto: UpdateCommentDto,
+  ): Promise<CommentDto[]> {
+    const replies = await this.commentService.getCommentReplies(id);
+    return replies.map(mapToCommentDto);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Update a comment' })
+  @ApiParam({ name: 'id', description: 'Comment ID' })
+  async updateComment(
+    @GetUser('id') gardenerId: number,
+    @Param('id', ParseIntPipe) id: number,
+    @Body('content') content: string,
   ): Promise<CommentDto> {
-    return this.commentService.update(id, user.sub, updateCommentDto);
+    const updated = await this.commentService.updateComment(
+      gardenerId,
+      id,
+      content,
+    );
+    return mapToCommentDto(updated);
   }
 
   @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Xóa bình luận' })
-  @ApiResponse({
-    status: 204,
-    description: 'Bình luận đã được xóa thành công.',
-  })
-  remove(
+  @ApiOperation({ summary: 'Delete a comment' })
+  @ApiParam({ name: 'id', description: 'Comment ID' })
+  @HttpCode(204)
+  async deleteComment(
+    @GetUser('id') gardenerId: number,
     @Param('id', ParseIntPipe) id: number,
-    @GetUser() user: JwtPayload,
   ): Promise<void> {
-    return this.commentService.remove(id, user.sub);
+    await this.commentService.deleteComment(gardenerId, id);
   }
 }

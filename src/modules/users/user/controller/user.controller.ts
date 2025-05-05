@@ -26,7 +26,7 @@ import { diskStorage } from 'multer';
 import { extname, join } from 'path';
 
 import { UserService } from '../service/user.service';
-import { GetUser } from 'src/modules/auth/decorators/get-user.decorator';
+import { GetUser } from 'src/common/decorators/get-user.decorator';
 import {
   CreateUserDto,
   UpdatePasswordDto,
@@ -34,6 +34,8 @@ import {
   UserDto,
   UserFilterDto,
 } from '../dto';
+import { ExperienceLevelDto } from '../../experience_level';
+import { ExperienceProgressDto } from '../dto/experience-progress.dto';
 
 @ApiTags('User')
 @Controller('user')
@@ -65,6 +67,15 @@ export class UserController {
   @ApiResponse({ status: 404, description: 'User not found' })
   async findOne(@Param('id', ParseIntPipe) id: number) {
     return this.userService.findOne(id);
+  }
+
+  @Get('me/experience-progress')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: "Get current user's experience progress" })
+  @ApiResponse({ status: 200, type: ExperienceProgressDto })
+  @HttpCode(HttpStatus.OK)
+  async getExperienceProgress(@GetUser('id') userId: number): Promise<ExperienceProgressDto> {
+    return this.userService.getExperienceProgress(userId);
   }
 
   @Post()

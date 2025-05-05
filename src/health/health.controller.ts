@@ -13,7 +13,7 @@ import {
   ApiServiceUnavailableResponse,
 } from '@nestjs/swagger';
 import { PrismaHealthIndicator } from './prisma.health';
-import { Public } from 'src/modules/auth/decorators/public.decorators';
+import { Public } from '../common/decorators/public.decorator';
 
 @Public()
 @ApiTags('Health')
