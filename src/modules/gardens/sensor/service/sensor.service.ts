@@ -189,4 +189,40 @@ export class SensorService {
     const prefix = type.toLowerCase().slice(0, 3);
     return `${prefix}_${randomUUID()}`;
   }
+
+
+  /**
+   * Lấy latest reading cho tất cả sensor trong một garden
+   */
+  async getLatestReadingsByGarden(
+    gardenerId: number,
+    gardenId: number,
+  ): Promise<Array<{ sensor: Sensor; latestReading: SensorData | null }>> {
+    // 1. Verify quyền truy cập
+    const allowed = await this.gardenService.checkGardenOwnership(
+      gardenerId,
+      Number(gardenId),
+    );
+    if (!allowed) {
+      throw new ForbiddenException('Access denied to this garden');
+    }
+
+    // 2. Lấy danh sách sensors
+    const sensors = await this.prisma.sensor.findMany({
+      where: { gardenId: Number(gardenId) },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // 3. Với mỗi sensor, lấy reading mới nhất (timestamp desc)
+    const result: Array<{ sensor: Sensor; latestReading: SensorData | null }> = [];
+    for (const sensor of sensors) {
+      const reading = await this.prisma.sensorData.findFirst({
+        where: { sensorId: sensor.id },
+        orderBy: { timestamp: 'desc' },
+      });
+      result.push({ sensor, latestReading: reading });
+    }
+
+    return result;
+  }
 }

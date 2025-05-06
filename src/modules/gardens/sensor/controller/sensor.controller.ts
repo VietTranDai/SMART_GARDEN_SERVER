@@ -19,16 +19,26 @@ import {
   ApiResponse,
   ApiParam,
   ApiQuery,
-  ApiBody, getSchemaPath, ApiBearerAuth,
+  ApiBody,
+  getSchemaPath,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { GetUser } from 'src/common/decorators/get-user.decorator';
 import {
   SensorDataDto,
+  mapToSensorDataDto,
   mapToSensorDataDtoList,
 } from '../dto/sensor-data.dto';
 
-import { CreateSensorDto, mapToSensorDto, mapToSensorDtoList, SensorDto, UpdateSensorDto } from '../dto/sensor.dto';
+import {
+  CreateSensorDto,
+  mapToSensorDto,
+  mapToSensorDtoList,
+  SensorDto,
+  UpdateSensorDto,
+} from '../dto/sensor.dto';
 import { SensorService } from '../service/sensor.service';
+import { SensorWithLatestReadingDto } from '../dto/sensor-with-latest-reading.dto';
 
 @ApiTags('Sensor')
 @Controller('sensors')
@@ -96,11 +106,7 @@ export class SensorController {
     @Body() dto: UpdateSensorDto,
   ): Promise<SensorDto> {
     this.logger.log(`User ${userId} updating sensor ${sensorId}`);
-    const sensor = await this.sensorService.updateSensor(
-      userId,
-      sensorId,
-      dto,
-    );
+    const sensor = await this.sensorService.updateSensor(userId, sensorId, dto);
     return mapToSensorDto(sensor);
   }
 
@@ -123,7 +129,11 @@ export class SensorController {
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'startDate', required: false, type: String })
   @ApiQuery({ name: 'endDate', required: false, type: String })
-  @ApiResponse({ status: 200, description: 'Sensor data list', type: [SensorDataDto] })
+  @ApiResponse({
+    status: 200,
+    description: 'Sensor data list',
+    type: [SensorDataDto],
+  })
   async sensorData(
     @GetUser('id') userId: number,
     @Param('sensorId', ParseIntPipe) sensorId: number,
@@ -142,7 +152,9 @@ export class SensorController {
   }
 
   @Get('gardens/:gardenId/data')
-  @ApiOperation({ summary: 'Get data across all sensors in a garden, grouped by sensor type' })
+  @ApiOperation({
+    summary: 'Get data across all sensors in a garden, grouped by sensor type',
+  })
   @ApiParam({ name: 'gardenId', type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'startDate', required: false, type: String })
@@ -180,5 +192,29 @@ export class SensorController {
       result[type] = mapToSensorDataDtoList(dataList);
     }
     return result;
+  }
+
+  @Get('gardens/:gardenId/latest')
+  @ApiOperation({ summary: 'Get latest reading for all sensors in a garden' })
+  @ApiParam({ name: 'gardenId', type: Number })
+  @ApiResponse({
+    status: 200,
+    description: 'List of sensors kèm giá trị đo mới nhất',
+    type: [SensorWithLatestReadingDto],
+  })
+  async latestReadingsByGarden(
+    @GetUser('id') userId: number,
+    @Param('gardenId', ParseIntPipe) gardenId: number,
+  ): Promise<SensorWithLatestReadingDto[]> {
+    const data = await this.sensorService.getLatestReadingsByGarden(
+      userId,
+      gardenId,
+    );
+
+    // Chuyển về DTO
+    return data.map(({ sensor, latestReading }) => ({
+      sensor: mapToSensorDto(sensor),
+      latestReading: latestReading ? mapToSensorDataDto(latestReading) : null,
+    }));
   }
 }

@@ -9,17 +9,10 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { HttpService } from '@nestjs/axios';
 import { PrismaService } from '../../prisma/prisma.service';
-import {
-  Garden,
-  Prisma,
-  AlertType,
-  AlertStatus,
-} from '@prisma/client';
+import { Garden, Prisma, AlertType, AlertStatus } from '@prisma/client';
 import { firstValueFrom } from 'rxjs';
 import { AxiosError } from 'axios';
-import {
-  mapWeatherCodeToEnum,
-} from './utils/weather-mapping.util';
+import { mapWeatherCodeToEnum } from './utils/weather-mapping.util';
 import {
   CurrentWeatherResponse,
   HourlyForecastApiResponse,
@@ -33,9 +26,12 @@ export class WeatherService implements OnModuleInit {
   private readonly apiKey: string;
 
   // API endpoints
-  private readonly currentUrl = 'https://api.openweathermap.org/data/2.5/weather';
-  private readonly hourlyUrl = 'https://pro.openweathermap.org/data/2.5/forecast/hourly';
-  private readonly dailyUrl = 'https://api.openweathermap.org/data/2.5/forecast/daily';
+  private readonly currentUrl =
+    'https://api.openweathermap.org/data/2.5/weather';
+  private readonly hourlyUrl =
+    'https://pro.openweathermap.org/data/2.5/forecast/hourly';
+  private readonly dailyUrl =
+    'https://api.openweathermap.org/data/2.5/forecast/daily';
 
   // In-memory cache
   private cache: WeatherCache = {
@@ -45,8 +41,8 @@ export class WeatherService implements OnModuleInit {
   };
   private readonly ttl = {
     observation: 15 * 60_000, // 15 phút
-    hourly: 60 * 60_000,      // 1 giờ
-    daily: 6 * 60 * 60_000,   // 6 giờ
+    hourly: 60 * 60_000, // 1 giờ
+    daily: 6 * 60 * 60_000, // 6 giờ
   };
 
   constructor(
@@ -59,7 +55,9 @@ export class WeatherService implements OnModuleInit {
 
   /** Run initial update */
   async onModuleInit() {
-    this.updateAllActiveGardens().catch((e) => this.logger.error('Initial update failed', e));
+    this.updateAllActiveGardens().catch((e) =>
+      this.logger.error('Initial update failed', e),
+    );
   }
 
   /** Generic fetch with retries */
@@ -72,12 +70,16 @@ export class WeatherService implements OnModuleInit {
         const err = e as AxiosError;
         if (
           attempt === 3 ||
-          (err.response?.status != null && err.response.status < 500 && err.response.status !== 429)
+          (err.response?.status != null &&
+            err.response.status < 500 &&
+            err.response.status !== 429)
         ) {
           throw err;
         }
         const delay = 1000 * 2 ** (attempt - 1);
-        this.logger.warn(`Fetch ${url} attempt ${attempt} failed, retrying in ${delay}ms`);
+        this.logger.warn(
+          `Fetch ${url} attempt ${attempt} failed, retrying in ${delay}ms`,
+        );
         await new Promise((res) => setTimeout(res, delay));
       }
     }
@@ -85,20 +87,31 @@ export class WeatherService implements OnModuleInit {
   }
 
   /** Fetch current weather */
-  private async fetchCurrent(lat: number, lon: number): Promise<CurrentWeatherResponse> {
-    const url = `${this.currentUrl}?lat=${lat}&lon=${lon}&appid=${this.apiKey}&units=metric`;
+  private async fetchCurrent(
+    lat: number,
+    lon: number,
+  ): Promise<CurrentWeatherResponse> {
+    const url = `${this.currentUrl}?lat=${lat}&lon=${lon}&appid=${this.apiKey}&units=metric&lang=vi`;
     return this.fetchWithRetries<CurrentWeatherResponse>(url);
   }
 
   /** Fetch hourly forecast */
-  private async fetchHourly(lat: number, lon: number, cnt = 48): Promise<HourlyForecastApiResponse> {
-    const url = `${this.hourlyUrl}?lat=${lat}&lon=${lon}&appid=${this.apiKey}&cnt=${cnt}&units=metric`;
+  private async fetchHourly(
+    lat: number,
+    lon: number,
+    cnt = 48,
+  ): Promise<HourlyForecastApiResponse> {
+    const url = `${this.hourlyUrl}?lat=${lat}&lon=${lon}&appid=${this.apiKey}&cnt=${cnt}&units=metric&lang=vi`;
     return this.fetchWithRetries<HourlyForecastApiResponse>(url);
   }
 
   /** Fetch daily forecast */
-  private async fetchDaily(lat: number, lon: number, cnt = 7): Promise<DailyForecastApiResponse> {
-    const url = `${this.dailyUrl}?lat=${lat}&lon=${lon}&cnt=${cnt}&appid=${this.apiKey}&units=metric`;
+  private async fetchDaily(
+    lat: number,
+    lon: number,
+    cnt = 7,
+  ): Promise<DailyForecastApiResponse> {
+    const url = `${this.dailyUrl}?lat=${lat}&lon=${lon}&appid=${this.apiKey}&cnt=${cnt}&units=metric&lang=vi`;
     return this.fetchWithRetries<DailyForecastApiResponse>(url);
   }
 
@@ -215,7 +228,7 @@ export class WeatherService implements OnModuleInit {
       return { success: true, lastUpdated: new Date() };
     } else {
       throw new InternalServerErrorException(
-        `Failed to refresh weather data for garden ${gardenId}. Check logs for details.,`
+        `Failed to refresh weather data for garden ${gardenId}. Check logs for details.,`,
       );
     }
   }
@@ -241,14 +254,24 @@ export class WeatherService implements OnModuleInit {
         await tx.weatherObservation.create({ data: obs });
         for (const entry of hf) {
           await tx.hourlyForecast.upsert({
-            where: { gardenId_forecastFor: { gardenId: garden.id, forecastFor: entry.forecastFor } },
+            where: {
+              gardenId_forecastFor: {
+                gardenId: garden.id,
+                forecastFor: entry.forecastFor,
+              },
+            },
             update: entry,
             create: entry,
           });
         }
         for (const entry of df) {
           await tx.dailyForecast.upsert({
-            where: { gardenId_forecastFor: { gardenId: garden.id, forecastFor: entry.forecastFor } },
+            where: {
+              gardenId_forecastFor: {
+                gardenId: garden.id,
+                forecastFor: entry.forecastFor,
+              },
+            },
             update: entry,
             create: entry,
           });
@@ -271,18 +294,22 @@ export class WeatherService implements OnModuleInit {
     });
 
     const results = await Promise.allSettled(
-      gardens.map(g => this.updateWeatherForGarden(g)),
+      gardens.map((g) => this.updateWeatherForGarden(g)),
     );
 
-    const success = results.filter(r => r.status === 'fulfilled' && (r as any).value === true).length;
+    const success = results.filter(
+      (r) => r.status === 'fulfilled' && (r as any).value === true,
+    ).length;
     const failed = results.length - success;
-    this.logger.log(`Weather update done — Success: ${success}, Failed: ${failed}`);
+    this.logger.log(
+      `Weather update done — Success: ${success}, Failed: ${failed}`,
+    );
   }
 
   private async handleFailure(gardenId: number, msg: string) {
     const garden = await this.prisma.garden.findUnique({
       where: { id: gardenId },
-    })
+    });
     if (!garden) {
       throw new NotFoundException(`Garden with ID ${gardenId} not found.`);
     }
@@ -307,8 +334,12 @@ export class WeatherService implements OnModuleInit {
   public async cleanupExpiredForecasts() {
     const now = new Date();
     const [h, d] = await Promise.all([
-      this.prisma.hourlyForecast.deleteMany({ where: { forecastFor: { lt: now } } }),
-      this.prisma.dailyForecast.deleteMany({ where: { forecastFor: { lt: new Date(now.setHours(0,0,0,0)) } } }),
+      this.prisma.hourlyForecast.deleteMany({
+        where: { forecastFor: { lt: now } },
+      }),
+      this.prisma.dailyForecast.deleteMany({
+        where: { forecastFor: { lt: new Date(now.setHours(0, 0, 0, 0)) } },
+      }),
     ]);
     this.logger.log(`Cleaned forecasts — hourly:${h.count}, daily:${d.count}`);
     return { hourlyDeleted: h.count, dailyDeleted: d.count };
@@ -333,9 +364,11 @@ export class WeatherService implements OnModuleInit {
       return cached.data;
     }
     const obs = await this.prisma.weatherObservation.findFirst({
-      where: { gardenId }, orderBy: { observedAt: 'desc' },
+      where: { gardenId },
+      orderBy: { observedAt: 'desc' },
     });
-    if (!obs) throw new NotFoundException(`No observations for garden ${gardenId}`);
+    if (!obs)
+      throw new NotFoundException(`No observations for garden ${gardenId}`);
     this.cache.observation[gardenId] = { data: obs, timestamp: now };
     return obs;
   }
@@ -362,7 +395,8 @@ export class WeatherService implements OnModuleInit {
     if (cached && now - cached.timestamp < this.ttl.daily) {
       return cached.data;
     }
-    const today = new Date(); today.setHours(0,0,0,0);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     const forecasts = await this.prisma.dailyForecast.findMany({
       where: { gardenId, forecastFor: { gte: today } },
       orderBy: { forecastFor: 'asc' },
@@ -385,16 +419,29 @@ export class WeatherService implements OnModuleInit {
   }
 
   /** Return daily summary grouped by date */
-  public async getWeatherHistory(gardenId: number, startDate: Date, endDate: Date) {
+  public async getWeatherHistory(
+    gardenId: number,
+    startDate: Date,
+    endDate: Date,
+  ) {
     const obs = await this.prisma.weatherObservation.findMany({
       where: { gardenId, observedAt: { gte: startDate, lte: endDate } },
       orderBy: { observedAt: 'asc' },
     });
-    if (!obs.length) throw new NotFoundException(`No history for garden ${gardenId}`);
+    if (!obs.length)
+      throw new NotFoundException(`No history for garden ${gardenId}`);
 
-    const map = new Map<string, { date: string; temps: number[]; hums: number[]; counts: Record<string, number> }>();
+    const map = new Map<
+      string,
+      {
+        date: string;
+        temps: number[];
+        hums: number[];
+        counts: Record<string, number>;
+      }
+    >();
 
-    obs.forEach(o => {
+    obs.forEach((o) => {
       const key = o.observedAt.toISOString().split('T')[0];
       if (!map.has(key)) {
         map.set(key, { date: key, temps: [], hums: [], counts: {} });
@@ -406,11 +453,21 @@ export class WeatherService implements OnModuleInit {
       d.counts[wm] = (d.counts[wm] || 0) + 1;
     });
 
-    return Array.from(map.values()).map(d => {
-      const avgTemp = d.temps.reduce((a,b) => a+b,0)/d.temps.length;
-      const avgHum = d.hums.reduce((a,b) => a+b,0)/d.hums.length;
-      const dominant = Object.entries(d.counts).sort((a,b)=>b[1]-a[1])[0]?.[0] ?? null;
-      return { date: d.date, minTemp: Math.min(...d.temps), maxTemp: Math.max(...d.temps), avgTemp, minHum: Math.min(...d.hums), maxHum: Math.max(...d.hums), avgHum, dominant };
+    return Array.from(map.values()).map((d) => {
+      const avgTemp = d.temps.reduce((a, b) => a + b, 0) / d.temps.length;
+      const avgHum = d.hums.reduce((a, b) => a + b, 0) / d.hums.length;
+      const dominant =
+        Object.entries(d.counts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+      return {
+        date: d.date,
+        minTemp: Math.min(...d.temps),
+        maxTemp: Math.max(...d.temps),
+        avgTemp,
+        minHum: Math.min(...d.hums),
+        maxHum: Math.max(...d.hums),
+        avgHum,
+        dominant,
+      };
     });
   }
 }

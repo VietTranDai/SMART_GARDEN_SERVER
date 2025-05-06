@@ -15,7 +15,8 @@ import {
   ApiOkResponse,
   ApiUnauthorizedResponse,
   ApiCreatedResponse,
-  ApiConflictResponse, ApiBearerAuth,
+  ApiConflictResponse,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -26,9 +27,8 @@ import { GetUser } from '../../common/decorators/get-user.decorator';
 import { User } from '@prisma/client';
 import { JwtAuthGuard } from '../../common/guards';
 import { JwtRefreshGuard } from '../../common/guards/jwt-refresh.guard';
-import { Public } from 'src/common/decorators/public.decorator'
+import { Public } from 'src/common/decorators/public.decorator';
 
-@Public()
 @ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
@@ -84,11 +84,12 @@ export class AuthController {
     @GetUser() user: User,
   ): Promise<TokensResponseDto> {
     const raw = (req as any).rawRefreshToken;
-    console.log("raw" + raw);
+    console.log('raw' + raw);
     return this.authService.refreshTokens(user.id, raw);
   }
 
   @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -98,8 +99,9 @@ export class AuthController {
   })
   @ApiOkResponse({ description: 'Logged out successfully.' })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid access token.' })
-  async logout(@GetUser() user: User): Promise<{ message: string }> {
-    await this.authService.logout(user.id);
+  async logout(@GetUser('id') userId: number) {
+    // if user is undefined, accessing user.id will throw a TypeError
+    await this.authService.logout(userId);
     return { message: 'Logged out successfully' };
   }
 }
