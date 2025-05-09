@@ -3,7 +3,6 @@ import {
   IsString,
   IsNotEmpty,
   IsInt,
-  IsPositive,
   IsNumber,
   Min,
   Max,
@@ -79,7 +78,7 @@ export class CreateGrowthStageDto {
   @IsOptional()
   @Min(0)
   @Max(14)
-  optimalPHMin?: number;
+  optimalPHMin: number;
 
   @ApiPropertyOptional({
     description: 'Maximum optimal soil pH',
@@ -89,7 +88,7 @@ export class CreateGrowthStageDto {
   @IsOptional()
   @Min(0)
   @Max(14)
-  optimalPHMax?: number;
+  optimalPHMax: number;
 
   @ApiPropertyOptional({
     description: 'Minimum optimal light intensity (lux)',
@@ -98,7 +97,7 @@ export class CreateGrowthStageDto {
   @IsNumber()
   @IsOptional()
   @Min(0)
-  optimalLightMin?: number;
+  optimalLightMin: number;
 
   @ApiPropertyOptional({
     description: 'Maximum optimal light intensity (lux)',
@@ -107,7 +106,7 @@ export class CreateGrowthStageDto {
   @IsNumber()
   @IsOptional()
   @Min(0)
-  optimalLightMax?: number;
+  optimalLightMax: number;
 
   @ApiPropertyOptional({
     description: 'Light requirement',

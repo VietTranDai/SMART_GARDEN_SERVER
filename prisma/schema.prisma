@@ -440,14 +440,16 @@ model GrowthStage {
   description String? // Short description, e.g., "Likes sun, needs water" (optional)
 
   // Optimal Conditions Group
-  optimalTemperatureMin Float // Minimum ideal temperature in Celsius (°C), e.g., 20
-  optimalTemperatureMax Float // Maximum ideal temperature in Celsius (°C), e.g., 30
-  optimalHumidityMin    Float // Minimum ideal humidity in percentage (%), e.g., 60
-  optimalHumidityMax    Float // Maximum ideal humidity in percentage (%), e.g., 80
-  optimalPHMin          Float? // Minimum ideal soil pH, e.g., 5.5 (optional)
-  optimalPHMax          Float? // Maximum ideal soil pH, e.g., 6.5 (optional)
-  optimalLightMin       Float? // Ideal light intensity in lux
-  optimalLightMax       Float? // Ideal light intensity in lux 
+  optimalTemperatureMin  Float // Minimum ideal temperature in Celsius (°C), e.g., 20
+  optimalTemperatureMax  Float // Maximum ideal temperature in Celsius (°C), e.g., 30
+  optimalHumidityMin     Float // Minimum ideal humidity in percentage (%), e.g., 60
+  optimalHumidityMax     Float // Maximum ideal humidity in percentage (%), e.g., 80
+  optimalSoilMoistureMin Float // Minimum ideal soil humidity in percentage (%), e.g.
+  optimalSoilMoistureMax Float // Minimum ideal soil humidity in percentage (%), e.g.
+  optimalPHMin           Float // Minimum ideal soil pH, e.g., 5.5 (optional)
+  optimalPHMax           Float // Maximum ideal soil pH, e.g., 6.5 (optional)
+  optimalLightMin        Float // Ideal light intensity in lux
+  optimalLightMax        Float // Ideal light intensity in lux
 
   // Care Requirements Group
   lightRequirement    String? // Light needs, e.g., "Full sun" (optional)

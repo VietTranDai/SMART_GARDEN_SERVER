@@ -8,6 +8,9 @@ CREATE TYPE "GardenType" AS ENUM ('INDOOR', 'OUTDOOR', 'BALCONY', 'ROOFTOP', 'WI
 CREATE TYPE "SensorType" AS ENUM ('HUMIDITY', 'TEMPERATURE', 'LIGHT', 'WATER_LEVEL', 'RAINFALL', 'SOIL_MOISTURE', 'SOIL_PH');
 
 -- CreateEnum
+CREATE TYPE "SensorUnit" AS ENUM ('PERCENT', 'CELSIUS', 'LUX', 'METER', 'MILLIMETER', 'PH');
+
+-- CreateEnum
 CREATE TYPE "TaskStatus" AS ENUM ('PENDING', 'COMPLETED', 'SKIPPED');
 
 -- CreateEnum
@@ -26,7 +29,7 @@ CREATE TYPE "AlertType" AS ENUM ('WEATHER', 'SENSOR_ERROR', 'SYSTEM', 'PLANT_CON
 CREATE TYPE "AlertStatus" AS ENUM ('PENDING', 'IN_PROGRESS', 'RESOLVED', 'IGNORED', 'ESCALATED');
 
 -- CreateEnum
-CREATE TYPE "NotificationMethod" AS ENUM ('EMAIL', 'SMS', 'PUSH', 'IN_APP', 'NONE');
+CREATE TYPE "Severity" AS ENUM ('LOW', 'MEDIUM', 'HIGH', 'CRITICAL');
 
 -- CreateEnum
 CREATE TYPE "VoteTargetType" AS ENUM ('POST', 'COMMENT');
@@ -137,6 +140,8 @@ CREATE TABLE "Sensor" (
     "id" SERIAL NOT NULL,
     "sensorKey" TEXT NOT NULL,
     "type" "SensorType" NOT NULL,
+    "unit" "SensorUnit" NOT NULL,
+    "name" TEXT NOT NULL,
     "gardenId" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -235,6 +240,7 @@ CREATE TABLE "WateringSchedule" (
     "scheduledAt" TIMESTAMP(3) NOT NULL,
     "amount" DOUBLE PRECISION,
     "status" TEXT NOT NULL DEFAULT 'PENDING',
+    "notes" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -251,6 +257,7 @@ CREATE TABLE "PhotoEvaluation" (
     "photoUrl" TEXT NOT NULL,
     "aiFeedback" TEXT,
     "confidence" DOUBLE PRECISION,
+    "notes" TEXT,
     "evaluatedAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -296,6 +303,8 @@ CREATE TABLE "GrowthStage" (
     "optimalTemperatureMax" DOUBLE PRECISION NOT NULL,
     "optimalHumidityMin" DOUBLE PRECISION NOT NULL,
     "optimalHumidityMax" DOUBLE PRECISION NOT NULL,
+    "optimalSoilMoistureMin" DOUBLE PRECISION NOT NULL,
+    "optimalSoilMoistureMax" DOUBLE PRECISION NOT NULL,
     "optimalPHMin" DOUBLE PRECISION,
     "optimalPHMax" DOUBLE PRECISION,
     "optimalLightMin" DOUBLE PRECISION,
@@ -318,12 +327,10 @@ CREATE TABLE "WeatherObservation" (
     "observedAt" TIMESTAMP(3) NOT NULL,
     "temp" DOUBLE PRECISION NOT NULL,
     "feelsLike" DOUBLE PRECISION NOT NULL,
-    "dewPoint" DOUBLE PRECISION NOT NULL,
     "pressure" INTEGER NOT NULL,
     "humidity" INTEGER NOT NULL,
     "clouds" INTEGER NOT NULL,
     "visibility" INTEGER NOT NULL,
-    "uvi" DOUBLE PRECISION NOT NULL,
     "windSpeed" DOUBLE PRECISION NOT NULL,
     "windDeg" INTEGER NOT NULL,
     "windGust" DOUBLE PRECISION,
@@ -344,12 +351,10 @@ CREATE TABLE "HourlyForecast" (
     "forecastedAt" TIMESTAMP(3) NOT NULL,
     "temp" DOUBLE PRECISION NOT NULL,
     "feelsLike" DOUBLE PRECISION NOT NULL,
-    "dewPoint" DOUBLE PRECISION NOT NULL,
     "pressure" INTEGER NOT NULL,
     "humidity" INTEGER NOT NULL,
     "clouds" INTEGER NOT NULL,
     "visibility" INTEGER NOT NULL,
-    "uvi" DOUBLE PRECISION NOT NULL,
     "pop" DOUBLE PRECISION NOT NULL,
     "windSpeed" DOUBLE PRECISION NOT NULL,
     "windDeg" INTEGER NOT NULL,
@@ -374,11 +379,9 @@ CREATE TABLE "DailyForecast" (
     "tempMax" DOUBLE PRECISION NOT NULL,
     "tempNight" DOUBLE PRECISION NOT NULL,
     "feelsLikeDay" DOUBLE PRECISION NOT NULL,
-    "dewPoint" DOUBLE PRECISION NOT NULL,
     "pressure" INTEGER NOT NULL,
     "humidity" INTEGER NOT NULL,
     "clouds" INTEGER NOT NULL,
-    "uvi" DOUBLE PRECISION NOT NULL,
     "pop" DOUBLE PRECISION NOT NULL,
     "windSpeed" DOUBLE PRECISION NOT NULL,
     "windDeg" INTEGER NOT NULL,
@@ -464,13 +467,13 @@ CREATE TABLE "Wards" (
 -- CreateTable
 CREATE TABLE "Alert" (
     "id" SERIAL NOT NULL,
-    "gardenId" INTEGER NOT NULL,
+    "gardenId" INTEGER,
+    "userId" INTEGER NOT NULL,
     "type" "AlertType" NOT NULL,
     "message" TEXT NOT NULL,
     "suggestion" TEXT,
-    "timestamp" TIMESTAMP(3) NOT NULL,
-    "status" "AlertStatus" NOT NULL,
-    "notificationMethod" "NotificationMethod",
+    "status" "AlertStatus" NOT NULL DEFAULT 'PENDING',
+    "severity" "Severity" NOT NULL DEFAULT 'LOW',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -623,6 +626,12 @@ CREATE INDEX "DailyForecast_gardenId_forecastFor_idx" ON "DailyForecast"("garden
 CREATE UNIQUE INDEX "DailyForecast_gardenId_forecastFor_key" ON "DailyForecast"("gardenId", "forecastFor");
 
 -- CreateIndex
+CREATE INDEX "Alert_gardenId_idx" ON "Alert"("gardenId");
+
+-- CreateIndex
+CREATE INDEX "Alert_status_idx" ON "Alert"("status");
+
+-- CreateIndex
 CREATE INDEX "Post_createdAt_idx" ON "Post"("createdAt");
 
 -- CreateIndex
@@ -758,7 +767,10 @@ ALTER TABLE "Wards" ADD CONSTRAINT "Wards_district_code_fkey" FOREIGN KEY ("dist
 ALTER TABLE "Wards" ADD CONSTRAINT "Wards_administrative_unit_id_fkey" FOREIGN KEY ("administrative_unit_id") REFERENCES "AdministrativeUnits"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Alert" ADD CONSTRAINT "Alert_gardenId_fkey" FOREIGN KEY ("gardenId") REFERENCES "Garden"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Alert" ADD CONSTRAINT "Alert_gardenId_fkey" FOREIGN KEY ("gardenId") REFERENCES "Garden"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Alert" ADD CONSTRAINT "Alert_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Post" ADD CONSTRAINT "Post_gardenerId_fkey" FOREIGN KEY ("gardenerId") REFERENCES "Gardener"("userId") ON DELETE RESTRICT ON UPDATE CASCADE;

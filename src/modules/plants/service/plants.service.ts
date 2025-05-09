@@ -328,7 +328,11 @@ export class PlantsService {
       }
 
       const growthStage = await this.prisma.growthStage.create({
-        data: createGrowthStageDto,
+        data: {
+          ...createGrowthStageDto,
+          optimalSoilMoistureMin: 0, // Default values, adjust as needed
+          optimalSoilMoistureMax: 0, // Default values, adjust as needed
+        },
       });
 
       this.logger.log(
