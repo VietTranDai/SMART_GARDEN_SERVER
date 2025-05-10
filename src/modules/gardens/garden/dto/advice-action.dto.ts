@@ -3,7 +3,14 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class AdviceActionDto {
   @ApiProperty({
-    description: 'Tên hành động cần thực hiện, ví dụ: "Water plants", "Provide shade"',
+    description: 'ID của lời khuyên',
+    example: 1,
+  })
+  id: number;
+
+  @ApiProperty({
+    description:
+      'Tên hành động cần thực hiện, ví dụ: "Water plants", "Provide shade"',
     example: 'Water plants',
   })
   action: string;
@@ -28,22 +35,16 @@ export class AdviceActionDto {
   priority: 'HIGH' | 'MEDIUM' | 'LOW';
 
   @ApiProperty({
-    description: 'Thời điểm gợi ý thực hiện hành động (có thể là "morning", "noon", "evening" hoặc chuỗi tuỳ chỉnh như "Sáng mai")',
+    description:
+      'Thời điểm gợi ý thực hiện hành động (có thể là "morning", "noon", "evening" hoặc chuỗi tuỳ chỉnh như "Sáng mai")',
     example: 'morning',
   })
   suggestedTime: string;
 
   @ApiProperty({
-    description: 'Phân loại lời khuyên, ví dụ: "WATERING", "TEMPERATURE", "LIGHT", "HUMIDITY", v.v.',
+    description:
+      'Phân loại lời khuyên, ví dụ: "WATERING", "TEMPERATURE", "LIGHT", "HUMIDITY", v.v.',
     example: 'WATERING',
   })
   category: string;
-}
-
-export class AdviceDto {
-  @ApiProperty({
-    description: 'Danh sách các hành động khuyến nghị',
-    type: [AdviceActionDto],
-  })
-  actions: AdviceActionDto[];
 }

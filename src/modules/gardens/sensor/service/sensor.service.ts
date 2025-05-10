@@ -37,7 +37,7 @@ export class SensorService {
     try {
       return await this.prisma.sensor.create({
         data: {
-          sensorKey: this.generateSensorKey(dto.type),
+          sensorKey: dto.sensorKey || this.generateSensorKey(dto.type),
           type: dto.type,
           unit: dto.unit,
           name: dto.name,
@@ -67,10 +67,7 @@ export class SensorService {
     });
   }
 
-  async getSensorById(
-    gardenerId: number,
-    sensorId: number,
-  ): Promise<Sensor> {
+  async getSensorById(gardenerId: number, sensorId: number): Promise<Sensor> {
     const sensor = await this.prisma.sensor.findUnique({
       where: { id: sensorId },
     });
@@ -108,10 +105,7 @@ export class SensorService {
     }
   }
 
-  async deleteSensor(
-    gardenerId: number,
-    sensorId: number,
-  ): Promise<void> {
+  async deleteSensor(gardenerId: number, sensorId: number): Promise<void> {
     await this.getSensorById(gardenerId, sensorId);
     try {
       await this.prisma.sensor.delete({ where: { id: sensorId } });
@@ -149,7 +143,9 @@ export class SensorService {
       });
     } catch (error) {
       this.logger.error(`getSensorDataHistory error: ${error.message}`);
-      throw new InternalServerErrorException('Failed to fetch sensor data history');
+      throw new InternalServerErrorException(
+        'Failed to fetch sensor data history',
+      );
     }
   }
 
@@ -159,7 +155,12 @@ export class SensorService {
   async getGardenSensorData(
     gardenerId: number,
     gardenId: number,
-    options: { limit?: number; startDate?: Date; endDate?: Date },
+    options: {
+      limit?: number;
+      startDate?: Date;
+      endDate?: Date;
+      sensorType?: SensorType;
+    },
   ): Promise<Record<SensorType, SensorData[]>> {
     const allowed = await this.gardenService.checkGardenOwnership(
       gardenerId,
@@ -167,7 +168,13 @@ export class SensorService {
     );
     if (!allowed) throw new ForbiddenException('Access denied to this garden');
 
-    const sensors = await this.prisma.sensor.findMany({ where: { gardenId } });
+    // If sensorType is specified, only get sensors of that type
+    const where: any = { gardenId };
+    if (options.sensorType) {
+      where.type = options.sensorType;
+    }
+
+    const sensors = await this.prisma.sensor.findMany({ where });
     const grouped: Record<SensorType, SensorData[]> = {} as any;
 
     for (const sensor of sensors) {
@@ -189,7 +196,6 @@ export class SensorService {
     const prefix = type.toLowerCase().slice(0, 3);
     return `${prefix}_${randomUUID()}`;
   }
-
 
   /**
    * Lấy latest reading cho tất cả sensor trong một garden
@@ -214,7 +220,8 @@ export class SensorService {
     });
 
     // 3. Với mỗi sensor, lấy reading mới nhất (timestamp desc)
-    const result: Array<{ sensor: Sensor; latestReading: SensorData | null }> = [];
+    const result: Array<{ sensor: Sensor; latestReading: SensorData | null }> =
+      [];
     for (const sensor of sensors) {
       const reading = await this.prisma.sensorData.findFirst({
         where: { sensorId: sensor.id },

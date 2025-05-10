@@ -182,6 +182,7 @@ enum SensorUnit {
   METER /// mét (mực nước)
   MILLIMETER /// milimét (lượng mưa)
   PH /// độ pH (độ chua, độ kiềm)
+  LITER /// lít (mực nước)
 }
 
 model Sensor {

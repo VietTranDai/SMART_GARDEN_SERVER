@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   Post,
   Patch,
+  Put,
   Query,
   HttpCode,
   HttpStatus,
@@ -39,6 +40,12 @@ import {
 } from '../dto/sensor.dto';
 import { SensorService } from '../service/sensor.service';
 import { SensorWithLatestReadingDto } from '../dto/sensor-with-latest-reading.dto';
+import {
+  SensorDataQueryParamsDto,
+  GardenSensorDataQueryParamsDto,
+} from '../dto/sensor-data-query.dto';
+import { SensorDataExtendedDto } from '../dto/sensor-data-extended.dto';
+import { SensorDisplayUtil } from '../util/sensor-display.util';
 
 @ApiTags('Sensor')
 @Controller('sensors')
@@ -95,7 +102,7 @@ export class SensorController {
     return mapToSensorDto(sensor);
   }
 
-  @Patch(':sensorId')
+  @Put(':sensorId')
   @ApiOperation({ summary: 'Update a sensor' })
   @ApiParam({ name: 'sensorId', type: Number })
   @ApiBody({ type: UpdateSensorDto })
@@ -106,6 +113,21 @@ export class SensorController {
     @Body() dto: UpdateSensorDto,
   ): Promise<SensorDto> {
     this.logger.log(`User ${userId} updating sensor ${sensorId}`);
+    const sensor = await this.sensorService.updateSensor(userId, sensorId, dto);
+    return mapToSensorDto(sensor);
+  }
+
+  @Patch(':sensorId')
+  @ApiOperation({ summary: 'Update a sensor (deprecated, use PUT instead)' })
+  @ApiParam({ name: 'sensorId', type: Number })
+  @ApiBody({ type: UpdateSensorDto })
+  @ApiResponse({ status: 200, description: 'Sensor updated', type: SensorDto })
+  async updatePatch(
+    @GetUser('id') userId: number,
+    @Param('sensorId', ParseIntPipe) sensorId: number,
+    @Body() dto: UpdateSensorDto,
+  ): Promise<SensorDto> {
+    this.logger.log(`User ${userId} updating sensor ${sensorId} via PATCH`);
     const sensor = await this.sensorService.updateSensor(userId, sensorId, dto);
     return mapToSensorDto(sensor);
   }
@@ -126,9 +148,6 @@ export class SensorController {
   @Get(':sensorId/data')
   @ApiOperation({ summary: 'Get data for a sensor' })
   @ApiParam({ name: 'sensorId', type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ name: 'startDate', required: false, type: String })
-  @ApiQuery({ name: 'endDate', required: false, type: String })
   @ApiResponse({
     status: 200,
     description: 'Sensor data list',
@@ -137,18 +156,17 @@ export class SensorController {
   async sensorData(
     @GetUser('id') userId: number,
     @Param('sensorId', ParseIntPipe) sensorId: number,
-    @Query('limit') limit?: string,
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
+    @Query() queryParams: SensorDataQueryParamsDto,
   ): Promise<SensorDataDto[]> {
-    // validation omitted for brevity
-    return this.sensorService.getSensorDataHistory(
+    this.logger.log(`User ${userId} getting data for sensor ${sensorId}`);
+    const data = await this.sensorService.getSensorDataHistory(
       userId,
       sensorId,
-      limit ? parseInt(limit, 10) : undefined,
-      startDate ? new Date(startDate) : undefined,
-      endDate ? new Date(endDate) : undefined,
+      queryParams.limit,
+      queryParams.startDate ? new Date(queryParams.startDate) : undefined,
+      queryParams.endDate ? new Date(queryParams.endDate) : undefined,
     );
+    return mapToSensorDataDtoList(data);
   }
 
   @Get('gardens/:gardenId/data')
@@ -156,9 +174,6 @@ export class SensorController {
     summary: 'Get data across all sensors in a garden, grouped by sensor type',
   })
   @ApiParam({ name: 'gardenId', type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ name: 'startDate', required: false, type: String })
-  @ApiQuery({ name: 'endDate', required: false, type: String })
   @ApiResponse({
     status: 200,
     description: 'Garden sensor data grouped by sensor type',
@@ -173,20 +188,24 @@ export class SensorController {
   async gardenData(
     @GetUser('id') userId: number,
     @Param('gardenId', ParseIntPipe) gardenId: number,
-    @Query('limit') limit?: string,
-    @Query('startDate') startDate?: string,
-    @Query('endDate') endDate?: string,
+    @Query() queryParams: GardenSensorDataQueryParamsDto,
   ): Promise<Record<string, SensorDataDto[]>> {
+    this.logger.log(`User ${userId} getting data for garden ${gardenId}`);
     const options = {
-      limit: limit ? parseInt(limit, 10) : undefined,
-      startDate: startDate ? new Date(startDate) : undefined,
-      endDate: endDate ? new Date(endDate) : undefined,
+      limit: queryParams.limit,
+      startDate: queryParams.startDate
+        ? new Date(queryParams.startDate)
+        : undefined,
+      endDate: queryParams.endDate ? new Date(queryParams.endDate) : undefined,
+      sensorType: queryParams.sensorType,
     };
+
     const grouped = await this.sensorService.getGardenSensorData(
       userId,
       gardenId,
       options,
     );
+
     const result: Record<string, SensorDataDto[]> = {};
     for (const [type, dataList] of Object.entries(grouped)) {
       result[type] = mapToSensorDataDtoList(dataList);
@@ -194,18 +213,67 @@ export class SensorController {
     return result;
   }
 
+  @Get('gardens/:gardenId/data/display')
+  @ApiOperation({
+    summary: 'Get formatted data for all sensors in a garden for display',
+  })
+  @ApiParam({ name: 'gardenId', type: Number })
+  @ApiResponse({
+    status: 200,
+    description: 'Garden sensor data formatted for display',
+    schema: {
+      type: 'object',
+      additionalProperties: {
+        type: 'array',
+        items: { $ref: getSchemaPath(SensorDataExtendedDto) },
+      },
+    },
+  })
+  async gardenDisplayData(
+    @GetUser('id') userId: number,
+    @Param('gardenId', ParseIntPipe) gardenId: number,
+    @Query() queryParams: GardenSensorDataQueryParamsDto,
+  ): Promise<Record<string, SensorDataExtendedDto[]>> {
+    this.logger.log(
+      `User ${userId} getting display data for garden ${gardenId}`,
+    );
+    const options = {
+      limit: queryParams.limit,
+      startDate: queryParams.startDate
+        ? new Date(queryParams.startDate)
+        : undefined,
+      endDate: queryParams.endDate ? new Date(queryParams.endDate) : undefined,
+      sensorType: queryParams.sensorType,
+    };
+
+    // Get the base data
+    const grouped = await this.sensorService.getGardenSensorData(
+      userId,
+      gardenId,
+      options,
+    );
+
+    // Format for display using utility
+    const formattedData = SensorDisplayUtil.formatSensorDataForDisplay(grouped);
+
+    return formattedData;
+  }
+
   @Get('gardens/:gardenId/latest')
   @ApiOperation({ summary: 'Get latest reading for all sensors in a garden' })
   @ApiParam({ name: 'gardenId', type: Number })
   @ApiResponse({
     status: 200,
-    description: 'List of sensors kèm giá trị đo mới nhất',
+    description: 'List of sensors with latest readings',
     type: [SensorWithLatestReadingDto],
   })
   async latestReadingsByGarden(
     @GetUser('id') userId: number,
     @Param('gardenId', ParseIntPipe) gardenId: number,
   ): Promise<SensorWithLatestReadingDto[]> {
+    this.logger.log(
+      `User ${userId} getting latest readings for garden ${gardenId}`,
+    );
     const data = await this.sensorService.getLatestReadingsByGarden(
       userId,
       gardenId,

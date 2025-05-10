@@ -17,7 +17,9 @@ export class GardenAdviceService {
     }
     const { plantName, plantGrowStage } = garden;
     if (!plantName || !plantGrowStage) {
-      throw new NotFoundException('Garden chưa khai báo plantName hoặc plantGrowStage');
+      throw new NotFoundException(
+        'Garden chưa khai báo plantName hoặc plantGrowStage',
+      );
     }
 
     // 2. Tìm Plant theo plantName
@@ -47,7 +49,7 @@ export class GardenAdviceService {
     });
     if (!growthStage) {
       throw new NotFoundException(
-        `Không tìm thấy giai đoạn '${plantGrowStage}' cho cây '${plantName}'`
+        `Không tìm thấy giai đoạn '${plantGrowStage}' cho cây '${plantName}'`,
       );
     }
 
@@ -65,7 +67,7 @@ export class GardenAdviceService {
           select: { value: true },
         });
         if (data) sensorDataMap[type.toLowerCase()] = data.value;
-      })
+      }),
     );
 
     // 5. Lấy weatherObservation, hourlyForecasts, dailyForecasts
@@ -104,8 +106,10 @@ export class GardenAdviceService {
       // Mưa lớn
       if (pop >= 0.8) {
         advices.push({
+          id: 1,
           action: 'Chuẩn bị thoát nước',
-          description: 'Dự báo mưa lớn trong ngày, hãy đảm bảo hệ thống thoát nước thông suốt.',
+          description:
+            'Dự báo mưa lớn trong ngày, hãy đảm bảo hệ thống thoát nước thông suốt.',
           reason: `Xác suất mưa: ${Math.round(pop * 100)}%.`,
           priority: 'HIGH',
           suggestedTime: 'afternoon',
@@ -114,8 +118,10 @@ export class GardenAdviceService {
       } else if (pop >= 0.5) {
         // Mưa vừa
         advices.push({
+          id: 2,
           action: 'Kiểm tra thoát nước',
-          description: 'Có khả năng mưa vừa hôm nay, chú ý hệ thống thoát nước.',
+          description:
+            'Có khả năng mưa vừa hôm nay, chú ý hệ thống thoát nước.',
           reason: `Xác suất mưa: ${Math.round(pop * 100)}%.`,
           priority: 'MEDIUM',
           suggestedTime: 'afternoon',
@@ -129,8 +135,9 @@ export class GardenAdviceService {
     const soil = sensorDataMap['soil_moisture'];
     if (soil != null) {
       if (soil < growthStage.optimalSoilMoistureMin) {
-        const rainSoon = hourlyForecasts.some(hf => hf.pop > 0.5);
+        const rainSoon = hourlyForecasts.some((hf) => hf.pop > 0.5);
         advices.push({
+          id: 3,
           action: 'Tưới nước',
           description: rainSoon
             ? 'Độ ẩm đất thấp, nhưng dự báo mưa nên có thể hoãn tưới.'
@@ -142,6 +149,7 @@ export class GardenAdviceService {
         });
       } else if (soil > growthStage.optimalSoilMoistureMax) {
         advices.push({
+          id: 4,
           action: 'Dừng tưới',
           description: 'Độ ẩm đất cao hơn ngưỡng tối đa, tạm dừng tưới.',
           reason: `Độ ẩm: ${soil}% so với tối đa ${growthStage.optimalSoilMoistureMax}%.`,
@@ -157,8 +165,10 @@ export class GardenAdviceService {
     if (temp != null) {
       if (temp > growthStage.optimalTemperatureMax) {
         advices.push({
+          id: 5,
           action: 'Che nắng',
-          description: 'Nhiệt độ môi trường cao hơn ngưỡng tối ưu, nên che chắn.',
+          description:
+            'Nhiệt độ môi trường cao hơn ngưỡng tối ưu, nên che chắn.',
           reason: `Nhiệt độ: ${temp}°C so với tối đa ${growthStage.optimalTemperatureMax}°C.`,
           priority: 'HIGH',
           suggestedTime: 'noon',
@@ -166,8 +176,10 @@ export class GardenAdviceService {
         });
       } else if (temp < growthStage.optimalTemperatureMin) {
         advices.push({
+          id: 6,
           action: 'Giữ ấm',
-          description: 'Nhiệt độ môi trường thấp hơn ngưỡng tối ưu, cần giữ ấm.',
+          description:
+            'Nhiệt độ môi trường thấp hơn ngưỡng tối ưu, cần giữ ấm.',
           reason: `Nhiệt độ: ${temp}°C so với tối thiểu ${growthStage.optimalTemperatureMin}°C.`,
           priority: 'MEDIUM',
           suggestedTime: 'morning',
@@ -181,6 +193,7 @@ export class GardenAdviceService {
     if (light != null) {
       if (light < growthStage.optimalLightMin) {
         advices.push({
+          id: 7,
           action: 'Tăng ánh sáng',
           description: 'Ánh sáng hiện tại yếu hơn ngưỡng tối ưu.',
           reason: `Ánh sáng: ${light} lux so với tối thiểu ${growthStage.optimalLightMin} lux.`,
@@ -190,6 +203,7 @@ export class GardenAdviceService {
         });
       } else if (light > growthStage.optimalLightMax) {
         advices.push({
+          id: 8,
           action: 'Che nắng',
           description: 'Ánh sáng mạnh hơn ngưỡng tối ưu, nên che chắn.',
           reason: `Ánh sáng: ${light} lux so với tối đa ${growthStage.optimalLightMax} lux.`,
@@ -205,6 +219,7 @@ export class GardenAdviceService {
     if (hum != null) {
       if (hum < growthStage.optimalHumidityMin) {
         advices.push({
+          id: 9,
           action: 'Tăng độ ẩm không khí',
           description: 'Độ ẩm không khí thấp hơn ngưỡng tối ưu.',
           reason: `Độ ẩm: ${hum}% so với tối thiểu ${growthStage.optimalHumidityMin}%.`,
@@ -214,6 +229,7 @@ export class GardenAdviceService {
         });
       } else if (hum > growthStage.optimalHumidityMax) {
         advices.push({
+          id: 10,
           action: 'Giảm độ ẩm không khí',
           description: 'Độ ẩm không khí cao hơn ngưỡng tối ưu.',
           reason: `Độ ẩm: ${hum}% so với tối đa ${growthStage.optimalHumidityMax}%.`,
@@ -226,20 +242,29 @@ export class GardenAdviceService {
 
     // 8. Gộp nhóm theo action và chọn priority cao nhất
     const merged = new Map<string, AdviceActionDto>();
-    advices.forEach(dto => {
+    let idCounter = 0;
+    advices.forEach((dto) => {
       const key = dto.action;
       if (merged.has(key)) {
         const ex = merged.get(key)!;
         ex.reason += ' ' + dto.reason;
-        if (['LOW','MEDIUM','HIGH'].indexOf(dto.priority) > ['LOW','MEDIUM','HIGH'].indexOf(ex.priority)) {
+        if (
+          ['LOW', 'MEDIUM', 'HIGH'].indexOf(dto.priority) >
+          ['LOW', 'MEDIUM', 'HIGH'].indexOf(ex.priority)
+        ) {
           ex.priority = dto.priority;
         }
-      } else merged.set(key, { ...dto });
+      } else {
+        idCounter++;
+        merged.set(key, { ...dto, id: idCounter });
+      }
     });
 
     // 9. Sắp xếp và trả về kết quả
-    return Array.from(merged.values()).sort((a, b) =>
-      ['LOW','MEDIUM','HIGH'].indexOf(b.priority) - ['LOW','MEDIUM','HIGH'].indexOf(a.priority)
+    return Array.from(merged.values()).sort(
+      (a, b) =>
+        ['LOW', 'MEDIUM', 'HIGH'].indexOf(b.priority) -
+        ['LOW', 'MEDIUM', 'HIGH'].indexOf(a.priority),
     );
   }
 }

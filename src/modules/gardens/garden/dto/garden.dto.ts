@@ -1,6 +1,14 @@
 // src/garden/dto/garden.dto.ts
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { GardenStatus, GardenType, Garden as GardenModel, Gardener, User, Role, ExperienceLevel } from '@prisma/client';
+import {
+  GardenStatus,
+  GardenType,
+  Garden as GardenModel,
+  Gardener,
+  User,
+  Role,
+  ExperienceLevel,
+} from '@prisma/client';
 import { GardenerDto, mapToGardenerDto } from '../../../users/gardener/dto';
 
 export class GardenDto {
@@ -137,6 +145,12 @@ export class GardenDto {
     format: 'date-time',
   })
   updatedAt: Date;
+
+  @ApiProperty({
+    description: 'Number of sensors in the garden',
+    example: 1,
+  })
+  sensorCount: number;
 }
 
 /**
@@ -148,7 +162,8 @@ export function mapToGardenDto(
       user: User & { role: Role };
       experienceLevel: ExperienceLevel;
     };
-  }
+  },
+  sensorCounts: number | null,
 ): GardenDto {
   const dto = new GardenDto();
 
@@ -177,6 +192,12 @@ export function mapToGardenDto(
 
   dto.createdAt = garden.createdAt;
   dto.updatedAt = garden.updatedAt;
+
+  if (sensorCounts) {
+    dto.sensorCount = sensorCounts;
+  } else {
+    dto.sensorCount = 0;
+  }
 
   return dto;
 }

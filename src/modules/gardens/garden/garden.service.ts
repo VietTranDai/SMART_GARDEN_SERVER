@@ -42,15 +42,17 @@ export class GardenService {
         experienceLevel: true,
       },
     },
+    sensors: true,
   } as const;
-
 
   async findAll(userId: number): Promise<GardenDto[]> {
     const gardens = await this.prisma.garden.findMany({
       where: { gardenerId: userId },
       include: this.defaultInclude,
     });
-    return gardens.map(mapToGardenDto);
+    return gardens.map((garden) =>
+      mapToGardenDto(garden, garden.sensors.length),
+    );
   }
 
   async findOne(userId: number, gardenId: number): Promise<GardenDto> {
@@ -60,12 +62,10 @@ export class GardenService {
     });
     if (!garden) throw new NotFoundException(`Garden ${gardenId} not found`);
 
-    if(!await this.checkGardenOwnership(userId, gardenId)){
+    if (!(await this.checkGardenOwnership(userId, gardenId))) {
       throw new ForbiddenException(`Garden ${gardenId} not found`);
     }
 
-    return mapToGardenDto(garden);
+    return mapToGardenDto(garden, garden.sensors.length);
   }
-
-
 }

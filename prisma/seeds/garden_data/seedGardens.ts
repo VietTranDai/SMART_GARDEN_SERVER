@@ -17,7 +17,8 @@ export async function seedGardens(prisma: PrismaClient): Promise<void> {
       name: 'Vườn Rau Sạch',
       gardenKey: '1',
       profilePicture: '/pictures/gardens/muong-rau.png',
-      description: 'Vườn rau hữu cơ không hóa chất, cung cấp rau tươi sạch mỗi ngày.',
+      description:
+        'Vườn rau hữu cơ không hóa chất, cung cấp rau tươi sạch mỗi ngày.',
       street: '268 Lý Thường Kiệt',
       ward: 'Phường 14',
       district: 'Quận 10',
@@ -27,7 +28,7 @@ export async function seedGardens(prisma: PrismaClient): Promise<void> {
       type: GardenType.OUTDOOR,
       status: GardenStatus.ACTIVE,
       plantName: 'Rau Muống',
-      plantGrowStage: 'Trưởng thành',
+      plantGrowStage: 'Giai đoạn thu hoạch',
       plantStartDate: new Date('2023-10-15'),
       plantDuration: 30,
     },
@@ -35,17 +36,18 @@ export async function seedGardens(prisma: PrismaClient): Promise<void> {
       name: 'Vườn Hoa Ban Công',
       gardenKey: '2',
       profilePicture: '/pictures/gardens/rose-ban.png',
-      description: 'Ban công rực rỡ hoa hồng, tạo không gian thơ mộng và dễ chăm sóc.',
+      description:
+        'Ban công rực rỡ hoa Cây Lan ý, tạo không gian thơ mộng và dễ chăm sóc.',
       street: '268 Lý Thường Kiệt',
-      ward: 'Phường 14',
-      district: 'Quận 10',
-      city: 'TP.HCM',
-      lat: 10.772141,
-      lng: 106.65797,
+      ward: 'Đông Hòa',
+      district: 'Dĩ An',
+      city: 'Bình Dương',
+      lat: 10.8946458,
+      lng: 106.7811372,
       type: GardenType.BALCONY,
       status: GardenStatus.ACTIVE,
-      plantName: 'Hoa Hồng',
-      plantGrowStage: 'Nảy mầm',
+      plantName: 'Cây Lan ý',
+      plantGrowStage: 'Nhân giống',
       plantStartDate: new Date('2023-11-20'),
       plantDuration: 90,
     },
@@ -53,7 +55,8 @@ export async function seedGardens(prisma: PrismaClient): Promise<void> {
       name: 'Vườn Gia Vị Trong Nhà',
       gardenKey: '3',
       profilePicture: '/pictures/gardens/hung-que.png',
-      description: 'Vườn gia vị trong nhà với húng quế thơm, giúp tăng hương vị món ăn.',
+      description:
+        'Vườn gia vị trong nhà với húng quế thơm, giúp tăng hương vị món ăn.',
       street: '268 Lý Thường Kiệt',
       ward: 'Phường 14',
       district: 'Quận 10',
@@ -62,7 +65,7 @@ export async function seedGardens(prisma: PrismaClient): Promise<void> {
       lng: 106.65797,
       type: GardenType.OUTDOOR,
       status: GardenStatus.ACTIVE,
-      plantName: 'Húng Quế',
+      plantName: 'Sinh trưởng',
       plantGrowStage: 'Phát triển',
       plantStartDate: new Date('2023-12-05'),
       plantDuration: 45,
@@ -99,5 +102,7 @@ export async function seedGardens(prisma: PrismaClient): Promise<void> {
     });
   }
 
-  console.log(`✅ Đã seed thành công ${gardens.length} khu vườn cho user "supergardener".`);
+  console.log(
+    `✅ Đã seed thành công ${gardens.length} khu vườn cho user "supergardener".`,
+  );
 }
