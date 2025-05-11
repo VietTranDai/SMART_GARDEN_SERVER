@@ -198,6 +198,63 @@ export class TagService {
     }
   }
 
+  /**
+   * Get popular tags based on post count
+   */
+  async getPopularTags(limit: number = 20): Promise<TagWithPostCountDto[]> {
+    try {
+      const tags = await this.prisma.tag.findMany({
+        include: {
+          _count: {
+            select: {
+              posts: true,
+            },
+          },
+        },
+        orderBy: {
+          posts: {
+            _count: 'desc',
+          },
+        },
+        take: limit,
+      });
+
+      return tags.map((tag) => ({
+        id: tag.id,
+        name: tag.name,
+        postCount: tag._count.posts,
+      }));
+    } catch (error) {
+      this.logger.error(
+        `Error getting popular tags: ${error.message}`,
+        error.stack,
+      );
+      throw new BadRequestException('Could not get popular tags');
+    }
+  }
+
+  /**
+   * Search tags by name
+   */
+  async searchTags(query: string, limit: number = 10): Promise<TagDto[]> {
+    try {
+      const tags = await this.prisma.tag.findMany({
+        where: {
+          name: {
+            contains: query,
+            mode: 'insensitive',
+          },
+        },
+        take: limit,
+      });
+
+      return tags.map(this.mapToTagDto);
+    } catch (error) {
+      this.logger.error(`Error searching tags: ${error.message}`, error.stack);
+      throw new BadRequestException('Could not search tags');
+    }
+  }
+
   private mapToTagDto(tag: Tag): TagDto {
     return {
       id: tag.id,

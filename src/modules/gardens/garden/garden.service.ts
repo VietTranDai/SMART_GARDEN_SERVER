@@ -8,11 +8,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { randomUUID } from 'crypto';
-import { CreateGardenDto } from './dto/create-garden.dto';
-import { UpdateGardenDto } from './dto/update-garden.dto';
 import { GardenDto, mapToGardenDto } from './dto/garden.dto';
-import { Garden, GardenStatus } from '@prisma/client';
 
 @Injectable()
 export class GardenService {

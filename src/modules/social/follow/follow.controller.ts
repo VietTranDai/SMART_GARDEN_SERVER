@@ -1,5 +1,18 @@
-import { Controller, Get, Post, Delete, Param, ParseIntPipe, HttpCode } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Param,
+  ParseIntPipe,
+  HttpCode,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+} from '@nestjs/swagger';
 import { FollowService } from './follow.service';
 import { GetUser } from '../../../common/decorators/get-user.decorator';
 import { FollowDto, mapToFollowDto } from './dto/follow.dto';
@@ -12,7 +25,12 @@ export class FollowController {
 
   @Get('followers/:gardenerId')
   @ApiOperation({ summary: 'Get followers of a gardener' })
-  @ApiParam({ name: 'gardenerId', required: true, description: 'ID of the gardener', example: 1 })
+  @ApiParam({
+    name: 'gardenerId',
+    required: true,
+    description: 'ID of the gardener',
+    example: 1,
+  })
   async getFollowers(
     @Param('gardenerId', ParseIntPipe) gardenerId: number,
   ): Promise<FollowDto[]> {
@@ -22,7 +40,12 @@ export class FollowController {
 
   @Get('following/:gardenerId')
   @ApiOperation({ summary: 'Get users that a gardener is following' })
-  @ApiParam({ name: 'gardenerId', required: true, description: 'ID of the gardener', example: 1 })
+  @ApiParam({
+    name: 'gardenerId',
+    required: true,
+    description: 'ID of the gardener',
+    example: 1,
+  })
   async getFollowing(
     @Param('gardenerId', ParseIntPipe) gardenerId: number,
   ): Promise<FollowDto[]> {
@@ -32,7 +55,12 @@ export class FollowController {
 
   @Post(':gardenerId')
   @ApiOperation({ summary: 'Follow a user' })
-  @ApiParam({ name: 'gardenerId', required: true, description: 'ID of the gardener to follow', example: 1 })
+  @ApiParam({
+    name: 'gardenerId',
+    required: true,
+    description: 'ID of the gardener to follow',
+    example: 1,
+  })
   async followUser(
     @GetUser('id') userId: number,
     @Param('gardenerId', ParseIntPipe) gardenerId: number,
@@ -44,7 +72,12 @@ export class FollowController {
   @Delete(':gardenerId')
   @HttpCode(204)
   @ApiOperation({ summary: 'Unfollow a user' })
-  @ApiParam({ name: 'gardenerId', required: true, description: 'ID of the gardener to unfollow', example: 1 })
+  @ApiParam({
+    name: 'gardenerId',
+    required: true,
+    description: 'ID of the gardener to unfollow',
+    example: 1,
+  })
   async unfollowUser(
     @GetUser('id') userId: number,
     @Param('gardenerId', ParseIntPipe) gardenerId: number,

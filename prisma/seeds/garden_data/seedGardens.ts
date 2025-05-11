@@ -29,8 +29,8 @@ export async function seedGardens(prisma: PrismaClient): Promise<void> {
       status: GardenStatus.ACTIVE,
       plantName: 'Rau Muống',
       plantGrowStage: 'Giai đoạn thu hoạch',
-      plantStartDate: new Date('2023-10-15'),
-      plantDuration: 30,
+      plantStartDate: new Date('2025-04-15'),
+      plantDuration: 100,
     },
     {
       name: 'Vườn Hoa Ban Công',
@@ -48,8 +48,8 @@ export async function seedGardens(prisma: PrismaClient): Promise<void> {
       status: GardenStatus.ACTIVE,
       plantName: 'Cây Lan ý',
       plantGrowStage: 'Nhân giống',
-      plantStartDate: new Date('2023-11-20'),
-      plantDuration: 90,
+      plantStartDate: new Date('2025-05-05'),
+      plantDuration: 100,
     },
     {
       name: 'Vườn Gia Vị Trong Nhà',
@@ -67,8 +67,8 @@ export async function seedGardens(prisma: PrismaClient): Promise<void> {
       status: GardenStatus.ACTIVE,
       plantName: 'Sinh trưởng',
       plantGrowStage: 'Phát triển',
-      plantStartDate: new Date('2023-12-05'),
-      plantDuration: 45,
+      plantStartDate: new Date('2025-03-15'),
+      plantDuration: 100,
     },
   ];
 

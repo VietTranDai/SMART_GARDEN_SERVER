@@ -23,7 +23,7 @@ import { CreateCommentDto } from './dto/create-comment.dto';
 import { CommentDto, mapToCommentDto } from './dto/comment.dto';
 
 @ApiTags('Comments')
-@Controller('comments')
+@Controller('community/comments')
 @ApiBearerAuth()
 export class CommentController {
   constructor(private readonly commentService: CommentService) {}

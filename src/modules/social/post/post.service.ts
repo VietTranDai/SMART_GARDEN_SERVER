@@ -22,7 +22,9 @@ export class PostService {
       where: {
         ...(search && { title: { contains: search, mode: 'insensitive' } }),
         ...(gardenerId && { gardenerId: Number(gardenerId) }),
-        ...(plantName && { plantName: { contains: plantName, mode: 'insensitive' } }),
+        ...(plantName && {
+          plantName: { contains: plantName, mode: 'insensitive' },
+        }),
         ...(tag && {
           tags: { some: { tag: { name: tag } } },
         }),
@@ -44,8 +46,8 @@ export class PostService {
       },
     });
 
-    const postIds = posts.map(p => p.id);
-    const gardenerIds = Array.from(new Set(posts.map(p => p.gardenerId)));
+    const postIds = posts.map((p) => p.id);
+    const gardenerIds = Array.from(new Set(posts.map((p) => p.gardenerId)));
 
     // 2) Fetch các quan hệ riêng
     const [postTags, images, comments, gardeners] = await Promise.all([
@@ -78,23 +80,23 @@ export class PostService {
     ]);
 
     // 3) Group thành map để dễ lookup
-    const tagsMap = new Map<number, typeof postTags[0]['tag'][]>();
-    const imagesMap = new Map<number, typeof images[0][]>();
-    const commentsMap = new Map<number, typeof comments[0][]>();
-    const gardenerUserMap = new Map<number, typeof gardeners[0]['user']>();
+    const tagsMap = new Map<number, (typeof postTags)[0]['tag'][]>();
+    const imagesMap = new Map<number, (typeof images)[0][]>();
+    const commentsMap = new Map<number, (typeof comments)[0][]>();
+    const gardenerUserMap = new Map<number, (typeof gardeners)[0]['user']>();
 
     for (const id of postIds) {
       tagsMap.set(id, []);
       imagesMap.set(id, []);
       commentsMap.set(id, []);
     }
-    postTags.forEach(pt => tagsMap.get(pt.postId)!.push(pt.tag));
-    images.forEach(img => imagesMap.get(img.postId)!.push(img));
-    comments.forEach(c => commentsMap.get(c.postId)!.push(c));
-    gardeners.forEach(g => gardenerUserMap.set(g.user.id, g.user));
+    postTags.forEach((pt) => tagsMap.get(pt.postId)!.push(pt.tag));
+    images.forEach((img) => imagesMap.get(img.postId)!.push(img));
+    comments.forEach((c) => commentsMap.get(c.postId)!.push(c));
+    gardeners.forEach((g) => gardenerUserMap.set(g.user.id, g.user));
 
     // 4) Build DTO
-    return posts.map(post =>
+    return posts.map((post) =>
       mapToPostDto(
         post,
         tagsMap.get(post.id)!,
@@ -157,7 +159,7 @@ export class PostService {
 
     return mapToPostDto(
       post,
-      postTags.map(r => r.tag),
+      postTags.map((r) => r.tag),
       images,
       comments,
       gardener.user,
@@ -171,7 +173,8 @@ export class PostService {
     body: CreatePostDto & { tagIds?: string[] },
     files: Express.Multer.File[],
   ): Promise<PostDto> {
-    const { title, content, gardenId, plantName, plantGrowStage, tagIds } = body;
+    const { title, content, gardenId, plantName, plantGrowStage, tagIds } =
+      body;
 
     // 1) Tạo post
     const post = await this.prisma.post.create({
@@ -200,7 +203,7 @@ export class PostService {
     // 2) Tạo PostTag & PostImage nếu có
     if (tagIds?.length) {
       await this.prisma.postTag.createMany({
-        data: tagIds.map(tid => ({
+        data: tagIds.map((tid) => ({
           postId: post.id,
           tagId: Number(tid),
         })),
@@ -208,7 +211,7 @@ export class PostService {
     }
     if (files?.length) {
       await this.prisma.postImage.createMany({
-        data: files.map(f => ({
+        data: files.map((f) => ({
           postId: post.id,
           url: `/uploads/${f.filename}`,
         })),
@@ -217,9 +220,15 @@ export class PostService {
 
     // 3) Fetch lại quan hệ
     const [postTags, images, comments, gardener] = await Promise.all([
-      this.prisma.postTag.findMany({ where: { postId: post.id }, include: { tag: true } }),
+      this.prisma.postTag.findMany({
+        where: { postId: post.id },
+        include: { tag: true },
+      }),
       this.prisma.postImage.findMany({ where: { postId: post.id } }),
-      this.prisma.comment.findMany({ where: { postId: post.id }, orderBy: { createdAt: 'asc' } }),
+      this.prisma.comment.findMany({
+        where: { postId: post.id },
+        orderBy: { createdAt: 'asc' },
+      }),
       this.prisma.gardener.findUnique({
         where: { userId },
         include: {
@@ -239,7 +248,7 @@ export class PostService {
 
     return mapToPostDto(
       post,
-      postTags.map(r => r.tag),
+      postTags.map((r) => r.tag),
       images,
       comments,
       gardener!.user,
@@ -255,7 +264,8 @@ export class PostService {
   ): Promise<PostDto> {
     const existing = await this.prisma.post.findUnique({ where: { id } });
     if (!existing) throw new NotFoundException('Post not found');
-    if (existing.gardenerId !== userId) throw new ForbiddenException('Unauthorized');
+    if (existing.gardenerId !== userId)
+      throw new ForbiddenException('Unauthorized');
 
     // 1) Cập nhật cơ bản
     const post = await this.prisma.post.update({
@@ -277,9 +287,15 @@ export class PostService {
 
     // 2) Fetch lại quan hệ
     const [postTags, images, comments, gardener] = await Promise.all([
-      this.prisma.postTag.findMany({ where: { postId: id }, include: { tag: true } }),
+      this.prisma.postTag.findMany({
+        where: { postId: id },
+        include: { tag: true },
+      }),
       this.prisma.postImage.findMany({ where: { postId: id } }),
-      this.prisma.comment.findMany({ where: { postId: id }, orderBy: { createdAt: 'asc' } }),
+      this.prisma.comment.findMany({
+        where: { postId: id },
+        orderBy: { createdAt: 'asc' },
+      }),
       this.prisma.gardener.findUnique({
         where: { userId },
         include: {
@@ -299,7 +315,7 @@ export class PostService {
 
     return mapToPostDto(
       post,
-      postTags.map(r => r.tag),
+      postTags.map((r) => r.tag),
       images,
       comments,
       gardener!.user,
@@ -311,34 +327,239 @@ export class PostService {
   async deletePost(userId: number, id: number): Promise<void> {
     const existing = await this.prisma.post.findUnique({ where: { id } });
     if (!existing) throw new NotFoundException('Post not found');
-    if (existing.gardenerId !== userId) throw new ForbiddenException('Unauthorized');
+    if (existing.gardenerId !== userId)
+      throw new ForbiddenException('Unauthorized');
     await this.prisma.post.delete({ where: { id } });
   }
 
   /** Lấy riêng comments theo postId */
   async getCommentsByPostId(postId: number) {
-    const post = await this.prisma.post.findUnique({ where: { id: postId } });
-    if (!post) throw new NotFoundException('Post not found');
-
     return this.prisma.comment.findMany({
       where: { postId },
-      orderBy: { createdAt: 'asc' },
       include: {
         gardener: {
           include: {
-            user: {
-              select: {
-                id: true,
-                username: true,
-                firstName: true,
-                lastName: true,
-                profilePicture: true,
-                gardener: { select: { experienceLevel: true } },
-              },
-            },
+            user: true,
           },
         },
       },
     });
+  }
+
+  /** Filter posts based on specified criteria */
+  async getFilteredPosts(params: {
+    tagIds?: number[];
+    searchQuery?: string;
+    gardenId?: number;
+    userId?: number;
+    page: number;
+    limit: number;
+  }): Promise<PostDto[]> {
+    const { tagIds, searchQuery, gardenId, userId, page, limit } = params;
+    const skip = (page - 1) * limit;
+
+    // Build where clause with filters
+    const where: any = {};
+
+    // Add tag filter if provided
+    if (tagIds && tagIds.length > 0) {
+      where.tags = { some: { tagId: { in: tagIds } } };
+    }
+
+    // Add search query filter if provided
+    if (searchQuery) {
+      where.OR = [
+        { title: { contains: searchQuery, mode: 'insensitive' } },
+        { content: { contains: searchQuery, mode: 'insensitive' } },
+        { plantName: { contains: searchQuery, mode: 'insensitive' } },
+      ];
+    }
+
+    // Add garden filter if provided
+    if (gardenId) {
+      where.gardenId = gardenId;
+    }
+
+    // Add user filter if provided
+    if (userId) {
+      where.gardenerId = userId;
+    }
+
+    // Fetch posts with filters
+    const posts = await this.prisma.post.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        gardenerId: true,
+        gardenId: true,
+        plantName: true,
+        plantGrowStage: true,
+        title: true,
+        content: true,
+        total_vote: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    const postIds = posts.map((p) => p.id);
+    const gardenerIds = Array.from(new Set(posts.map((p) => p.gardenerId)));
+
+    // Fetch related data
+    const [postTags, images, comments, gardeners] = await Promise.all([
+      this.prisma.postTag.findMany({
+        where: { postId: { in: postIds } },
+        include: { tag: true },
+      }),
+      this.prisma.postImage.findMany({
+        where: { postId: { in: postIds } },
+      }),
+      this.prisma.comment.findMany({
+        where: { postId: { in: postIds } },
+        orderBy: { createdAt: 'asc' },
+      }),
+      this.prisma.gardener.findMany({
+        where: { userId: { in: gardenerIds } },
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              firstName: true,
+              lastName: true,
+              profilePicture: true,
+              gardener: { select: { experienceLevel: true } },
+            },
+          },
+        },
+      }),
+    ]);
+
+    // Group into maps for easy lookup
+    const tagsMap = new Map<number, (typeof postTags)[0]['tag'][]>();
+    const imagesMap = new Map<number, (typeof images)[0][]>();
+    const commentsMap = new Map<number, (typeof comments)[0][]>();
+    const gardenerUserMap = new Map<number, (typeof gardeners)[0]['user']>();
+
+    for (const id of postIds) {
+      tagsMap.set(id, []);
+      imagesMap.set(id, []);
+      commentsMap.set(id, []);
+    }
+    postTags.forEach((pt) => tagsMap.get(pt.postId)!.push(pt.tag));
+    images.forEach((img) => imagesMap.get(img.postId)!.push(img));
+    comments.forEach((c) => commentsMap.get(c.postId)!.push(c));
+    gardeners.forEach((g) => gardenerUserMap.set(g.user.id, g.user));
+
+    // Build and return DTOs
+    return posts.map((post) =>
+      mapToPostDto(
+        post,
+        tagsMap.get(post.id) || [],
+        imagesMap.get(post.id) || [],
+        commentsMap.get(post.id) || [],
+        gardenerUserMap.get(post.gardenerId)!,
+        undefined,
+      ),
+    );
+  }
+
+  /** Search posts by query */
+  async searchPosts(
+    query: string,
+    page: number = 1,
+    limit: number = 10,
+  ): Promise<PostDto[]> {
+    const skip = (page - 1) * limit;
+
+    // Search in title, content, and plantName
+    const posts = await this.prisma.post.findMany({
+      where: {
+        OR: [
+          { title: { contains: query, mode: 'insensitive' } },
+          { content: { contains: query, mode: 'insensitive' } },
+          { plantName: { contains: query, mode: 'insensitive' } },
+        ],
+      },
+      skip,
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        gardenerId: true,
+        gardenId: true,
+        plantName: true,
+        plantGrowStage: true,
+        title: true,
+        content: true,
+        total_vote: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    const postIds = posts.map((p) => p.id);
+    const gardenerIds = Array.from(new Set(posts.map((p) => p.gardenerId)));
+
+    // Fetch related data
+    const [postTags, images, comments, gardeners] = await Promise.all([
+      this.prisma.postTag.findMany({
+        where: { postId: { in: postIds } },
+        include: { tag: true },
+      }),
+      this.prisma.postImage.findMany({
+        where: { postId: { in: postIds } },
+      }),
+      this.prisma.comment.findMany({
+        where: { postId: { in: postIds } },
+        orderBy: { createdAt: 'asc' },
+      }),
+      this.prisma.gardener.findMany({
+        where: { userId: { in: gardenerIds } },
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              firstName: true,
+              lastName: true,
+              profilePicture: true,
+              gardener: { select: { experienceLevel: true } },
+            },
+          },
+        },
+      }),
+    ]);
+
+    // Group into maps for easy lookup
+    const tagsMap = new Map<number, (typeof postTags)[0]['tag'][]>();
+    const imagesMap = new Map<number, (typeof images)[0][]>();
+    const commentsMap = new Map<number, (typeof comments)[0][]>();
+    const gardenerUserMap = new Map<number, (typeof gardeners)[0]['user']>();
+
+    for (const id of postIds) {
+      tagsMap.set(id, []);
+      imagesMap.set(id, []);
+      commentsMap.set(id, []);
+    }
+    postTags.forEach((pt) => tagsMap.get(pt.postId)!.push(pt.tag));
+    images.forEach((img) => imagesMap.get(img.postId)!.push(img));
+    comments.forEach((c) => commentsMap.get(c.postId)!.push(c));
+    gardeners.forEach((g) => gardenerUserMap.set(g.user.id, g.user));
+
+    // Build and return DTOs
+    return posts.map((post) =>
+      mapToPostDto(
+        post,
+        tagsMap.get(post.id) || [],
+        imagesMap.get(post.id) || [],
+        commentsMap.get(post.id) || [],
+        gardenerUserMap.get(post.gardenerId)!,
+        undefined,
+      ),
+    );
   }
 }

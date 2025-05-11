@@ -130,6 +130,19 @@ export class GardenDto {
   })
   plantDuration: number | null;
 
+  @ApiPropertyOptional({
+    description:
+      'Number of days until the plant is expected to be ready for harvest',
+    example: 45,
+  })
+  daysUntilHarvest: number;
+
+  @ApiPropertyOptional({
+    description: 'Percentage of growth progress from planting to harvest',
+    example: 50,
+  })
+  growthProgress: number;
+
   @ApiProperty({
     description: 'When the garden was created',
     example: '2023-08-15T08:30:00.000Z',
@@ -190,6 +203,12 @@ export function mapToGardenDto(
   dto.plantStartDate = garden.plantStartDate;
   dto.plantDuration = garden.plantDuration;
 
+  // Calculate garden statistics
+  const { daysUntilHarvest, growthProgress } =
+    calculateGardenStatistics(garden);
+  dto.daysUntilHarvest = daysUntilHarvest;
+  dto.growthProgress = growthProgress;
+
   dto.createdAt = garden.createdAt;
   dto.updatedAt = garden.updatedAt;
 
@@ -200,4 +219,46 @@ export function mapToGardenDto(
   }
 
   return dto;
+}
+
+/**
+ * Calculate garden statistics
+ * @param garden Garden object
+ * @returns Object containing days until harvest and growth progress
+ */
+function calculateGardenStatistics(garden: GardenModel): {
+  daysUntilHarvest: number;
+  growthProgress: number;
+} {
+  let daysUntilHarvest = 0;
+  let growthProgress = 0;
+
+  // plantDuration in Garden model should represent the sum of durations
+  // from all growth stages of the plant being grown
+  if (garden.plantStartDate && garden.plantDuration) {
+    const currentDate = new Date();
+    const startDate = new Date(garden.plantStartDate);
+
+    // The total duration is stored directly in garden.plantDuration
+    // This value should be populated from the Plant model's growthStages
+    // when the plant is added to the garden
+    const totalDuration = garden.plantDuration;
+
+    // Calculate days elapsed since planting
+    const elapsed = Math.floor(
+      (currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24),
+    );
+
+    // Calculate days until harvest (min is 0) and round to 2 decimal places
+    daysUntilHarvest = parseFloat(
+      Math.max(0, totalDuration - elapsed).toFixed(2),
+    );
+
+    // Calculate growth progress percentage (cap at 100%) and round to 2 decimal places
+    growthProgress = parseFloat(
+      Math.min(100, Math.max(0, (elapsed / totalDuration) * 100)).toFixed(2),
+    );
+  }
+
+  return { daysUntilHarvest, growthProgress };
 }

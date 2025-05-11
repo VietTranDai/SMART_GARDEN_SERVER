@@ -7,12 +7,14 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOperation,
   ApiResponse,
   ApiTags,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { TagService } from './tag.service';
 import { CreateTagDto } from './dto/create-tag.dto';
@@ -21,56 +23,96 @@ import { TagDto, TagWithPostCountDto } from './dto/tag.dto';
 import { Public } from 'src/common/decorators/public.decorator';
 
 @ApiTags('Tags')
-@Controller('tags')
+@Controller('community/tags')
 @ApiBearerAuth()
 export class TagController {
   constructor(private readonly tagService: TagService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Tạo một tag mới' })
+  @ApiOperation({ summary: 'Create a new tag' })
   @ApiResponse({
     status: 201,
-    description: 'Tag đã được tạo thành công.',
+    description: 'Tag created successfully',
     type: TagDto,
   })
-  @ApiResponse({ status: 400, description: 'Dữ liệu không hợp lệ.' })
+  @ApiResponse({ status: 400, description: 'Invalid data' })
   create(@Body() createTagDto: CreateTagDto): Promise<TagDto> {
     return this.tagService.create(createTagDto);
   }
 
   @Get()
   @Public()
-  @ApiOperation({ summary: 'Lấy danh sách tất cả các tag' })
+  @ApiOperation({ summary: 'Get all tags' })
   @ApiResponse({
     status: 200,
-    description: 'Danh sách các tag.',
+    description: 'List of tags',
     type: [TagWithPostCountDto],
   })
   findAll(): Promise<TagWithPostCountDto[]> {
     return this.tagService.findAll();
   }
 
-  @Get(':id')
+  @Get('popular')
   @Public()
-  @ApiOperation({ summary: 'Lấy thông tin của một tag theo ID' })
+  @ApiOperation({ summary: 'Get popular tags based on post count' })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: 'Number of tags to return',
+    example: 20,
+  })
   @ApiResponse({
     status: 200,
-    description: 'Thông tin chi tiết của tag.',
+    description: 'List of popular tags',
+    type: [TagWithPostCountDto],
+  })
+  getPopularTags(@Query('limit') limit = '20'): Promise<TagWithPostCountDto[]> {
+    return this.tagService.getPopularTags(parseInt(limit, 10));
+  }
+
+  @Get('search')
+  @Public()
+  @ApiOperation({ summary: 'Search tags by name' })
+  @ApiQuery({ name: 'query', required: true, description: 'Search query' })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    description: 'Number of tags to return',
+    example: 10,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'List of matching tags',
+    type: [TagDto],
+  })
+  searchTags(
+    @Query('query') query: string,
+    @Query('limit') limit = '10',
+  ): Promise<TagDto[]> {
+    return this.tagService.searchTags(query, parseInt(limit, 10));
+  }
+
+  @Get(':id')
+  @Public()
+  @ApiOperation({ summary: 'Get tag details by ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Tag details',
     type: TagWithPostCountDto,
   })
-  @ApiResponse({ status: 404, description: 'Không tìm thấy tag.' })
+  @ApiResponse({ status: 404, description: 'Tag not found' })
   findOne(@Param('id', ParseIntPipe) id: number): Promise<TagWithPostCountDto> {
     return this.tagService.findOne(id);
   }
 
   @Patch(':id')
-  @ApiOperation({ summary: 'Cập nhật thông tin của một tag' })
+  @ApiOperation({ summary: 'Update a tag' })
   @ApiResponse({
     status: 200,
-    description: 'Tag đã được cập nhật thành công.',
+    description: 'Tag updated successfully',
     type: TagDto,
   })
-  @ApiResponse({ status: 404, description: 'Không tìm thấy tag.' })
+  @ApiResponse({ status: 404, description: 'Tag not found' })
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateTagDto: UpdateTagDto,
@@ -79,15 +121,15 @@ export class TagController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Xóa một tag' })
+  @ApiOperation({ summary: 'Delete a tag' })
   @ApiResponse({
     status: 200,
-    description: 'Tag đã được xóa thành công.',
+    description: 'Tag deleted successfully',
   })
-  @ApiResponse({ status: 404, description: 'Không tìm thấy tag.' })
+  @ApiResponse({ status: 404, description: 'Tag not found' })
   @ApiResponse({
     status: 400,
-    description: 'Không thể xóa tag vì đang được sử dụng.',
+    description: 'Cannot delete tag because it is being used',
   })
   remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return this.tagService.remove(id);
