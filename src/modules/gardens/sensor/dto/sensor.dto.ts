@@ -7,7 +7,12 @@ import {
   IsEnum,
   IsOptional,
 } from 'class-validator';
-import { SensorType, SensorUnit, Sensor as SensorModel } from '@prisma/client';
+import {
+  SensorType,
+  SensorUnit,
+  Sensor as SensorModel,
+  SensorData,
+} from '@prisma/client';
 
 export class CreateSensorDto {
   @ApiProperty({ description: 'ID của vườn mà sensor thuộc về', example: 1 })
@@ -79,14 +84,32 @@ export class SensorDto {
   @ApiProperty({ description: 'ID của vườn', example: 1 })
   gardenId: number;
 
-  @ApiProperty({ description: 'Ngày tạo', example: '2025-05-01T08:30:00Z' })
-  createdAt: Date;
+  @ApiProperty({
+    description: 'Trạng thái hoạt động của sensor',
+    example: true,
+  })
+  isActive: boolean;
+
+  @ApiPropertyOptional({
+    description: 'Giá trị đo cuối cùng',
+    example: 27.5,
+  })
+  lastReading: number;
+
+  @ApiPropertyOptional({
+    description: 'Thời gian đo cuối cùng',
+    example: '2023-06-15T08:30:00Z',
+  })
+  lastReadingAt: string;
+
+  @ApiProperty({ description: 'Ngày tạo', example: '2023-05-01T08:30:00Z' })
+  createdAt: string;
 
   @ApiProperty({
     description: 'Ngày cập nhật',
-    example: '2025-05-02T10:15:00Z',
+    example: '2023-05-02T10:15:00Z',
   })
-  updatedAt: Date;
+  updatedAt: string;
 }
 
 /**
@@ -95,8 +118,19 @@ export class SensorDto {
 
 /**
  * Map a Prisma Sensor model to SensorDto
+ * @param sensor The sensor model
+ * @param latestReading Optional latest sensor reading data
  */
-export function mapToSensorDto(sensor: SensorModel): SensorDto {
+export function mapToSensorDto(
+  sensor: SensorModel,
+  latestReading?: SensorData | null,
+): SensorDto {
+  // Determine if sensor is active based on having data in the last 24 hours
+  const isActive = latestReading
+    ? new Date().getTime() - new Date(latestReading.timestamp).getTime() <
+      24 * 60 * 60 * 1000
+    : false;
+
   return {
     id: sensor.id,
     sensorKey: sensor.sensorKey,
@@ -104,14 +138,25 @@ export function mapToSensorDto(sensor: SensorModel): SensorDto {
     unit: sensor.unit,
     name: sensor.name,
     gardenId: sensor.gardenId,
-    createdAt: sensor.createdAt,
-    updatedAt: sensor.updatedAt,
+    isActive: isActive,
+    lastReading: latestReading?.value ?? 0,
+    lastReadingAt:
+      latestReading?.createdAt.toISOString() || new Date().toISOString(),
+    createdAt: sensor.createdAt.toISOString(),
+    updatedAt: sensor.updatedAt.toISOString(),
   };
 }
 
 /**
  * Map an array of Prisma Sensor models to SensorDto[]
+ * @param sensors Array of sensor models
+ * @param latestReadings Optional map of sensor IDs to their latest reading
  */
-export function mapToSensorDtoList(sensors: SensorModel[]): SensorDto[] {
-  return sensors.map(mapToSensorDto);
+export function mapToSensorDtoList(
+  sensors: SensorModel[],
+  latestReadings?: Map<number, SensorData>,
+): SensorDto[] {
+  return sensors.map((sensor) =>
+    mapToSensorDto(sensor, latestReadings?.get(sensor.id)),
+  );
 }

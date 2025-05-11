@@ -39,13 +39,13 @@ import {
   UpdateSensorDto,
 } from '../dto/sensor.dto';
 import { SensorService } from '../service/sensor.service';
-import { SensorWithLatestReadingDto } from '../dto/sensor-with-latest-reading.dto';
 import {
   SensorDataQueryParamsDto,
   GardenSensorDataQueryParamsDto,
 } from '../dto/sensor-data-query.dto';
 import { SensorDataExtendedDto } from '../dto/sensor-data-extended.dto';
 import { SensorDisplayUtil } from '../util/sensor-display.util';
+import { PrismaService } from '../../../../prisma/prisma.service';
 
 @ApiTags('Sensor')
 @Controller('sensors')
@@ -53,7 +53,10 @@ import { SensorDisplayUtil } from '../util/sensor-display.util';
 export class SensorController {
   private readonly logger = new Logger(SensorController.name);
 
-  constructor(private readonly sensorService: SensorService) {}
+  constructor(
+    private readonly sensorService: SensorService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   @Get('gardens/:gardenId')
   @ApiOperation({ summary: 'List sensors by garden' })
@@ -64,11 +67,22 @@ export class SensorController {
     @Param('gardenId', ParseIntPipe) gardenId: number,
   ): Promise<SensorDto[]> {
     this.logger.log(`User ${userId} listing sensors for garden ${gardenId}`);
-    const sensors = await this.sensorService.getSensorByGarden(
-      userId,
-      gardenId,
+    // Get sensors and their latest readings in one call
+    const sensorsWithReadings =
+      await this.sensorService.getLatestReadingsByGarden(userId, gardenId);
+
+    // Convert to map for easier lookup by sensor id
+    const readingsMap = new Map();
+    sensorsWithReadings.forEach((item) => {
+      if (item.latestReading) {
+        readingsMap.set(item.sensor.id, item.latestReading);
+      }
+    });
+
+    return mapToSensorDtoList(
+      sensorsWithReadings.map((item) => item.sensor),
+      readingsMap,
     );
-    return mapToSensorDtoList(sensors);
   }
 
   @Get(':sensorId')
@@ -81,7 +95,14 @@ export class SensorController {
   ): Promise<SensorDto> {
     this.logger.log(`User ${userId} getting sensor ${sensorId}`);
     const sensor = await this.sensorService.getSensorById(userId, sensorId);
-    return mapToSensorDto(sensor);
+
+    // Get latest reading for this sensor
+    const latestReading = await this.prisma.sensorData.findFirst({
+      where: { sensorId: sensor.id },
+      orderBy: { timestamp: 'desc' },
+    });
+
+    return mapToSensorDto(sensor, latestReading);
   }
 
   @Post('gardens/:gardenId')
@@ -99,7 +120,9 @@ export class SensorController {
       ...dto,
       gardenId,
     });
-    return mapToSensorDto(sensor);
+
+    // For a newly created sensor, there's no reading yet
+    return mapToSensorDto(sensor, null);
   }
 
   @Put(':sensorId')
@@ -114,7 +137,14 @@ export class SensorController {
   ): Promise<SensorDto> {
     this.logger.log(`User ${userId} updating sensor ${sensorId}`);
     const sensor = await this.sensorService.updateSensor(userId, sensorId, dto);
-    return mapToSensorDto(sensor);
+
+    // Get latest reading for this sensor
+    const latestReading = await this.prisma.sensorData.findFirst({
+      where: { sensorId: sensor.id },
+      orderBy: { timestamp: 'desc' },
+    });
+
+    return mapToSensorDto(sensor, latestReading);
   }
 
   @Patch(':sensorId')
@@ -129,7 +159,14 @@ export class SensorController {
   ): Promise<SensorDto> {
     this.logger.log(`User ${userId} updating sensor ${sensorId} via PATCH`);
     const sensor = await this.sensorService.updateSensor(userId, sensorId, dto);
-    return mapToSensorDto(sensor);
+
+    // Get latest reading for this sensor
+    const latestReading = await this.prisma.sensorData.findFirst({
+      where: { sensorId: sensor.id },
+      orderBy: { timestamp: 'desc' },
+    });
+
+    return mapToSensorDto(sensor, latestReading);
   }
 
   @Delete(':sensorId')
@@ -265,24 +302,18 @@ export class SensorController {
   @ApiResponse({
     status: 200,
     description: 'List of sensors with latest readings',
-    type: [SensorWithLatestReadingDto],
+    type: [SensorDto],
   })
   async latestReadingsByGarden(
     @GetUser('id') userId: number,
     @Param('gardenId', ParseIntPipe) gardenId: number,
-  ): Promise<SensorWithLatestReadingDto[]> {
-    this.logger.log(
-      `User ${userId} getting latest readings for garden ${gardenId}`,
-    );
+  ): Promise<SensorDto[]> {
     const data = await this.sensorService.getLatestReadingsByGarden(
       userId,
       gardenId,
     );
 
     // Chuyển về DTO
-    return data.map(({ sensor, latestReading }) => ({
-      sensor: mapToSensorDto(sensor),
-      latestReading: latestReading ? mapToSensorDataDto(latestReading) : null,
-    }));
+    return data.map((item) => mapToSensorDto(item.sensor, item.latestReading));
   }
 }

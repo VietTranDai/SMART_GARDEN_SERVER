@@ -65,7 +65,7 @@ export async function seedGardens(prisma: PrismaClient): Promise<void> {
       lng: 106.65797,
       type: GardenType.OUTDOOR,
       status: GardenStatus.ACTIVE,
-      plantName: 'Sinh trưởng',
+      plantName: 'Húng Quế',
       plantGrowStage: 'Phát triển',
       plantStartDate: new Date('2025-03-15'),
       plantDuration: 100,
