@@ -1,4 +1,8 @@
-import { PartialType } from '@nestjs/swagger';
+import { PartialType } from '@nestjs/mapped-types';
 import { CreateGardenDto } from './create-garden.dto';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 
-export class UpdateGardenDto extends PartialType(CreateGardenDto) {}
+// UpdateGardenDto extends CreateGardenDto but makes all properties optional
+export class UpdateGardenDto extends PartialType(CreateGardenDto) {
+  // All fields are inherited from CreateGardenDto but are optional through PartialType
+}

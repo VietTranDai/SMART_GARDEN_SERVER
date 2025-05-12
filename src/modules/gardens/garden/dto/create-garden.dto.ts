@@ -3,117 +3,124 @@ import {
   IsString,
   IsOptional,
   IsEnum,
-  MaxLength,
-  Min,
-  Max,
   IsNumber,
-  IsLatitude,
-  IsLongitude,
+  IsDateString,
+  IsUUID,
+  MaxLength,
 } from 'class-validator';
-import { GardenType } from '@prisma/client';
+import { GardenStatus, GardenType } from '@prisma/client';
 
 export class CreateGardenDto {
-  @ApiProperty({
-    description: 'Name of the garden',
-    example: 'My Balcony Garden',
-    maxLength: 100,
-  })
+  @ApiProperty({ description: 'Garden name', example: 'My Tomato Garden' })
   @IsString()
   @MaxLength(100)
   name: string;
 
   @ApiPropertyOptional({
-    description: 'Street address of the garden',
-    example: '123 Garden Street',
-    maxLength: 200,
-    required: false,
+    description: 'Garden key for IoT devices',
+    example: 'garden-001',
   })
   @IsString()
   @IsOptional()
-  @MaxLength(200)
-  street?: string;
+  gardenKey?: string;
 
   @ApiPropertyOptional({
-    description: 'Ward/neighborhood of the garden',
-    example: 'Ward 10',
-    maxLength: 100,
-    required: false,
+    description: 'Garden description',
+    example: 'A small garden for growing tomatoes',
   })
   @IsString()
   @IsOptional()
-  @MaxLength(100)
+  @MaxLength(500)
+  description?: string;
+
+  @ApiPropertyOptional({
+    description: 'Garden street',
+    example: '123 Garden Street',
+  })
+  @IsString()
+  @IsOptional()
+  street?: string;
+
+  @ApiPropertyOptional({ description: 'Garden ward', example: 'Green Ward' })
+  @IsString()
+  @IsOptional()
   ward?: string;
 
   @ApiPropertyOptional({
-    description: 'District of the garden',
-    example: 'District 1',
-    maxLength: 100,
-    required: false,
+    description: 'Garden district',
+    example: 'Garden District',
   })
   @IsString()
   @IsOptional()
-  @MaxLength(100)
   district?: string;
 
-  @ApiPropertyOptional({
-    description: 'City of the garden',
-    example: 'Ho Chi Minh City',
-    maxLength: 100,
-    required: false,
-  })
+  @ApiPropertyOptional({ description: 'Garden city', example: 'Garden City' })
   @IsString()
   @IsOptional()
-  @MaxLength(100)
   city?: string;
 
-  @ApiPropertyOptional({
-    description: 'Latitude coordinate of the garden',
-    example: 10.762622,
-    required: false,
-  })
-  @IsLatitude()
+  @ApiPropertyOptional({ description: 'Garden latitude', example: 10.762622 })
+  @IsNumber()
   @IsOptional()
   lat?: number;
 
-  @ApiPropertyOptional({
-    description: 'Longitude coordinate of the garden',
-    example: 106.660172,
-    required: false,
-  })
-  @IsLongitude()
+  @ApiPropertyOptional({ description: 'Garden longitude', example: 106.660172 })
+  @IsNumber()
   @IsOptional()
   lng?: number;
 
   @ApiPropertyOptional({
-    description: 'Type of garden',
+    description: 'Garden profile picture URL',
+    example: 'https://example.com/garden.jpg',
+  })
+  @IsString()
+  @IsOptional()
+  profilePicture?: string;
+
+  @ApiPropertyOptional({
+    description: 'Garden type',
     enum: GardenType,
-    example: 'BALCONY',
-    default: 'OUTDOOR',
-    required: false,
+    example: GardenType.OUTDOOR,
   })
   @IsEnum(GardenType)
   @IsOptional()
   type?: GardenType;
 
   @ApiPropertyOptional({
-    description: 'Name of the plant in this garden',
-    example: 'Tomato',
-    maxLength: 100,
-    required: false,
+    description: 'Garden status',
+    enum: GardenStatus,
+    example: GardenStatus.ACTIVE,
   })
+  @IsEnum(GardenStatus)
+  @IsOptional()
+  status?: GardenStatus;
+
+  @ApiPropertyOptional({ description: 'Plant name', example: 'Tomato' })
   @IsString()
   @IsOptional()
-  @MaxLength(100)
   plantName?: string;
 
   @ApiPropertyOptional({
-    description: 'Current growth stage of the plant',
-    example: 'Seedling',
-    maxLength: 50,
-    required: false,
+    description: 'Plant growth stage',
+    example: 'Seeding',
   })
   @IsString()
   @IsOptional()
-  @MaxLength(50)
   plantGrowStage?: string;
+
+  @ApiPropertyOptional({
+    description: 'Plant start date (ISO format)',
+    example: '2023-04-15T00:00:00Z',
+  })
+  @IsDateString()
+  @IsOptional()
+  plantStartDate?: string;
+
+  @ApiPropertyOptional({
+    description: 'Plant duration in days',
+    example: 90,
+  })
+  @IsNumber()
+  @IsOptional()
+  plantDuration?: number;
 }
