@@ -2,31 +2,25 @@ import { ApiProperty } from '@nestjs/swagger';
 import { WeatherMain } from '@prisma/client';
 
 /**
- * DTO for temperature range in weather advice
+ * DTO for temperature conditions in weather advice
  */
-export class TemperatureRangeDto {
-  @ApiProperty({
-    description: 'Minimum temperature in Celsius',
-    required: false,
-  })
-  min?: number;
+export class TemperatureConditionsDto {
+  @ApiProperty({ description: 'Minimum temperature in Celsius' })
+  min: number;
 
-  @ApiProperty({
-    description: 'Maximum temperature in Celsius',
-    required: false,
-  })
-  max?: number;
+  @ApiProperty({ description: 'Maximum temperature in Celsius' })
+  max: number;
 }
 
 /**
- * DTO for humidity range in weather advice
+ * DTO for humidity conditions in weather advice
  */
-export class HumidityRangeDto {
-  @ApiProperty({ description: 'Minimum humidity percentage', required: false })
-  min?: number;
+export class HumidityConditionsDto {
+  @ApiProperty({ description: 'Minimum humidity percentage' })
+  min: number;
 
-  @ApiProperty({ description: 'Maximum humidity percentage', required: false })
-  max?: number;
+  @ApiProperty({ description: 'Maximum humidity percentage' })
+  max: number;
 }
 
 /**
@@ -41,9 +35,27 @@ export class WindConditionsDto {
 }
 
 /**
+ * DTO for recovery timeline in weather advice
+ */
+export class RecoveryTimelineDto {
+  @ApiProperty({ description: 'Immediate recovery actions/observations' })
+  immediate: string;
+
+  @ApiProperty({ description: 'Short-term recovery actions/observations' })
+  shortTerm: string;
+
+  @ApiProperty({ description: 'Medium-term recovery actions/observations' })
+  mediumTerm: string;
+
+  @ApiProperty({ description: 'Long-term recovery actions/observations' })
+  longTerm: string;
+}
+
+/**
  * DTO for weather-based advice for garden care
  */
 export class WeatherAdviceDto {
+  // Core Information
   @ApiProperty({ description: 'Unique identifier for the advice' })
   id: number;
 
@@ -53,35 +65,73 @@ export class WeatherAdviceDto {
   @ApiProperty({ description: 'Detailed explanation of the advice' })
   description: string;
 
+  // Detailed Guidance
   @ApiProperty({
-    description: 'Weather condition this advice applies to',
-    enum: WeatherMain,
+    description: 'Step-by-step instructions for the advice',
+    type: [String],
   })
-  weatherCondition: WeatherMain;
+  detailedSteps: string[];
 
   @ApiProperty({
-    description: 'Temperature range this advice applies to',
-    type: TemperatureRangeDto,
+    description: 'Reasons behind giving this advice',
+    type: [String],
+  })
+  reasons: string[];
+
+  @ApiProperty({
+    description: 'Helpful tips related to the advice',
+    type: [String],
+  })
+  tips: string[];
+
+  @ApiProperty({
+    description: 'Precautions to take while following the advice',
+    type: [String],
     required: false,
   })
-  temperature?: TemperatureRangeDto;
+  precautions?: string[];
+
+  // Personalization
+  @ApiProperty({ description: 'Personalized message for the user' })
+  personalizedMessage: string;
 
   @ApiProperty({
-    description: 'Humidity range this advice applies to',
-    type: HumidityRangeDto,
+    description: 'Order in which this advice should be displayed',
     required: false,
   })
-  humidity?: HumidityRangeDto;
+  displayOrder?: number;
+
+  // Timing Information
+  @ApiProperty({
+    description: 'Recommended time of day to perform the activity',
+    required: false,
+  })
+  bestTimeOfDay?: string;
 
   @ApiProperty({
-    description: 'Wind conditions this advice applies to',
-    type: WindConditionsDto,
+    description: 'Estimated duration to complete the activity',
     required: false,
   })
-  wind?: WindConditionsDto;
+  duration?: string;
 
-  @ApiProperty({ description: 'Icon to represent this advice' })
-  icon: string;
+  @ApiProperty({
+    description: 'Recommended frequency for the activity',
+    required: false,
+  })
+  frequency?: string;
+
+  // Priority and Urgency
+  @ApiProperty({
+    description: 'Urgency level of the advice',
+    enum: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'],
+  })
+  urgencyLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+
+  @ApiProperty({
+    description: 'Difficulty level to implement the advice',
+    enum: ['EASY', 'MEDIUM', 'HARD'],
+  })
+  difficultyLevel: 'EASY' | 'MEDIUM' | 'HARD';
 
   @ApiProperty({
     description: 'Priority level (1-5, with 5 being highest priority)',
@@ -90,19 +140,96 @@ export class WeatherAdviceDto {
   })
   priority: number;
 
+  // Health and Impact
   @ApiProperty({
-    description: 'Recommended time to perform the activity',
+    description: 'Potential health impact on the plant',
+    enum: ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL', 'POSITIVE'],
     required: false,
   })
-  bestTimeOfDay?: string;
+  healthImpact?: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL' | 'POSITIVE';
+
+  // Environmental Conditions
+  @ApiProperty({
+    description: 'Weather condition this advice applies to',
+    enum: WeatherMain,
+  })
+  weatherCondition: WeatherMain;
+
+  @ApiProperty({
+    description: 'Temperature range this advice applies to',
+    type: TemperatureConditionsDto,
+    required: false,
+  })
+  temperature?: TemperatureConditionsDto;
+
+  @ApiProperty({
+    description: 'Humidity range this advice applies to',
+    type: HumidityConditionsDto,
+    required: false,
+  })
+  humidity?: HumidityConditionsDto;
+
+  @ApiProperty({
+    description: 'Wind conditions this advice applies to',
+    type: WindConditionsDto,
+    required: false,
+  })
+  wind?: WindConditionsDto;
+
+  // Advanced Features
+  @ApiProperty({
+    description: 'Potential risk factors if advice is not followed',
+    type: [String],
+    required: false,
+  })
+  riskFactors?: string[];
+
+  @ApiProperty({
+    description: 'Indicators of successful implementation of the advice',
+    type: [String],
+    required: false,
+  })
+  successIndicators?: string[];
+
+  @ApiProperty({
+    description: 'Timeline for plant recovery after implementing advice',
+    type: RecoveryTimelineDto,
+    required: false,
+  })
+  recoveryTimeline?: RecoveryTimelineDto;
+
+  @ApiProperty({
+    description: 'Links to related resources or further reading',
+    type: [String],
+    required: false,
+  })
+  relatedResources?: string[];
+
+  // Metadata
+  @ApiProperty({ description: 'Icon to represent this advice' })
+  icon: string;
 
   @ApiProperty({
     description: 'Garden types this advice is most relevant for',
     type: [String],
+  })
+  applicableGardenTypes: string[];
+
+  @ApiProperty({
+    description: 'Specific plant types this advice is relevant for',
+    type: [String],
     required: false,
   })
-  applicableGardenTypes?: string[];
+  plantTypes?: string[];
 
+  @ApiProperty({
+    description: 'Seasons this advice is most applicable to',
+    type: [String],
+    required: false,
+  })
+  seasonality?: string[];
+
+  // Timestamps
   @ApiProperty({ description: 'Creation timestamp' })
   createdAt: string;
 

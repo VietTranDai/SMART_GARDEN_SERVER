@@ -4,6 +4,7 @@ import { GardenAdviceService } from './garden-advice.service';
 import { WeatherAdviceService } from './weather-advice.service';
 import { AdviceActionDto } from './dto/advice-action.dto';
 import { GardenAdviceResponseDto } from './dto/garden-advice-response.dto';
+import { WeatherAdviceDto } from './dto/weather-advice.dto'; // Still needed for response type
 
 @ApiTags('Advice')
 @Controller('advice')
@@ -69,11 +70,12 @@ export class AdviceController {
 
     const weather =
       await this.weatherAdviceService.getLatestWeatherObservation(gardenId);
-    const gardenInfo = await this.weatherAdviceService.getGardenType(gardenId);
+    const gardenProfile =
+      await this.weatherAdviceService.getCompleteGardenProfile(gardenId);
 
     return {
       gardenId,
-      gardenType: gardenInfo.type || 'Unknown',
+      gardenType: gardenProfile.type || 'Unknown',
       currentWeather: weather.weatherMain.toString(),
       currentTemp: weather.temp,
       advice: adviceArray,
