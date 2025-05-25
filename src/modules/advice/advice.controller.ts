@@ -1,5 +1,11 @@
 import { Controller, Get, Param, ParseIntPipe, Logger } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { GardenAdviceService } from './garden-advice.service';
 import { WeatherAdviceService } from './weather-advice.service';
 import { AdviceActionDto } from './dto/advice-action.dto';
@@ -7,6 +13,7 @@ import { GardenAdviceResponseDto } from './dto/garden-advice-response.dto';
 import { WeatherAdviceDto } from './dto/weather-advice.dto'; // Still needed for response type
 
 @ApiTags('Advice')
+@ApiBearerAuth()
 @Controller('advice')
 export class AdviceController {
   private readonly logger = new Logger(AdviceController.name);
