@@ -13,7 +13,7 @@ import { LocationModule } from './modules/location/location.module';
 import { WeatherModule } from './modules/weathers/weather.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ActivitiesModule } from './modules/activities/activities.module';
-
+import { AdviceModule } from './modules/advice/advice.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -27,7 +27,8 @@ import { ActivitiesModule } from './modules/activities/activities.module';
     SocialModule,
     LocationModule,
     WeatherModule,
-    ActivitiesModule
+    ActivitiesModule,
+    AdviceModule,
   ],
   controllers: [],
   providers: [

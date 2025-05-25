@@ -5,10 +5,16 @@ import { WeatherMain } from '@prisma/client';
  * DTO for temperature range in weather advice
  */
 export class TemperatureRangeDto {
-  @ApiProperty({ description: 'Minimum temperature in Celsius', required: false })
+  @ApiProperty({
+    description: 'Minimum temperature in Celsius',
+    required: false,
+  })
   min?: number;
 
-  @ApiProperty({ description: 'Maximum temperature in Celsius', required: false })
+  @ApiProperty({
+    description: 'Maximum temperature in Celsius',
+    required: false,
+  })
   max?: number;
 }
 
@@ -102,4 +108,4 @@ export class WeatherAdviceDto {
 
   @ApiProperty({ description: 'Last update timestamp' })
   updatedAt: string;
-} 
+}

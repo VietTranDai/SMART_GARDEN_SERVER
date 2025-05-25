@@ -1,10 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from '../../../prisma/prisma.service';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { PrismaService } from '../../prisma/prisma.service';
 import { AdviceActionDto } from './dto/advice-action.dto';
+import { WeatherAdviceService } from './weather-advice.service'; // Import WeatherAdviceService
 
 @Injectable()
 export class GardenAdviceService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(GardenAdviceService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    private weatherAdviceService: WeatherAdviceService, // Inject WeatherAdviceService
+  ) {}
 
   async getAdvice(gardenId: number): Promise<AdviceActionDto[]> {
     // 1. Lấy thông tin Garden chỉ với plantName và plantGrowStage
@@ -70,26 +76,26 @@ export class GardenAdviceService {
       }),
     );
 
-    // 5. Lấy weatherObservation, hourlyForecasts, dailyForecasts
-    const [weatherObs, hourlyForecasts, dailyForecasts] = await Promise.all([
-      this.prisma.weatherObservation.findFirst({
-        where: { gardenId },
-        orderBy: { observedAt: 'desc' },
-        select: { rain1h: true },
-      }),
-      this.prisma.hourlyForecast.findMany({
-        where: { gardenId },
-        orderBy: { forecastFor: 'asc' },
-        take: 6,
-        select: { forecastFor: true, pop: true },
-      }),
-      this.prisma.dailyForecast.findMany({
-        where: { gardenId },
-        orderBy: { forecastFor: 'asc' },
-        take: 1, // chỉ cần dự báo ngày hôm nay
-        select: { forecastFor: true, pop: true },
-      }),
-    ]);
+    // 5. Lấy weatherObservation (from WeatherAdviceService), hourlyForecasts, dailyForecasts
+    const [weatherObsData, hourlyForecasts, dailyForecasts] = await Promise.all(
+      [
+        this.weatherAdviceService
+          .getLatestWeatherObservation(gardenId)
+          .catch(() => null),
+        this.prisma.hourlyForecast.findMany({
+          where: { gardenId },
+          orderBy: { forecastFor: 'asc' },
+          take: 6,
+          select: { forecastFor: true, pop: true },
+        }),
+        this.prisma.dailyForecast.findMany({
+          where: { gardenId },
+          orderBy: { forecastFor: 'asc' },
+          take: 1,
+          select: { forecastFor: true, pop: true },
+        }),
+      ],
+    );
 
     // 6. Xác định thời điểm gợi ý
     const hour = new Date().getHours();

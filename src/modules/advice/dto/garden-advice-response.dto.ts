@@ -19,6 +19,7 @@ export class GardenAdviceResponseDto {
 
   @ApiProperty({
     description: 'List of weather-based advice sorted by priority',
+    type: [WeatherAdviceDto],
   })
   advice: WeatherAdviceDto[];
 }

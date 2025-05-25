@@ -25,8 +25,6 @@ import {
   HourlyForecastDto,
   WeatherObservationDto,
 } from './dto/weather-response.dto';
-import { GardenAdviceResponseDto } from './dto/garden-advice-response.dto';
-import { WeatherAdviceDto } from './dto/weather-advice.dto';
 
 @ApiTags('Weather')
 @ApiBearerAuth() // Indicate JWT Bearer auth is expected (applied globally)
@@ -34,10 +32,7 @@ import { WeatherAdviceDto } from './dto/weather-advice.dto';
 export class WeatherController {
   private readonly logger = new Logger(WeatherController.name);
 
-  constructor(
-    private readonly weatherService: WeatherService,
-    // Inject RedisService or similar if implementing rate limiting here
-  ) {}
+  constructor(private readonly weatherService: WeatherService) {}
 
   @Get('garden/:gardenId/current')
   @ApiOperation({ summary: 'Get the latest weather observation for a garden' })
@@ -266,45 +261,5 @@ export class WeatherController {
     this.logger.log('Clearing all weather cache');
     this.weatherService.clearCache();
     return { success: true, message: 'All weather cache cleared' };
-  }
-
-  @Get('garden/:gardenId/advice')
-  @ApiOperation({ summary: 'Get garden care advice based on current weather' })
-  @ApiParam({
-    name: 'gardenId',
-    required: true,
-    description: 'ID of the garden',
-    type: Number,
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Successfully retrieved weather-based garden advice',
-    type: GardenAdviceResponseDto,
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Garden not found or no weather data available',
-  })
-  async getGardenAdvice(@Param('gardenId', ParseIntPipe) gardenId: number) {
-    this.logger.log(`Getting weather advice for garden ${gardenId}`);
-
-    // Get the advice from service
-    const advice = await this.weatherService.getWeatherAdvice(gardenId);
-
-    // Get current weather info for response
-    const weather =
-      await this.weatherService.getLatestWeatherObservation(gardenId);
-
-    // Get garden info from the service
-    const gardenInfo = await this.weatherService.getGardenType(gardenId);
-
-    // Return the formatted response
-    return {
-      gardenId,
-      gardenType: gardenInfo.type,
-      currentWeather: weather.weatherMain.toString(),
-      currentTemp: weather.temp,
-      advice,
-    };
   }
 }
