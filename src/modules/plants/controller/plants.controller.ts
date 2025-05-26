@@ -14,7 +14,7 @@ import {
 import { PlantsService } from '../service/plants.service';
 
 import { GetUser } from 'src/common/decorators/get-user.decorator';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth } from '@nestjs/swagger';
 import { PlantTypeDto } from '../dto/plant-type.dto';
 import { CreatePlantTypeDto } from '../dto/create-plant-type.dto';
 import { UpdatePlantTypeDto } from '../dto/update-plant-type.dto';
@@ -28,7 +28,7 @@ import { JwtPayload } from '../../auth/dto/jwt-payload.interface';
 
 @ApiTags('Plant Types')
 @Controller('plant-types')
-// Assuming global JwtAuthGuard and ApiBearerAuth() from main.ts
+@ApiBearerAuth()
 export class PlantsController {
   private readonly logger = new Logger(PlantsController.name);
   constructor(private readonly plantsService: PlantsService) {}
