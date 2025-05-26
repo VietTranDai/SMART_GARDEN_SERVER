@@ -16,7 +16,8 @@ import {
   ApiParam,
   ApiOperation,
   ApiTags,
-  ApiResponse, ApiBearerAuth,
+  ApiResponse,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { SensorStatisticsService } from '../service/sensor-statistics.service';
 import { SensorStatisticsDto } from '../dto/sensor-statistics.dto';
@@ -54,7 +55,7 @@ export class SensorStatisticsController {
   })
   @ApiNotFoundResponse({ description: 'Sensor not found or no data in range' })
   async getStatistics(
-    @GetUser() user: JwtPayload,
+    @GetUser('id') userId: number,
     @Param('sensorId', ParseIntPipe) sensorId: number,
     @Query('startDate') startDateStr: string,
     @Query('endDate') endDateStr: string,
@@ -67,11 +68,11 @@ export class SensorStatisticsController {
     }
 
     this.logger.log(
-      `User ${user.sub} requesting statistics for sensor ${sensorId} from ${startDateStr} to ${endDateStr}`,
+      `User ${userId} requesting statistics for sensor ${sensorId} from ${startDateStr} to ${endDateStr}`,
     );
 
     return this.statisticsService.calculateStatistics(
-      user.sub,
+      userId,
       sensorId,
       startDate,
       endDate,
@@ -105,18 +106,18 @@ export class SensorStatisticsController {
     description: 'Sensor not found or no data in range',
   })
   async getAnalytics(
-    @GetUser() user: JwtPayload,
+    @GetUser('id') userId: number,
     @Param('sensorId', ParseIntPipe) sensorId: number,
     @Query('startDate') startDate: string,
     @Query('endDate') endDate: string,
   ): Promise<SensorAnalyticsDto> {
     // Date format validation will be handled in the service
     this.logger.log(
-      `User ${user.sub} requesting analytics for sensor ${sensorId} from ${startDate} to ${endDate}`,
+      `User ${userId} requesting analytics for sensor ${sensorId} from ${startDate} to ${endDate}`,
     );
 
     return this.statisticsService.generateAnalytics(
-      user.sub,
+      userId,
       sensorId,
       startDate,
       endDate,
