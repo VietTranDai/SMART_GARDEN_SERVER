@@ -322,9 +322,6 @@ export class GardenAdviceService {
       },
       orderBy: { dueDate: 'asc' },
       take: 10,
-      include: {
-        photoEvaluations: true,
-      },
     });
   }
 

@@ -1050,12 +1050,6 @@ export class PlantStatisticsService {
     const tasks = await this.prisma.task.findMany({
       where: { gardenId },
       orderBy: { dueDate: 'asc' },
-      include: {
-        photoEvaluations: {
-          take: 1,
-          orderBy: { createdAt: 'desc' },
-        },
-      },
     });
 
     const now = new Date();
@@ -1098,7 +1092,6 @@ export class PlantStatisticsService {
           description: task.description,
           dueDate: task.dueDate.toISOString(),
           priority,
-          hasPhotoEvaluation: task.photoEvaluations.length > 0,
         };
       });
 

@@ -3,130 +3,252 @@ import {
   Body,
   Controller,
   Delete,
-  Get, HttpCode,
+  Get,
+  HttpCode,
   Param,
   ParseIntPipe,
-  Patch,
+  Put,
   Post,
   Query,
-  UploadedFile,
-  UseInterceptors,
+  Req,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
-  ApiConsumes,
   ApiOperation,
   ApiParam,
   ApiQuery,
   ApiTags,
+  ApiResponse,
 } from '@nestjs/swagger';
-import { GetUser } from 'src/common/decorators/get-user.decorator';
-import { CreateTaskDto, UpdateTaskDto } from './dto/task.dto';
-import { TaskStatus } from '@prisma/client';
-import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  CreateTaskDto,
+  UpdateTaskDto,
+  GetTasksQueryDto,
+  PaginatedTaskResult,
+  TaskDto,
+  mapToTaskDto,
+} from './dto/task.dto';
+import { TaskStatus, Task } from '@prisma/client';
 import { TaskService } from './task.service';
 
-@ApiTags('Task')
-@Controller('tasks/me')
+/**
+ * Controller for managing tasks.
+ * Base path: /api/tasks
+ * All endpoints are protected and require Bearer token authentication.
+ */
+@ApiTags('Tasks')
+@Controller('api/tasks')
 @ApiBearerAuth()
 export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 
+  /**
+   * Creates a new task.
+   * @param createTaskDto DTO containing data for the new task.
+   * @returns The created task as a TaskDto.
+   */
+  @Post()
+  @ApiOperation({ summary: 'Tạo một công việc mới' })
+  @ApiResponse({
+    status: 201,
+    description: 'Công việc đã được tạo thành công.',
+    type: TaskDto,
+  })
+  @ApiResponse({ status: 400, description: 'Dữ liệu đầu vào không hợp lệ.' })
+  @ApiResponse({ status: 401, description: 'Không được phép (Chưa xác thực).' })
+  @ApiResponse({
+    status: 404,
+    description: 'Không tìm thấy Gardener hoặc Garden được chỉ định.',
+  })
+  async createTask(@Body() createTaskDto: CreateTaskDto): Promise<TaskDto> {
+    const task = await this.taskService.createTask(createTaskDto);
+    return mapToTaskDto(task);
+  }
+
+  /**
+   * Retrieves a paginated list of tasks with optional filters.
+   * The user ID from the request is used to further scope tasks if not an admin or querying specific gardener.
+   * @param req The request object (to get authenticated user ID).
+   * @param query DTO containing filter and pagination parameters.
+   * @returns A paginated list of tasks.
+   */
   @Get()
-  @ApiOperation({ summary: 'Get all tasks of current user' })
-  @ApiQuery({ name: 'status', enum: TaskStatus, required: false })
-  @ApiQuery({ name: 'dueDate', required: false })
-  async getTasks(@GetUser('id') userId: number, @Query() query: any) {
+  @ApiOperation({
+    summary: 'Lấy danh sách công việc với các bộ lọc và phân trang',
+  })
+  @ApiQuery({
+    name: 'gardenerId',
+    type: Number,
+    required: false,
+    description: 'Lọc công việc theo ID Người làm vườn',
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'gardenId',
+    type: Number,
+    required: false,
+    description: 'Lọc công việc theo ID Khu vườn',
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'status',
+    enum: TaskStatus,
+    required: false,
+    description: 'Lọc công việc theo trạng thái',
+  })
+  @ApiQuery({
+    name: 'dueDateFrom',
+    type: String,
+    required: false,
+    description: 'Lọc công việc đến hạn từ ngày này (ISO 8601)',
+    example: '2024-01-01T00:00:00Z',
+  })
+  @ApiQuery({
+    name: 'dueDateTo',
+    type: String,
+    required: false,
+    description: 'Lọc công việc đến hạn đến ngày này (ISO 8601)',
+    example: '2024-12-31T23:59:59Z',
+  })
+  @ApiQuery({
+    name: 'page',
+    type: Number,
+    required: false,
+    description: 'Số trang',
+    default: 1,
+    example: 1,
+  })
+  @ApiQuery({
+    name: 'limit',
+    type: Number,
+    required: false,
+    description: 'Số lượng mục trên mỗi trang',
+    default: 10,
+    example: 10,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Lấy danh sách công việc thành công.',
+    type: PaginatedTaskResult,
+  })
+  @ApiResponse({ status: 401, description: 'Không được phép (Chưa xác thực).' })
+  async getTasks(
+    @Req() req: any,
+    @Query() query: GetTasksQueryDto,
+  ): Promise<PaginatedTaskResult> {
+    const userId = req.user?.id;
     return this.taskService.getTasks(userId, query);
   }
 
-  @Get('gardens/:gardenId')
-  @ApiOperation({ summary: 'Get tasks by garden' })
-  @ApiParam({ name: 'gardenId' })
-  async getTasksByGarden(
-    @GetUser('id') userId: number,
-    @Param('gardenId', ParseIntPipe) gardenId: number,
-    @Query() query: any,
-  ) {
-    return this.taskService.getTasksByGarden(userId, gardenId, query);
-  }
-
+  /**
+   * Retrieves a specific task by its ID.
+   * Requires user to be the task's gardener or the garden owner.
+   * @param req The request object (to get authenticated user ID).
+   * @param taskId The ID of the task to retrieve.
+   * @returns The requested task as a TaskDto.
+   */
   @Get(':taskId')
-  @ApiOperation({ summary: 'Get task detail' })
-  @ApiParam({ name: 'taskId' })
+  @ApiOperation({ summary: 'Lấy chi tiết công việc theo ID' })
+  @ApiParam({
+    name: 'taskId',
+    type: Number,
+    description: 'ID Công việc',
+    example: 1,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Chi tiết công việc.',
+    type: TaskDto,
+  })
+  @ApiResponse({ status: 401, description: 'Không được phép (Chưa xác thực).' })
+  @ApiResponse({
+    status: 403,
+    description: 'Không có quyền truy cập công việc này.',
+  })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy công việc.' })
   async getTaskById(
-    @GetUser('id') userId: number,
+    @Req() req: any,
     @Param('taskId', ParseIntPipe) taskId: number,
-  ) {
-    return this.taskService.getTaskById(userId, taskId);
+  ): Promise<TaskDto> {
+    const userId = req.user?.id;
+    const task = await this.taskService.getTaskById(userId, taskId);
+    return mapToTaskDto(task);
   }
 
-  @Post()
-  @ApiOperation({ summary: 'Create task' })
-  async createTask(@GetUser('id') userId: number, @Body() dto: CreateTaskDto) {
-    return this.taskService.createTask(userId, dto);
-  }
-
-  @Post('gardens/:gardenId')
-  @ApiOperation({ summary: 'Create task for specific garden' })
-  @ApiParam({ name: 'gardenId' })
-  async createTaskForGarden(
-    @GetUser('id') userId: number,
-    @Param('gardenId', ParseIntPipe) gardenId: number,
-    @Body() dto: CreateTaskDto,
-  ) {
-    return this.taskService.createTaskForGarden(userId, gardenId, dto);
-  }
-
-  @Patch(':taskId')
-  @ApiOperation({ summary: 'Update task' })
-  @ApiParam({ name: 'taskId' })
+  /**
+   * Updates an existing task.
+   * Requires user to be the task's gardener or the garden owner.
+   * @param req The request object (to get authenticated user ID).
+   * @param taskId The ID of the task to update.
+   * @param updateTaskDto DTO containing data for the update.
+   * @returns The updated task as a TaskDto.
+   */
+  @Put(':taskId')
+  @ApiOperation({
+    summary: 'Cập nhật thông tin công việc (bao gồm cả trạng thái)',
+  })
+  @ApiParam({
+    name: 'taskId',
+    type: Number,
+    description: 'ID Công việc',
+    example: 1,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Công việc đã được cập nhật thành công.',
+    type: TaskDto,
+  })
+  @ApiResponse({ status: 400, description: 'Dữ liệu đầu vào không hợp lệ.' })
+  @ApiResponse({ status: 401, description: 'Không được phép (Chưa xác thực).' })
+  @ApiResponse({
+    status: 403,
+    description: 'Không có quyền cập nhật công việc này.',
+  })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy công việc.' })
   async updateTask(
-    @GetUser('id') userId: number,
+    @Req() req: any,
     @Param('taskId', ParseIntPipe) taskId: number,
-    @Body() dto: UpdateTaskDto,
-  ) {
-    return this.taskService.updateTask(userId, taskId, dto);
+    @Body() updateTaskDto: UpdateTaskDto,
+  ): Promise<TaskDto> {
+    const userId = req.user?.id;
+    const updatedTask = await this.taskService.updateTask(
+      userId,
+      taskId,
+      updateTaskDto,
+    );
+    return mapToTaskDto(updatedTask);
   }
 
+  /**
+   * Deletes a task.
+   * Requires user to be the task's gardener or the garden owner.
+   * @param req The request object (to get authenticated user ID).
+   * @param taskId The ID of the task to delete.
+   */
   @Delete(':taskId')
-  @ApiOperation({ summary: 'Delete task' })
-  @ApiParam({ name: 'taskId' })
+  @ApiOperation({ summary: 'Xóa một công việc' })
+  @ApiParam({
+    name: 'taskId',
+    type: Number,
+    description: 'ID Công việc',
+    example: 1,
+  })
+  @ApiResponse({
+    status: 204,
+    description: 'Công việc đã được xóa thành công.',
+  })
+  @ApiResponse({ status: 401, description: 'Không được phép (Chưa xác thực).' })
+  @ApiResponse({
+    status: 403,
+    description: 'Không có quyền xóa công việc này.',
+  })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy công việc.' })
   @HttpCode(204)
   async deleteTask(
-    @GetUser('id') userId: number,
+    @Req() req: any,
     @Param('taskId', ParseIntPipe) taskId: number,
-  ) {
-    return this.taskService.deleteTask(userId, taskId);
-  }
-
-  @Post(':taskId/complete')
-  @ApiOperation({ summary: 'Mark task as completed' })
-  async completeTask(
-    @GetUser('id') userId: number,
-    @Param('taskId', ParseIntPipe) taskId: number,
-  ) {
-    return this.taskService.completeTask(userId, taskId);
-  }
-
-  @Post(':taskId/skip')
-  @ApiOperation({ summary: 'Mark task as skipped' })
-  async skipTask(
-    @GetUser('id') userId: number,
-    @Param('taskId', ParseIntPipe) taskId: number,
-  ) {
-    return this.taskService.skipTask(userId, taskId);
-  }
-
-  @Post(':taskId/photo')
-  @ApiOperation({ summary: 'Upload photo for task' })
-  @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('photo'))
-  async uploadPhoto(
-    @GetUser('id') userId: number,
-    @Param('taskId', ParseIntPipe) taskId: number,
-    @UploadedFile() file: Express.Multer.File,
-  ) {
-    return this.taskService.uploadPhoto(userId, taskId, file);
+  ): Promise<void> {
+    const userId = req.user?.id;
+    await this.taskService.deleteTask(userId, taskId);
   }
 }

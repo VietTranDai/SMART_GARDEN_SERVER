@@ -149,6 +149,8 @@ model Garden {
   sensorData SensorData[]
 
   alerts     Alert[]
+  tasks      Task[]
+  photos     PhotoEvaluation[]
   activities GardenActivity[]
 
   weatherData    WeatherObservation[]
@@ -157,7 +159,6 @@ model Garden {
 
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
-  task             Task[]
   wateringSchedule WateringSchedule[]
   post             Post[]
 
@@ -369,6 +370,9 @@ model WateringSchedule {
 model PhotoEvaluation {
   id     Int @id @default(autoincrement())
   taskId Int
+
+  gardenId Int
+  garden   Garden @relation(fields: [gardenId], references: [id])
 
   gardenerId Int
   gardener   Gardener @relation(fields: [gardenerId], references: [userId])

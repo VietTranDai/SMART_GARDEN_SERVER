@@ -252,16 +252,13 @@ export class PlantAdviceService {
             weatherObservation: true,
           },
         },
-        task: {
+        tasks: {
           where: {
             dueDate: {
               gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 ngày gần đây
             },
           },
           orderBy: { dueDate: 'desc' },
-          include: {
-            photoEvaluations: true,
-          },
         },
         wateringSchedule: {
           where: {
@@ -2199,9 +2196,6 @@ export class PlantAdviceService {
           lt: tomorrow,
         },
       },
-      include: {
-        photoEvaluations: true,
-      },
     });
 
     // Lấy hoạt động gần đây
@@ -2226,12 +2220,6 @@ export class PlantAdviceService {
         ),
         description:
           'Cây cần nước để sống! Hãy kiểm tra và tưới nước đúng cách.',
-      },
-      {
-        task: '📸 Chụp ảnh theo dõi sự phát triển của cây',
-        xpReward: 20,
-        completed: todayTasks.some((t) => t.photoEvaluations.length > 0),
-        description: 'Ghi lại hành trình phát triển của cây qua từng ngày.',
       },
       {
         task: '🔍 Kiểm tra sâu bệnh trên lá và thân cây',
@@ -2306,19 +2294,6 @@ export class PlantAdviceService {
         unlocked: consistency >= 80,
         xpReward: 250,
         icon: '⭐',
-      },
-      {
-        name: '📸 Nhiếp ảnh gia vườn',
-        description: 'Chụp và đánh giá 10 ảnh cây trồng',
-        progress: `${Math.min(
-          todayTasks.reduce((sum, t) => sum + t.photoEvaluations.length, 0),
-          10,
-        )}/10`,
-        unlocked:
-          todayTasks.reduce((sum, t) => sum + t.photoEvaluations.length, 0) >=
-          10,
-        xpReward: 180,
-        icon: '📷',
       },
     ];
 

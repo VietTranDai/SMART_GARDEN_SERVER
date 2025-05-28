@@ -342,21 +342,12 @@ export class GardenService {
       // Find photo evaluations for this garden
       const photoEvaluations = await this.prisma.photoEvaluation.findMany({
         where: {
-          task: {
-            gardenId,
-          },
+          gardenId,
         },
         orderBy: {
           createdAt: 'desc',
         },
         include: {
-          task: {
-            select: {
-              id: true,
-              type: true,
-              description: true,
-            },
-          },
           gardener: {
             include: {
               user: {
@@ -375,8 +366,6 @@ export class GardenService {
         data: photoEvaluations.map((photo) => ({
           id: photo.id,
           taskId: photo.taskId,
-          taskType: photo.task.type,
-          taskDescription: photo.task.description,
           photoUrl: photo.photoUrl,
           aiFeedback: photo.aiFeedback,
           confidence: photo.confidence,

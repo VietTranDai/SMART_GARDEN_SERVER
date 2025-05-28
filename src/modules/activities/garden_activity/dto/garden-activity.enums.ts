@@ -1,0 +1,48 @@
+export enum ActivityEffectiveness {
+  HIGHLY_EFFECTIVE = 'HIGHLY_EFFECTIVE',
+  EFFECTIVE = 'EFFECTIVE',
+  MODERATELY_EFFECTIVE = 'MODERATELY_EFFECTIVE',
+  INEFFECTIVE = 'INEFFECTIVE',
+  HARMFUL = 'HARMFUL',
+  UNKNOWN = 'UNKNOWN',
+}
+
+export enum TrendDirection {
+  IMPROVING = 'IMPROVING',
+  STABLE = 'STABLE',
+  DECLINING = 'DECLINING',
+  CRITICAL = 'CRITICAL',
+  UNKNOWN = 'UNKNOWN',
+}
+
+export enum PredictionConfidence {
+  VERY_HIGH = 'VERY_HIGH',
+  HIGH = 'HIGH',
+  MEDIUM = 'MEDIUM',
+  LOW = 'LOW',
+  VERY_LOW = 'VERY_LOW',
+}
+
+export enum ActivityTiming {
+  OPTIMAL = 'OPTIMAL',
+  GOOD = 'GOOD',
+  ACCEPTABLE = 'ACCEPTABLE',
+  POOR = 'POOR',
+  INAPPROPRIATE = 'INAPPROPRIATE',
+}
+
+export enum ActivityDifficulty {
+  VERY_EASY = 'VERY_EASY',
+  EASY = 'EASY',
+  MEDIUM = 'MEDIUM',
+  HARD = 'HARD',
+  VERY_HARD = 'VERY_HARD',
+}
+
+export enum UserSkillLevel {
+  BEGINNER = 'BEGINNER',
+  NOVICE = 'NOVICE',
+  INTERMEDIATE = 'INTERMEDIATE',
+  ADVANCED = 'ADVANCED',
+  EXPERT = 'EXPERT',
+}

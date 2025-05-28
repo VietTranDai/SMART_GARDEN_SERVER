@@ -57,7 +57,7 @@ export class WeatherAdviceService {
             evaluations: true,
           },
         },
-        task: {
+        tasks: {
           where: {
             status: 'PENDING',
             dueDate: { gte: new Date() },
@@ -238,7 +238,7 @@ export class WeatherAdviceService {
     // 🗓️ Lời khuyên dựa trên lịch trình và công việc
     advice.push(
       ...this.generateScheduleBasedAdvice(
-        garden.task,
+        garden.tasks,
         garden.wateringSchedule,
         currentWeather,
         gardenerName,
