@@ -231,23 +231,20 @@ enum TaskStatus {
 }
 
 model Task {
-  id                 Int               @id @default(autoincrement())
-  gardenerId         Int
-  gardener           Gardener          @relation(fields: [gardenerId], references: [userId])
-  gardenId           Int
-  garden             Garden            @relation(fields: [gardenId], references: [id])
-  plantTypeName      String?
-  plantStageName     String?
-  type               String
-  description        String
-  dueDate            DateTime
-  status             TaskStatus        @default(PENDING) // Sử dụng enum thay vì String
-  createdAt          DateTime          @default(now())
-  updatedAt          DateTime          @updatedAt
-  wateringScheduleId Int?
-  wateringSchedule   WateringSchedule? @relation(fields: [wateringScheduleId], references: [id])
-  photoEvaluations   PhotoEvaluation[]
-  completedAt        DateTime? // Thời gian hoàn thành công việc
+  id             Int        @id @default(autoincrement())
+  gardenerId     Int
+  gardener       Gardener   @relation(fields: [gardenerId], references: [userId])
+  gardenId       Int
+  garden         Garden     @relation(fields: [gardenId], references: [id])
+  plantTypeName  String?
+  plantStageName String?
+  type           String
+  description    String
+  dueDate        DateTime
+  status         TaskStatus @default(PENDING) // Sử dụng enum thay vì String
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  completedAt    DateTime? // Thời gian hoàn thành công việc
 
   @@index([gardenerId, dueDate])
 }
@@ -305,7 +302,9 @@ model GardenActivity {
   updatedAt DateTime @updatedAt // Timestamp when the record was last updated
 
   // Relations
-  evaluations ActivityEvaluation[] // Relation to activity evaluations
+  wateringSchedule WateringSchedule[]
+  photoEvaluations PhotoEvaluation[]
+  evaluations      ActivityEvaluation[] // Relation to activity evaluations
 }
 
 enum EvaluatorType {
@@ -348,9 +347,13 @@ model ActivityEvaluation {
 }
 
 model WateringSchedule {
-  id       Int    @id @default(autoincrement())
+  id Int @id @default(autoincrement())
+
   gardenId Int
   garden   Garden @relation(fields: [gardenId], references: [id])
+
+  gardenActivityId Int?
+  gardenActivity   GardenActivity? @relation(fields: [gardenActivityId], references: [id])
 
   scheduledAt DateTime // Thời gian lịch tưới
   amount      Float? // Lượng nước đề xuất (ví dụ: lí`t)
@@ -360,18 +363,18 @@ model WateringSchedule {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  tasks Task[] // Liên kết với công việc để thực hiện
-
   @@index([gardenId, scheduledAt])
 }
 
 model PhotoEvaluation {
-  id     Int  @id @default(autoincrement())
+  id     Int @id @default(autoincrement())
   taskId Int
-  task   Task @relation(fields: [taskId], references: [id])
 
   gardenerId Int
   gardener   Gardener @relation(fields: [gardenerId], references: [userId])
+
+  gardenActivityId Int?
+  gardenActivity   GardenActivity? @relation(fields: [gardenActivityId], references: [id])
 
   plantName      String?
   plantGrowStage String?
