@@ -22,18 +22,20 @@ import { ActivityType } from '@prisma/client';
 
 import { GardenActivityService } from './garden-activity.service';
 import { GardenActivityAnalyticsService } from './garden-activity-analytics.service';
+import { ActivityStatsService } from './activity-stats.service';
 import { GetUser } from '../../../common/decorators/get-user.decorator';
 
 import {
-  DetailedGardenActivityAnalyticsDto,
   GardenActivityDto,
 } from './dto/garden-activity.dto';
 import { CreateActivityDto } from './dto/create-activity.dto';
 import { GetGardenActivitiesQueryDto } from './dto/garden-activity-query.dto';
 import { PaginatedGardenActivitiesResultDto } from './dto/pagination.dto';
-import { CreateEvaluationDto } from './dto/create-evaluation.dto';
-import { ActivityEvaluationDto } from './dto/activity-evaluation.dto';
 import { GardenActivityAnalyticsDto } from './dto/garden-activity-analytics.dto';
+import {
+  ActivityStatsQueryDto,
+  ActivityStatsResponseDto,
+} from './dto/activity-stats.dto';
 
 @ApiTags('Garden Activities')
 @Controller('activities')
@@ -42,6 +44,7 @@ export class GardenActivityController {
   constructor(
     private readonly activityService: GardenActivityService,
     private readonly analyticsService: GardenActivityAnalyticsService,
+    private readonly statsService: ActivityStatsService,
   ) {}
 
   @Get()
@@ -150,37 +153,6 @@ export class GardenActivityController {
     return this.activityService.findOneForUser(userId, activityId);
   }
 
-  @Post(':activityId/evaluate')
-  @ApiOperation({ summary: 'Đánh giá một hoạt động vườn' })
-  @ApiParam({
-    name: 'activityId',
-    type: Number,
-    description: 'ID của hoạt động cần đánh giá',
-  })
-  @ApiResponse({
-    status: 201,
-    type: ActivityEvaluationDto,
-    description: 'Đánh giá đã được tạo.',
-  })
-  @ApiResponse({ status: 400, description: 'Dữ liệu không hợp lệ.' })
-  @ApiResponse({ status: 401, description: 'Không được phép (Chưa xác thực).' })
-  @ApiResponse({
-    status: 403,
-    description: 'Không có quyền đánh giá hoạt động này.',
-  })
-  @ApiResponse({ status: 404, description: 'Không tìm thấy hoạt động.' })
-  @HttpCode(HttpStatus.CREATED)
-  async evaluateActivity(
-    @GetUser('id') userId: number,
-    @Param('activityId', ParseIntPipe) activityId: number,
-    @Body() evaluationDto: CreateEvaluationDto,
-  ): Promise<ActivityEvaluationDto> {
-    return this.activityService.evaluateForUser(
-      userId,
-      activityId,
-      evaluationDto,
-    );
-  }
 
   @Get(':activityId/analysis')
   @ApiOperation({ summary: 'Lấy phân tích chi tiết cho một hoạt động vườn' })
@@ -205,5 +177,46 @@ export class GardenActivityController {
     @Param('activityId', ParseIntPipe) activityId: number,
   ): Promise<GardenActivityAnalyticsDto> {
     return this.analyticsService.getActivityAnalytics(userId, activityId);
+  }
+
+  @Get('stats')
+  @ApiOperation({
+    summary: 'Lấy thống kê hoạt động vườn của người dùng',
+  })
+  @ApiQuery({
+    name: 'gardenId',
+    required: false,
+    type: Number,
+    description: 'Lọc theo ID khu vườn',
+  })
+  @ApiQuery({
+    name: 'activityType',
+    required: false,
+    enum: ActivityType,
+    description: 'Lọc theo loại hoạt động',
+  })
+  @ApiQuery({
+    name: 'startDate',
+    required: true,
+    type: String,
+    description: 'Ngày bắt đầu thống kê (ISO 8601)',
+  })
+  @ApiQuery({
+    name: 'endDate',
+    required: true,
+    type: String,
+    description: 'Ngày kết thúc thống kê (ISO 8601)',
+  })
+  @ApiResponse({
+    status: 200,
+    type: ActivityStatsResponseDto,
+    description: 'Thống kê hoạt động vườn.',
+  })
+  @ApiResponse({ status: 401, description: 'Không được phép (Chưa xác thực).' })
+  async getActivityStats(
+    @GetUser('id') userId: number,
+    @Query() queryDto: ActivityStatsQueryDto,
+  ): Promise<ActivityStatsResponseDto> {
+    return this.statsService.getActivityStats(userId, queryDto);
   }
 }

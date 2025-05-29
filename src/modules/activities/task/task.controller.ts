@@ -37,7 +37,7 @@ import { TaskService } from './task.service';
  * All endpoints are protected and require Bearer token authentication.
  */
 @ApiTags('Tasks')
-@Controller('api/tasks')
+@Controller('tasks')
 @ApiBearerAuth()
 export class TaskController {
   constructor(private readonly taskService: TaskService) {}
