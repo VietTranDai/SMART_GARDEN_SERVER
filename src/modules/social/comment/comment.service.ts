@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../../prisma/prisma.service';
+import { VoteTargetType } from '@prisma/client';
 
 @Injectable()
 export class CommentService {
@@ -8,7 +9,7 @@ export class CommentService {
   /**
    * Lấy tất cả comments cha cho một post, kèm replies và userVote
    */
-  async getPostComments(postId: number): Promise<any[]> {
+  async getPostComments(postId: number, currentUserId?: number): Promise<any[]> {
     const comments = await this.prisma.comment.findMany({
       where: { postId, parentId: null },
       orderBy: { createdAt: 'asc' },
@@ -20,7 +21,7 @@ export class CommentService {
         },
       },
     });
-    return Promise.all(comments.map(c => this.attachUserVote(c)));
+    return Promise.all(comments.map(c => this.attachUserVote(c, currentUserId)));
   }
 
   /**
@@ -31,6 +32,7 @@ export class CommentService {
     postId: number,
     content: string,
     parentId?: number,
+    currentUserId?: number,
   ): Promise<any> {
     const comment = await this.prisma.comment.create({
       data: { gardenerId, postId, content, parentId },
@@ -38,13 +40,13 @@ export class CommentService {
         gardener: { include: { user: { include: { gardener: { include: { experienceLevel: true } } } } } },
       },
     });
-    return this.attachUserVote(comment);
+    return this.attachUserVote(comment, currentUserId);
   }
 
   /**
    * Lấy chi tiết comment theo ID
    */
-  async getCommentById(id: number): Promise<any> {
+  async getCommentById(id: number, currentUserId?: number): Promise<any> {
     const comment = await this.prisma.comment.findUnique({
       where: { id },
       include: {
@@ -56,19 +58,19 @@ export class CommentService {
       },
     });
     if (!comment) throw new NotFoundException('Comment not found');
-    return this.attachUserVote(comment);
+    return this.attachUserVote(comment, currentUserId);
   }
 
   /**
    * Lấy replies cho một comment
    */
-  async getCommentReplies(commentId: number): Promise<any[]> {
+  async getCommentReplies(commentId: number, currentUserId?: number): Promise<any[]> {
     const replies = await this.prisma.comment.findMany({
       where: { parentId: commentId },
       orderBy: { createdAt: 'asc' },
       include: { gardener: { include: { user: { include: { gardener: { include: { experienceLevel: true } } } } } } },
     });
-    return Promise.all(replies.map(r => this.attachUserVote(r)));
+    return Promise.all(replies.map(r => this.attachUserVote(r, currentUserId)));
   }
 
   /**
@@ -78,6 +80,7 @@ export class CommentService {
     gardenerId: number,
     id: number,
     content: string,
+    currentUserId?: number,
   ): Promise<any> {
     const existing = await this.prisma.comment.findUnique({ where: { id } });
     if (!existing) throw new NotFoundException('Comment not found');
@@ -88,7 +91,7 @@ export class CommentService {
       data: { content },
       include: { gardener: { include: { user: { include: { gardener: { include: { experienceLevel: true } } } } } } },
     });
-    return this.attachUserVote(updated);
+    return this.attachUserVote(updated, currentUserId);
   }
 
   /**
@@ -103,19 +106,34 @@ export class CommentService {
 
   /**
    * Đính kèm userVote cho comment object
+   * @param comment Comment object to attach vote to
+   * @param currentUserId ID of the current user viewing the comment
    */
-  private async attachUserVote(comment: any): Promise<any> {
-    const vote = await this.prisma.vote.findUnique({
+  private async attachUserVote(comment: any, currentUserId?: number): Promise<any> {
+    if (!currentUserId) {
+      comment.userVote = 0;
+      return comment;
+    }
+
+    const vote = await this.prisma.vote.findFirst({
       where: {
-        gardenerId_targetType_targetId: {
-          gardenerId: comment.gardenerId,
-          targetType: 'COMMENT',
-          targetId: comment.id,
-        },
+        gardenerId: currentUserId,
+        targetType: VoteTargetType.COMMENT,
+        postId: null,
+        commentId: comment.id,
       },
       select: { voteValue: true },
     });
+    
     comment.userVote = vote?.voteValue ?? 0;
+    
+    // Ensure replies also have userVote attached
+    if (comment.replies && Array.isArray(comment.replies)) {
+      comment.replies = await Promise.all(
+        comment.replies.map((reply: any) => this.attachUserVote(reply, currentUserId))
+      );
+    }
+    
     return comment;
   }
 }

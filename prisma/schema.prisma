@@ -358,9 +358,11 @@ model WateringSchedule {
 
   scheduledAt DateTime // Thời gian lịch tưới
   amount      Float? // Lượng nước đề xuất (ví dụ: lí`t)
+  reason      String? // Lý do tưới nước
 
   status    String   @default("PENDING") // PENDING, COMPLETED, SKIPPED
   notes     String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -814,15 +816,16 @@ model Vote {
   id         Int            @id @default(autoincrement())
   gardenerId Int
   gardener   Gardener       @relation(fields: [gardenerId], references: [userId])
-  targetType VoteTargetType
-  targetId   Int
-  voteValue  Int // 1 cho phiếu lên, -1 cho phiếu xuống
-  createdAt  DateTime       @default(now())
-  post       Post?          @relation(fields: [targetId], references: [id], map: "Vote_Post_targetId_fkey")
-  comment    Comment?       @relation(fields: [targetId], references: [id], map: "Vote_Comment_targetId_fkey")
 
-  @@unique([gardenerId, targetType, targetId])
-  @@index([targetType, targetId])
+  targetType VoteTargetType
+  postId     Int?          
+  commentId  Int?          
+
+  voteValue  Int
+  createdAt  DateTime       @default(now())
+  
+  post       Post?          @relation(fields: [postId], references: [id])
+  comment    Comment?       @relation(fields: [commentId], references: [id])
 }
 
 // Mô hình hình ảnh bài viết

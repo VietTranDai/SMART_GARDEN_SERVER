@@ -20,22 +20,22 @@ import {
 } from '@nestjs/swagger';
 import { ActivityType } from '@prisma/client';
 
-import { GardenActivityService } from './garden-activity.service';
-import { GardenActivityAnalyticsService } from './garden-activity-analytics.service';
-import { ActivityStatsService } from './activity-stats.service';
-import { GetUser } from '../../../common/decorators/get-user.decorator';
+import { GardenActivityService } from '../service/garden-activity.service';
+import { GardenActivityAnalyticsService } from '../service/garden-activity-analytics.service';
+import { ActivityStatsService } from '../service/activity-stats.service';
+import { GetUser } from '../../../../common/decorators/get-user.decorator';
 
 import {
   GardenActivityDto,
-} from './dto/garden-activity.dto';
-import { CreateActivityDto } from './dto/create-activity.dto';
-import { GetGardenActivitiesQueryDto } from './dto/garden-activity-query.dto';
-import { PaginatedGardenActivitiesResultDto } from './dto/pagination.dto';
-import { GardenActivityAnalyticsDto } from './dto/garden-activity-analytics.dto';
+} from '../dto/garden-activity.dto';
+import { CreateActivityDto } from '../dto/create-activity.dto';
+import { GetGardenActivitiesQueryDto } from '../dto/garden-activity-query.dto';
+import { PaginatedGardenActivitiesResultDto } from '../dto/pagination.dto';
+import { GardenActivityAnalyticsDto } from '../dto/garden-activity-analytics.dto';
 import {
   ActivityStatsQueryDto,
   ActivityStatsResponseDto,
-} from './dto/activity-stats.dto';
+} from '../dto/activity-stats.dto';
 
 @ApiTags('Garden Activities')
 @Controller('activities')
@@ -128,57 +128,6 @@ export class GardenActivityController {
     return this.activityService.createForUser(userId, dto);
   }
 
-  @Get(':activityId')
-  @ApiOperation({ summary: 'Lấy chi tiết một hoạt động vườn theo ID' })
-  @ApiParam({
-    name: 'activityId',
-    description: 'ID của Hoạt động Vườn',
-    type: Number,
-  })
-  @ApiResponse({
-    status: 200,
-    type: GardenActivityDto,
-    description: 'Chi tiết hoạt động vườn.',
-  })
-  @ApiResponse({ status: 401, description: 'Không được phép (Chưa xác thực).' })
-  @ApiResponse({
-    status: 403,
-    description: 'Không có quyền truy cập hoạt động này.',
-  })
-  @ApiResponse({ status: 404, description: 'Không tìm thấy hoạt động.' })
-  async getActivityById(
-    @GetUser('id') userId: number,
-    @Param('activityId', ParseIntPipe) activityId: number,
-  ): Promise<GardenActivityDto> {
-    return this.activityService.findOneForUser(userId, activityId);
-  }
-
-
-  @Get(':activityId/analysis')
-  @ApiOperation({ summary: 'Lấy phân tích chi tiết cho một hoạt động vườn' })
-  @ApiParam({
-    name: 'activityId',
-    type: Number,
-    description: 'ID của hoạt động cần phân tích chi tiết',
-  })
-  @ApiResponse({
-    status: 200,
-    type: GardenActivityAnalyticsDto,
-    description: 'Kết quả phân tích chi tiết hoạt động.',
-  })
-  @ApiResponse({ status: 401, description: 'Không được phép (Chưa xác thực).' })
-  @ApiResponse({
-    status: 403,
-    description: 'Không có quyền truy cập hoặc phân tích hoạt động này.',
-  })
-  @ApiResponse({ status: 404, description: 'Không tìm thấy hoạt động.' })
-  async getActivityDetailedAnalysis(
-    @GetUser('id') userId: number,
-    @Param('activityId', ParseIntPipe) activityId: number,
-  ): Promise<GardenActivityAnalyticsDto> {
-    return this.analyticsService.getActivityAnalytics(userId, activityId);
-  }
-
   @Get('stats')
   @ApiOperation({
     summary: 'Lấy thống kê hoạt động vườn của người dùng',
@@ -218,5 +167,55 @@ export class GardenActivityController {
     @Query() queryDto: ActivityStatsQueryDto,
   ): Promise<ActivityStatsResponseDto> {
     return this.statsService.getActivityStats(userId, queryDto);
+  }
+
+  @Get(':activityId')
+  @ApiOperation({ summary: 'Lấy chi tiết một hoạt động vườn theo ID' })
+  @ApiParam({
+    name: 'activityId',
+    description: 'ID của Hoạt động Vườn',
+    type: Number,
+  })
+  @ApiResponse({
+    status: 200,
+    type: GardenActivityDto,
+    description: 'Chi tiết hoạt động vườn.',
+  })
+  @ApiResponse({ status: 401, description: 'Không được phép (Chưa xác thực).' })
+  @ApiResponse({
+    status: 403,
+    description: 'Không có quyền truy cập hoạt động này.',
+  })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy hoạt động.' })
+  async getActivityById(
+    @GetUser('id') userId: number,
+    @Param('activityId', ParseIntPipe) activityId: number,
+  ): Promise<GardenActivityDto> {
+    return this.activityService.findOneForUser(userId, activityId);
+  }
+
+  @Get(':activityId/analysis')
+  @ApiOperation({ summary: 'Lấy phân tích chi tiết cho một hoạt động vườn' })
+  @ApiParam({
+    name: 'activityId',
+    type: Number,
+    description: 'ID của hoạt động cần phân tích chi tiết',
+  })
+  @ApiResponse({
+    status: 200,
+    type: GardenActivityAnalyticsDto,
+    description: 'Kết quả phân tích chi tiết hoạt động.',
+  })
+  @ApiResponse({ status: 401, description: 'Không được phép (Chưa xác thực).' })
+  @ApiResponse({
+    status: 403,
+    description: 'Không có quyền truy cập hoặc phân tích hoạt động này.',
+  })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy hoạt động.' })
+  async getActivityDetailedAnalysis(
+    @GetUser('id') userId: number,
+    @Param('activityId', ParseIntPipe) activityId: number,
+  ): Promise<GardenActivityAnalyticsDto> {
+    return this.analyticsService.getActivityAnalytics(activityId, userId);
   }
 }

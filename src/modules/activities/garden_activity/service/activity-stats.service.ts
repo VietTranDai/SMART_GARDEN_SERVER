@@ -9,7 +9,7 @@ import {
   MonthlyActivityStatsDto,
   GardenActivityStatsDto,
   ActivityTrendDto,
-} from './dto/activity-stats.dto';
+} from '../dto/activity-stats.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 interface ActivityTypeMapping {

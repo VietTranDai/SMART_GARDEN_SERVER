@@ -9,7 +9,8 @@ import { seedPlantTypes } from './seeds/plant_data/seedPlantTypes';
 import { seedGardens } from './seeds/garden_data/seedGardens';
 import { seedGardeners } from './seeds/user_data/seedGardeners';
 import { seedSensors } from './seeds/garden_data/seedSensors';
-
+import { seedSocialNetwork } from './seeds/social_data/seed-social-network';
+import { seedGardenActivities } from './seeds/task_data/seed-garden-activity';
 const prisma = new PrismaClient();
 
 async function main() {
@@ -22,6 +23,8 @@ async function main() {
   await seedPlants(prisma);
   await seedGardens(prisma);
   await seedSensors(prisma);
+  await seedSocialNetwork(prisma);
+  await seedGardenActivities(prisma);
 
   console.log('Tất cả dữ liệu đã được seed thành công!');
 }

@@ -5,20 +5,20 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { ActivityType, Prisma, GardenActivity } from '@prisma/client';
-import { PrismaService } from '../../../prisma/prisma.service';
+import { PrismaService } from '../../../../prisma/prisma.service';
 import {
   GardenActivityDto,
   mapToGardenActivityDto,
   mapToGardenActivityDtoList,
-} from './dto/garden-activity.dto';
-import { GetGardenActivitiesQueryDto } from './dto/garden-activity-query.dto';
-import { PaginatedGardenActivitiesResultDto } from './dto/pagination.dto';
-import { CreateActivityDto } from './dto/create-activity.dto';
-import { CreateEvaluationDto } from './dto/create-evaluation.dto';
+} from '../dto/garden-activity.dto';
+import { GetGardenActivitiesQueryDto } from '../dto/garden-activity-query.dto';
+import { PaginatedGardenActivitiesResultDto } from '../dto/pagination.dto';
+import { CreateActivityDto } from '../dto/create-activity.dto';
+import { CreateEvaluationDto } from '../dto/create-evaluation.dto';
 import {
   ActivityEvaluationDto,
   mapToActivityEvaluationDto,
-} from './dto/activity-evaluation.dto';
+} from '../dto/activity-evaluation.dto';
 
 @Injectable()
 export class GardenActivityService {

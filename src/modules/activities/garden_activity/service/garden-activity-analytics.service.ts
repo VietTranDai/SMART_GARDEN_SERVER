@@ -2,14 +2,14 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import {
   GardenActivityAnalyticsDto,
   mapToGardenActivityAnalyticsDto,
-} from './dto/garden-activity-analytics.dto';
+} from '../dto/garden-activity-analytics.dto';
 import {
   ActivityDifficulty,
   ActivityEffectiveness,
   PredictionConfidence,
   TrendDirection,
   UserSkillLevel,
-} from './dto/garden-activity.enums';
+} from '../dto/garden-activity.enums';
 import { ActivityType, EvaluatorType } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 

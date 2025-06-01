@@ -19,32 +19,42 @@ export class VoteService {
     postId: number,
     dto: CreateVoteDto,
   ): Promise<{ total_vote: number; userVote: number }> {
-    const vote = await this.prisma.vote.upsert({
+    // Find existing vote
+    const existingVote = await this.prisma.vote.findFirst({
       where: {
-        gardenerId_targetType_targetId: {
-          gardenerId: userId,
-          targetType: VoteTargetType.POST,
-          targetId: postId,
-        },
-      },
-      create: {
         gardenerId: userId,
         targetType: VoteTargetType.POST,
-        targetId: postId,
-        voteValue: dto.voteValue,
-      },
-      update: {
-        voteValue: dto.voteValue,
+        postId: postId,
+        commentId: null,
       },
     });
 
+    let vote;
+    if (existingVote) {
+      // Update existing vote
+      vote = await this.prisma.vote.update({
+        where: { id: existingVote.id },
+        data: { voteValue: dto.voteValue },
+      });
+    } else {
+      // Create new vote
+      vote = await this.prisma.vote.create({
+        data: {
+          gardenerId: userId,
+          targetType: VoteTargetType.POST,
+          postId: postId,
+          voteValue: dto.voteValue,
+        },
+      });
+    }
+
     const aggregate = await this.prisma.vote.aggregate({
-      where: { targetType: VoteTargetType.POST, targetId: postId },
+      where: { targetType: VoteTargetType.POST, postId: postId },
       _sum: { voteValue: true },
     });
 
     return {
-      total_vote: aggregate._sum.voteValue ?? 0,
+      total_vote: aggregate._sum?.voteValue ?? 0,
       userVote: vote.voteValue,
     };
   }
@@ -61,32 +71,42 @@ export class VoteService {
     commentId: number,
     dto: CreateVoteDto,
   ): Promise<{ score: number; userVote: number }> {
-    const vote = await this.prisma.vote.upsert({
+    // Find existing vote
+    const existingVote = await this.prisma.vote.findFirst({
       where: {
-        gardenerId_targetType_targetId: {
-          gardenerId: userId,
-          targetType: VoteTargetType.COMMENT,
-          targetId: commentId,
-        },
-      },
-      create: {
         gardenerId: userId,
         targetType: VoteTargetType.COMMENT,
-        targetId: commentId,
-        voteValue: dto.voteValue,
-      },
-      update: {
-        voteValue: dto.voteValue,
+        postId: null,
+        commentId: commentId,
       },
     });
 
+    let vote;
+    if (existingVote) {
+      // Update existing vote
+      vote = await this.prisma.vote.update({
+        where: { id: existingVote.id },
+        data: { voteValue: dto.voteValue },
+      });
+    } else {
+      // Create new vote
+      vote = await this.prisma.vote.create({
+        data: {
+          gardenerId: userId,
+          targetType: VoteTargetType.COMMENT,
+          commentId: commentId,
+          voteValue: dto.voteValue,
+        },
+      });
+    }
+
     const aggregate = await this.prisma.vote.aggregate({
-      where: { targetType: VoteTargetType.COMMENT, targetId: commentId },
+      where: { targetType: VoteTargetType.COMMENT, commentId: commentId },
       _sum: { voteValue: true },
     });
 
     return {
-      score: aggregate._sum.voteValue ?? 0,
+      score: aggregate._sum?.voteValue ?? 0,
       userVote: vote.voteValue,
     };
   }

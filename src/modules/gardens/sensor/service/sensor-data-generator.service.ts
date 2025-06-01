@@ -34,10 +34,9 @@ export class SensorDataGeneratorService implements OnModuleInit {
   /** Chạy một lần khi module init để load danh sách sensors */
   async onModuleInit() {
     this.sensors = await this.prisma.sensor.findMany({
-      // Nếu bạn chỉ muốn những sensor theo gardenKeys cụ thể:
       where: {
         sensorKey: {
-          in: ['1', '2', '3']
+          in: ['1', '2', '3', '4', '5', '6', '7']
             .flatMap(gk =>
               (Object.values(SensorType) as SensorType[]).map(
                 t => `sensor_${gk}_${t.toLowerCase()}`,

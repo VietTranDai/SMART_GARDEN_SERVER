@@ -2,7 +2,7 @@ import { PrismaClient, SensorType, SensorUnit } from '@prisma/client';
 
 export async function seedSensors(prisma: PrismaClient): Promise<void> {
   // Danh sách gardenKey được khai báo từ seedGardens
-  const gardenKeys = ['1', '2', '3'];
+  const gardenKeys = ['1', '2', '3', '4', '5', '6', '7'];
 
   // Map từ SensorType sang SensorUnit
   const typeToUnit: Record<SensorType, SensorUnit> = {

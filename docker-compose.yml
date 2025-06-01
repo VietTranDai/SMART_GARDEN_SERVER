@@ -18,6 +18,36 @@ services:
       retries: 5
     labels:
       - app=smart-garden-db
+    networks:
+      - smart-garden-network
+
+  # Plant Disease Detection AI Service
+  plant-disease-ai:
+    build: 
+      context: ./predict_disease_model
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      - FLASK_ENV=production
+      - TFLITE_PATH=/app/InceptionResNetV2_improved.tflite
+      - FLASK_HOST=0.0.0.0
+      - FLASK_PORT=5000
+    volumes:
+      - ./predict_disease_model/model:/app/model:ro  # Mount model directory if separate
+      - ai_logs:/app/logs                            # Persistent logs
+    # No external ports - internal service only
+    expose:
+      - "5000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - app=plant-disease-ai
+    networks:
+      - smart-garden-network
 
   smart-garden-server:
     build: .
@@ -25,22 +55,34 @@ services:
     depends_on:
       smart-garden-db:
         condition: service_healthy
+      plant-disease-ai:
+        condition: service_healthy
     ports:
       - '3456:3000'
     environment:
       DATABASE_URL: postgresql://user:postgres@smart-garden-db:5432/smartgardendb?schema=public
+      # AI Service URL for internal communication
+      AI_SERVICE_URL: http://plant-disease-ai:5000
+      AI_SERVICE_ENABLED: "true"
     labels:
       - app=smart-garden-server
     healthcheck:
       test:
         [
           'CMD-SHELL',
-          'curl -f http://localhost:3456/v1/health/liveness || exit 1',
+          'curl -f http://localhost:3000/v1/health/liveness || exit 1',
         ]
       interval: 30s
       timeout: 5s
       retries: 3
       start_period: 10s
+    networks:
+      - smart-garden-network
 
 volumes:
   pgdata:
+  ai_logs:
+
+networks:
+  smart-garden-network:
+    driver: bridge

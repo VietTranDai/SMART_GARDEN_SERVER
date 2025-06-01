@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌱 AI Phát Hiện Bệnh Cây Trồng | Plant Disease Detection</title>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success sticky-top shadow">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{{ url_for('index') }}">
+                <i class="fas fa-seedling me-2"></i>
+                Plant Disease AI
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#home"><i class="fas fa-home me-1"></i>Trang chủ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#features"><i class="fas fa-star me-1"></i>Tính năng</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#api-docs"><i class="fas fa-code me-1"></i>API</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#about"><i class="fas fa-info-circle me-1"></i>Giới thiệu</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container mt-3">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Hero Section -->
+    <section id="home" class="hero-section">
+        <div class="container">
+            <div class="row align-items-center min-vh-100">
+                <div class="col-lg-6">
+                    <div class="hero-content">
+                        <h1 class="display-4 fw-bold text-white mb-4">
+                            🌱 AI Phát Hiện Bệnh Cây Trồng
+                        </h1>
+                        <p class="lead text-white-50 mb-4">
+                            Sử dụng trí tuệ nhân tạo để phát hiện và chẩn đoán bệnh trên cây trồng từ hình ảnh.
+                            Hỗ trợ 38 loại bệnh trên 14 loại cây khác nhau với độ chính xác cao.
+                        </p>
+                        <div class="hero-stats d-flex gap-4 mb-4">
+                            <div class="stat-item text-center">
+                                <div class="stat-number h3 text-warning fw-bold">38</div>
+                                <div class="stat-label text-white-50">Loại bệnh</div>
+                            </div>
+                            <div class="stat-item text-center">
+                                <div class="stat-number h3 text-warning fw-bold">14</div>
+                                <div class="stat-label text-white-50">Loại cây</div>
+                            </div>
+                            <div class="stat-item text-center">
+                                <div class="stat-number h3 text-warning fw-bold">AI</div>
+                                <div class="stat-label text-white-50">Powered</div>
+                            </div>
+                        </div>
+                        <a href="#upload-section" class="btn btn-warning btn-lg px-4 py-3 rounded-pill smooth-scroll">
+                            <i class="fas fa-upload me-2"></i>Bắt đầu phân tích
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="hero-image text-center">
+                        <img src="{{ url_for('static', filename='images/hero-plant.png') }}" alt="Plant AI" class="img-fluid animate__animated animate__fadeInRight">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Upload Section -->
+    <section id="upload-section" class="py-5 bg-light">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="upload-card card shadow-lg border-0 rounded-4">
+                        <div class="card-header bg-success text-white text-center py-4">
+                            <h3 class="mb-0"><i class="fas fa-camera me-2"></i>Tải lên hình ảnh cây bệnh</h3>
+                        </div>
+                        <div class="card-body p-4">
+                            <form action="{{ url_for('web_predict') }}" method="post" enctype="multipart/form-data" id="uploadForm">
+                                <!-- Plant Type Selection -->
+                                <div class="mb-4">
+                                    <label for="plant_type" class="form-label fw-semibold">
+                                        <i class="fas fa-leaf me-2 text-success"></i>Chọn loại cây (tùy chọn):
+                                    </label>
+                                    <select class="form-select form-select-lg" id="plant_type" name="plant_type">
+                                        <option value="">🌿 Tất cả các loại cây</option>
+                                        <option value="Cây táo">🍎 Cây Táo (Apple)</option>
+                                        <option value="Cây việt quất">🫐 Cây Việt Quất (Blueberry)</option>
+                                        <option value="Cây anh đào">🍒 Cây Anh Đào (Cherry)</option>
+                                        <option value="Cây ngô">🌽 Cây Ngô (Corn/Maize)</option>
+                                        <option value="Cây nho">🍇 Cây Nho (Grape)</option>
+                                        <option value="Cây cam">🍊 Cây Cam (Orange)</option>
+                                        <option value="Cây đào">🍑 Cây Đào (Peach)</option>
+                                        <option value="Cây ớt chuông">🌶️ Cây Ớt Chuông (Bell Pepper)</option>
+                                        <option value="Cây khoai tây">🥔 Cây Khoai Tây (Potato)</option>
+                                        <option value="Cây phúc bồn tử">🍓 Cây Phúc Bồn Tử (Raspberry)</option>
+                                        <option value="Cây đậu tương">🫘 Cây Đậu Tương (Soybean)</option>
+                                        <option value="Cây bí">🎃 Cây Bí (Squash)</option>
+                                        <option value="Cây dâu tây">🍓 Cây Dâu Tây (Strawberry)</option>
+                                        <option value="Cây cà chua">🍅 Cây Cà Chua (Tomato)</option>
+                                    </select>
+                                </div>
+
+                                <!-- File Upload Area -->
+                                <div class="upload-area" id="uploadArea">
+                                    <div class="upload-content text-center">
+                                        <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                                        <h4 class="mb-3">Kéo thả hoặc nhấp để chọn ảnh</h4>
+                                        <p class="text-muted mb-3">Hỗ trợ: JPG, PNG, GIF, BMP, TIFF (tối đa 16MB)</p>
+                                        <input type="file" class="form-control d-none" id="file" name="file" accept="image/*" required>
+                                        <button type="button" class="btn btn-outline-success btn-lg" onclick="document.getElementById('file').click()">
+                                            <i class="fas fa-folder-open me-2"></i>Chọn file
+                                        </button>
+                                    </div>
+                                    <div class="upload-preview d-none" id="uploadPreview">
+                                        <img id="previewImage" src="" alt="Preview" class="img-fluid rounded">
+                                        <div class="preview-info mt-3">
+                                            <p class="mb-1"><strong>File:</strong> <span id="fileName"></span></p>
+                                            <p class="mb-0"><strong>Kích thước:</strong> <span id="fileSize"></span></p>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-danger mt-2" onclick="clearPreview()">
+                                            <i class="fas fa-times me-1"></i>Xóa
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Submit Button -->
+                                <div class="text-center mt-4">
+                                    <button type="submit" class="btn btn-success btn-lg px-5 py-3 rounded-pill" id="submitBtn" disabled>
+                                        <i class="fas fa-magic me-2"></i>
+                                        <span id="submitText">Phân tích bằng AI</span>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Results Section -->
+    {% if result %}
+    <section class="py-5 bg-white">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div class="results-card card shadow-lg border-0 rounded-4">
+                        <div class="card-header bg-primary text-white text-center py-4">
+                            <h3 class="mb-0"><i class="fas fa-chart-line me-2"></i>Kết quả phân tích</h3>
+                        </div>
+                        <div class="card-body p-4">
+                            {% if result.success %}
+                                <!-- Main Result -->
+                                <div class="main-result text-center mb-5">
+                                    <div class="result-icon mb-3">
+                                        {% if 'healthy' in result.prediction.class_en.lower() %}
+                                            <i class="fas fa-heart text-success" style="font-size: 4rem;"></i>
+                                        {% else %}
+                                            <i class="fas fa-exclamation-triangle text-warning" style="font-size: 4rem;"></i>
+                                        {% endif %}
+                                    </div>
+                                    <h2 class="fw-bold mb-3">{{ result.prediction.class_vi }}</h2>
+                                    <h5 class="text-muted mb-3">{{ result.prediction.class_en }}</h5>
+                                    <div class="confidence-meter mb-4">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="fw-semibold">Độ tin cậy:</span>
+                                            <span class="badge bg-primary fs-6">{{ "%.1f"|format(result.prediction.confidence_percent) }}%</span>
+                                        </div>
+                                        <div class="progress" style="height: 10px;">
+                                            <div class="progress-bar bg-success" role="progressbar" style="width: 0%;" data-confidence="{{ result.prediction.confidence_percent }}"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Detailed Results -->
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="info-card h-100">
+                                            <h5 class="mb-3"><i class="fas fa-info-circle text-info me-2"></i>Thông tin chi tiết</h5>
+                                            <ul class="list-unstyled">
+                                                <li class="mb-2"><strong>File:</strong> {{ result.filename or 'N/A' }}</li>
+                                                <li class="mb-2"><strong>Thời gian xử lý:</strong> {{ result.processing_time }}s</li>
+                                                <li class="mb-2"><strong>Tổng số lớp:</strong> {{ result.total_classes }}</li>
+                                                {% if result.plant_filter.applied %}
+                                                <li class="mb-2"><strong>Loại cây:</strong> {{ result.plant_filter.plant_type }}</li>
+                                                <li class="mb-2"><strong>Lớp được lọc:</strong> {{ result.filtered_classes }}</li>
+                                                {% endif %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="top-predictions h-100">
+                                            <h5 class="mb-3"><i class="fas fa-list-ol text-warning me-2"></i>Top dự đoán</h5>
+                                            <div class="prediction-list">
+                                                {% for pred in result.all_predictions[:5] %}
+                                                <div class="prediction-item d-flex justify-content-between align-items-center mb-2 p-2 rounded {% if loop.index == 1 %}bg-light border{% endif %}">
+                                                    <div class="prediction-name">
+                                                        <div class="fw-semibold">{{ pred.class_vi }}</div>
+                                                        <small class="text-muted">{{ pred.class_en }}</small>
+                                                    </div>
+                                                    <span class="badge bg-secondary">{{ "%.1f"|format(pred.confidence_percent) }}%</span>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <div class="error-result text-center">
+                                    <i class="fas fa-exclamation-circle text-danger mb-3" style="font-size: 4rem;"></i>
+                                    <h3 class="text-danger mb-3">Lỗi phân tích</h3>
+                                    <p class="text-muted">{{ result.error }}</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Features Section -->
+    <section id="features" class="py-5 bg-light">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="display-5 fw-bold">Tính năng nổi bật</h2>
+                <p class="lead text-muted">Công nghệ AI tiên tiến để chẩn đoán bệnh cây trồng</p>
+            </div>
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-3">
+                    <div class="feature-card card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon mb-3">
+                                <i class="fas fa-brain text-primary" style="font-size: 3rem;"></i>
+                            </div>
+                            <h5 class="fw-bold">AI Thông minh</h5>
+                            <p class="text-muted">Sử dụng mạng nơ-ron sâu InceptionResNetV2 được huấn luyện trên hàng triệu hình ảnh</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="feature-card card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon mb-3">
+                                <i class="fas fa-tachometer-alt text-success" style="font-size: 3rem;"></i>
+                            </div>
+                            <h5 class="fw-bold">Nhanh chóng</h5>
+                            <p class="text-muted">Phân tích và trả kết quả trong vòng vài giây với độ chính xác cao</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="feature-card card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon mb-3">
+                                <i class="fas fa-language text-warning" style="font-size: 3rem;"></i>
+                            </div>
+                            <h5 class="fw-bold">Đa ngôn ngữ</h5>
+                            <p class="text-muted">Hỗ trợ cả tiếng Việt và tiếng Anh, dễ dàng sử dụng cho mọi người</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="feature-card card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center p-4">
+                            <div class="feature-icon mb-3">
+                                <i class="fas fa-mobile-alt text-info" style="font-size: 3rem;"></i>
+                            </div>
+                            <h5 class="fw-bold">Responsive</h5>
+                            <p class="text-muted">Hoạt động tốt trên mọi thiết bị: máy tính, tablet, điện thoại</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- API Documentation -->
+    <section id="api-docs" class="py-5 bg-white">
+        <div class="container">
+            <div class="text-center mb-5">
+                <h2 class="display-5 fw-bold">API Documentation</h2>
+                <p class="lead text-muted">Tích hợp AI vào ứng dụng của bạn</p>
+            </div>
+            <div class="row">
+                <div class="col-lg-8 mx-auto">
+                    <div class="api-docs-card card shadow-lg border-0 rounded-4">
+                        <div class="card-header bg-dark text-white">
+                            <h5 class="mb-0"><i class="fas fa-code me-2"></i>REST API Endpoints</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="endpoint mb-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="badge bg-success me-2">POST</span>
+                                    <code>/predict</code>
+                                </div>
+                                <p class="text-muted mb-2">Phân tích bệnh từ hình ảnh</p>
+                                <div class="code-example">
+                                    <pre><code>curl -X POST -F "image=@plant.jpg" -F "plant_type=tomato" \
+  {{ request.url_root }}predict</code></pre>
+                                </div>
+                            </div>
+                            <div class="endpoint mb-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="badge bg-primary me-2">GET</span>
+                                    <code>/health</code>
+                                </div>
+                                <p class="text-muted">Kiểm tra trạng thái dịch vụ</p>
+                            </div>
+                            <div class="endpoint mb-4">
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="badge bg-primary me-2">GET</span>
+                                    <code>/classes</code>
+                                </div>
+                                <p class="text-muted">Lấy danh sách tất cả các loại bệnh</p>
+                            </div>
+                            <div class="endpoint">
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="badge bg-primary me-2">GET</span>
+                                    <code>/plants</code>
+                                </div>
+                                <p class="text-muted">Lấy danh sách tất cả các loại cây</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="py-5 bg-light">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h2 class="display-5 fw-bold mb-4">Về dự án</h2>
+                    <p class="lead mb-4">
+                        Plant Disease Detection AI là một ứng dụng web sử dụng trí tuệ nhân tạo để giúp nông dân 
+                        và những người yêu thích trồng trọt phát hiện sớm các bệnh trên cây trồng.
+                    </p>
+                    <div class="about-features">
+                        <div class="feature-item d-flex align-items-center mb-3">
+                            <i class="fas fa-check-circle text-success me-3"></i>
+                            <span>Phát hiện 38 loại bệnh khác nhau</span>
+                        </div>
+                        <div class="feature-item d-flex align-items-center mb-3">
+                            <i class="fas fa-check-circle text-success me-3"></i>
+                            <span>Hỗ trợ 14 loại cây trồng phổ biến</span>
+                        </div>
+                        <div class="feature-item d-flex align-items-center mb-3">
+                            <i class="fas fa-check-circle text-success me-3"></i>
+                            <span>Độ chính xác cao với công nghệ Deep Learning</span>
+                        </div>
+                        <div class="feature-item d-flex align-items-center mb-3">
+                            <i class="fas fa-check-circle text-success me-3"></i>
+                            <span>Giao diện thân thiện, dễ sử dụng</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="about-image text-center">
+                        <img src="{{ url_for('static', filename='images/about-plants.png') }}" alt="About Plants" class="img-fluid rounded-4 shadow">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6">
+                    <h5 class="fw-bold mb-3">
+                        <i class="fas fa-seedling me-2"></i>
+                        Plant Disease Detection AI
+                    </h5>
+                    <p class="text-white-50 mb-3">
+                        Ứng dụng AI tiên tiến giúp phát hiện và chẩn đoán bệnh trên cây trồng với độ chính xác cao.
+                    </p>
+                    <div class="social-links">
+                        <a href="#" class="text-white-50 me-3"><i class="fab fa-github fa-lg"></i></a>
+                        <a href="#" class="text-white-50 me-3"><i class="fab fa-linkedin fa-lg"></i></a>
+                        <a href="#" class="text-white-50 me-3"><i class="fab fa-twitter fa-lg"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold mb-3">Liên kết</h6>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a href="#home" class="text-white-50 text-decoration-none">Trang chủ</a></li>
+                        <li class="mb-2"><a href="#features" class="text-white-50 text-decoration-none">Tính năng</a></li>
+                        <li class="mb-2"><a href="#api-docs" class="text-white-50 text-decoration-none">API</a></li>
+                        <li class="mb-2"><a href="#about" class="text-white-50 text-decoration-none">Giới thiệu</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="fw-bold mb-3">Thông tin</h6>
+                    <ul class="list-unstyled text-white-50">
+                        <li class="mb-2"><i class="fas fa-user me-2"></i>Tác giả: VietTranDai</li>
+                        <li class="mb-2"><i class="fas fa-calendar me-2"></i>Phiên bản: 1.0.0</li>
+                        <li class="mb-2"><i class="fas fa-code me-2"></i>Framework: Flask + TensorFlow</li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="my-4 border-secondary">
+            <div class="text-center text-white-50">
+                <p class="mb-0">© 2025 Plant Disease Detection AI. Made with ❤️ by VietTranDai</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="spinner-border text-success mb-3" role="status" style="width: 3rem; height: 3rem;">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <h4 class="text-white">Đang phân tích...</h4>
+            <p class="text-white-50">AI đang xử lý hình ảnh của bạn</p>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        // Set progress bar width
+        document.addEventListener('DOMContentLoaded', function() {
+            const progressBar = document.querySelector('.progress-bar[data-confidence]');
+            if (progressBar) {
+                const confidence = progressBar.getAttribute('data-confidence');
+                progressBar.style.width = confidence + '%';
+            }
+        });
+    </script>
+</body>
+</html>

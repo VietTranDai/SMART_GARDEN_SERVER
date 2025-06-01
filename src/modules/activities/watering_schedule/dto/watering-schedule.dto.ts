@@ -14,6 +14,9 @@ export class WateringScheduleDto {
   @ApiPropertyOptional({ description: 'Lượng nước tưới (lít)', example: 5.0 })
   amount?: number;
 
+  @ApiPropertyOptional({ description: 'Lý do tưới nước', example: 'Tưới nước cho cây trồng' })
+  reason?: string;
+
   @ApiProperty({ description: 'Trạng thái lịch tưới', example: 'PENDING' })
   status: string;
 
@@ -65,6 +68,7 @@ export function mapToWateringScheduleDto(model: WateringSchedule): WateringSched
     notes: model.notes ?? undefined,
     createdAt: model.createdAt,
     updatedAt: model.updatedAt,
+    reason: model.reason ?? undefined,
   };
 }
 

@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsDateString, IsOptional, IsInt, Min, IsEnum } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 import { ActivityType } from '@prisma/client';
 
 /**
@@ -14,15 +14,24 @@ export class ActivityStatsQueryDto {
     type: Number,
   })
   @IsOptional()
+  @Transform(({ value }) => {
+    if (value === undefined || value === null || value === '') {
+      return undefined;
+    }
+    return Number(value);
+  })
   @IsInt({ message: 'ID khu vườn phải là số nguyên' })
   @Min(1, { message: 'ID khu vườn phải lớn hơn 0' })
-  @Type(() => Number)
   gardenId?: number;
 
   @ApiProperty({
     description: 'Ngày bắt đầu thống kê (định dạng ISO 8601)',
     example: '2024-01-01T00:00:00.000Z',
     type: String,
+  })
+  @Transform(({ value }) => {
+    if (!value) return undefined;
+    return value;
   })
   @IsDateString({}, { message: 'Ngày bắt đầu phải có định dạng hợp lệ' })
   startDate: string;
@@ -31,6 +40,10 @@ export class ActivityStatsQueryDto {
     description: 'Ngày kết thúc thống kê (định dạng ISO 8601)',
     example: '2024-12-31T23:59:59.999Z',
     type: String,
+  })
+  @Transform(({ value }) => {
+    if (!value) return undefined;
+    return value;
   })
   @IsDateString({}, { message: 'Ngày kết thúc phải có định dạng hợp lệ' })
   endDate: string;
@@ -41,6 +54,12 @@ export class ActivityStatsQueryDto {
     example: ActivityType.WATERING,
   })
   @IsOptional()
+  @Transform(({ value }) => {
+    if (value === undefined || value === null || value === '') {
+      return undefined;
+    }
+    return value;
+  })
   @IsEnum(ActivityType, { message: 'Loại hoạt động không hợp lệ' })
   activityType?: ActivityType;
 }

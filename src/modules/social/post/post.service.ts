@@ -7,6 +7,7 @@ import {
 import { PrismaService } from '../../../prisma/prisma.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { PostDto, mapToPostDto } from './dto/post.dto';
+import { SearchPostDto } from './dto/search-post.dto';
 
 @Injectable()
 export class PostService {
@@ -561,5 +562,188 @@ export class PostService {
         undefined,
       ),
     );
+  }
+
+  /** Advanced search posts với SearchPostDto */
+  async searchPostsAdvanced(searchDto: SearchPostDto): Promise<{
+    data: PostDto[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    const {
+      title,
+      content,
+      plantName,
+      plantGrowStage,
+      gardenerId,
+      gardenId,
+      tagIds,
+      tagName,
+      minVotes,
+      page = 1,
+      limit = 10,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+      generalSearch,
+    } = searchDto;
+
+    const skip = (page - 1) * limit;
+
+    // Build where clause
+    const where: any = {};
+
+    // Specific field searches
+    if (title) {
+      where.title = { contains: title, mode: 'insensitive' };
+    }
+    if (content) {
+      where.content = { contains: content, mode: 'insensitive' };
+    }
+    if (plantName) {
+      where.plantName = { contains: plantName, mode: 'insensitive' };
+    }
+    if (plantGrowStage) {
+      where.plantGrowStage = { contains: plantGrowStage, mode: 'insensitive' };
+    }
+    if (gardenerId) {
+      where.gardenerId = gardenerId;
+    }
+    if (gardenId) {
+      where.gardenId = gardenId;
+    }
+    if (minVotes !== undefined) {
+      where.total_vote = { gte: minVotes };
+    }
+
+    // Tag filters
+    if (tagIds && tagIds.length > 0) {
+      where.tags = { some: { tagId: { in: tagIds } } };
+    } else if (tagName) {
+      where.tags = { some: { tag: { name: { contains: tagName, mode: 'insensitive' } } } };
+    }
+
+    // General search - tìm kiếm tổng hợp
+    if (generalSearch) {
+      const searchConditions = [
+        { title: { contains: generalSearch, mode: 'insensitive' } },
+        { content: { contains: generalSearch, mode: 'insensitive' } },
+        { plantName: { contains: generalSearch, mode: 'insensitive' } },
+        { plantGrowStage: { contains: generalSearch, mode: 'insensitive' } },
+      ];
+
+      // Nếu có các điều kiện khác, kết hợp với AND
+      if (Object.keys(where).length > 0) {
+        where.AND = [
+          where,
+          { OR: searchConditions }
+        ];
+        // Clear the original where object
+        Object.keys(where).forEach(key => {
+          if (key !== 'AND') delete where[key];
+        });
+      } else {
+        where.OR = searchConditions;
+      }
+    }
+
+    // Build orderBy
+    const orderBy: any = {};
+    orderBy[sortBy] = sortOrder;
+
+    // Get total count
+    const total = await this.prisma.post.count({ where });
+
+    // Fetch posts
+    const posts = await this.prisma.post.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy,
+      select: {
+        id: true,
+        gardenerId: true,
+        gardenId: true,
+        plantName: true,
+        plantGrowStage: true,
+        title: true,
+        content: true,
+        total_vote: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    const postIds = posts.map((p) => p.id);
+    const gardenerIds = Array.from(new Set(posts.map((p) => p.gardenerId)));
+
+    // Fetch related data
+    const [postTags, images, comments, gardeners] = await Promise.all([
+      this.prisma.postTag.findMany({
+        where: { postId: { in: postIds } },
+        include: { tag: true },
+      }),
+      this.prisma.postImage.findMany({
+        where: { postId: { in: postIds } },
+      }),
+      this.prisma.comment.findMany({
+        where: { postId: { in: postIds } },
+        orderBy: { createdAt: 'asc' },
+      }),
+      this.prisma.gardener.findMany({
+        where: { userId: { in: gardenerIds } },
+        include: {
+          user: {
+            select: {
+              id: true,
+              username: true,
+              firstName: true,
+              lastName: true,
+              profilePicture: true,
+              gardener: { select: { experienceLevel: true } },
+            },
+          },
+        },
+      }),
+    ]);
+
+    // Group into maps
+    const tagsMap = new Map<number, (typeof postTags)[0]['tag'][]>();
+    const imagesMap = new Map<number, (typeof images)[0][]>();
+    const commentsMap = new Map<number, (typeof comments)[0][]>();
+    const gardenerUserMap = new Map<number, (typeof gardeners)[0]['user']>();
+
+    for (const id of postIds) {
+      tagsMap.set(id, []);
+      imagesMap.set(id, []);
+      commentsMap.set(id, []);
+    }
+    postTags.forEach((pt) => tagsMap.get(pt.postId)!.push(pt.tag));
+    images.forEach((img) => imagesMap.get(img.postId)!.push(img));
+    comments.forEach((c) => commentsMap.get(c.postId)!.push(c));
+    gardeners.forEach((g) => gardenerUserMap.set(g.user.id, g.user));
+
+    // Build DTOs
+    const data = posts.map((post) =>
+      mapToPostDto(
+        post,
+        tagsMap.get(post.id) || [],
+        imagesMap.get(post.id) || [],
+        commentsMap.get(post.id) || [],
+        gardenerUserMap.get(post.gardenerId)!,
+        undefined,
+      ),
+    );
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages,
+    };
   }
 }

@@ -38,6 +38,36 @@ export async function seedUsers(prisma: PrismaClient): Promise<void> {
       roleId: gardenerRole.id,
       phoneNumber: '0383525377',
     },
+    {
+      firstName: 'Nguyen Van',
+      lastName: 'An',
+      profilePicture: '/pictures/avatars/user-3-20250531T180000Z.png',
+      email: 'an.nguyen@example.com',
+      username: 'annguyen',
+      password: hashedPassword,
+      roleId: gardenerRole.id,
+      phoneNumber: '0901234567',
+    },
+    {
+      firstName: 'Le Thi',
+      lastName: 'Binh',
+      profilePicture: '/pictures/avatars/user-4-20250531T180510Z.png',
+      email: 'binh.le@example.com',
+      username: 'binhle',
+      password: hashedPassword,
+      roleId: gardenerRole.id,
+      phoneNumber: '0912345678',
+    },
+    {
+      firstName: 'Pham Hoang',
+      lastName: 'Minh',
+      profilePicture: '/pictures/avatars/user-5-20250531T181025Z.png',
+      email: 'minh.pham@example.com',
+      username: 'minhpham',
+      password: hashedPassword,
+      roleId: gardenerRole.id,
+      phoneNumber: '0987654321',
+    },
   ];
 
   for (const u of users) {
