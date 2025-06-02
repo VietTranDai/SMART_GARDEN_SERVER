@@ -14,6 +14,8 @@ import { WeatherModule } from './modules/weathers/weather.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ActivitiesModule } from './modules/activities/activities.module';
 import { AdviceModule } from './modules/advice/advice.module';
+import { AppController } from './app.controller';
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -30,7 +32,7 @@ import { AdviceModule } from './modules/advice/advice.module';
     ActivitiesModule,
     AdviceModule,
   ],
-  controllers: [],
+  controllers: [AppController],
   providers: [
     {
       provide: APP_GUARD,

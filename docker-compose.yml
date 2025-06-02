@@ -8,61 +8,103 @@ services:
       dockerfile: Dockerfile
     restart: always
     environment:
-      - FLASK_ENV=production
-      - TFLITE_PATH=/app/InceptionResNetV2_improved.tflite
-      - FLASK_HOST=0.0.0.0
-      - FLASK_PORT=5000
+      - FLASK_ENV=${FLASK_ENV}
+      - TFLITE_PATH=${TFLITE_PATH}
+      - FLASK_HOST=${FLASK_HOST}
+      - FLASK_PORT=${PLANT_AI_PORT}
+      - FLASK_DEBUG=${FLASK_DEBUG}
     volumes:
-      - ./predict_disease_model/model:/app/model:ro  # Mount model directory if separate
-      - ai_logs:/app/logs                            # Persistent logs
-    # No external ports - internal service only
+      - ./predict_disease_model/model:/app/model:ro
+      - ai_disease_logs:/app/logs
     expose:
-      - "5000"
+      - "${PLANT_AI_PORT}"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:${PLANT_AI_PORT}/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
     labels:
       - app=plant-disease-ai
+      - service=ai-model
     networks:
       - smart-garden-network
 
+  # Smart Watering System AI Service
+  smart-watering-ai:
+    build: 
+      context: ./smart_watering_model
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+      - PORT=${WATERING_AI_PORT}
+      - HOST=${FLASK_HOST}
+      - DEBUG=${FLASK_DEBUG}
+    volumes:
+      - ./smart_watering_model/models:/app/models:ro
+      - ai_watering_logs:/app/logs
+    expose:
+      - "${WATERING_AI_PORT}"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${WATERING_AI_PORT}/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    labels:
+      - app=smart-watering-ai
+      - service=ai-model
+    networks:
+      - smart-garden-network
+
+  # Main NestJS Server
   smart-garden-server:
-    build: .
+    build: 
+      context: .
+      dockerfile: Dockerfile
     restart: always
     depends_on:
-      # Chỉ phụ thuộc vào AI service vì database đã online
       plant-disease-ai:
         condition: service_healthy
+      smart-watering-ai:
+        condition: service_healthy
     ports:
-      - '3456:3000'
+      - '${EXTERNAL_PORT}:${APP_PORT}'
     environment:
-      # Sử dụng database online
-      DATABASE_URL: "postgresql://avnadmin:AVNS_sATWAKCDBSQXKCkvsnN@pg-39c47927-trandaiviet.e.aivencloud.com:19306/defaultdb?sslmode=require"
-      # AI Service URL for internal communication
-      AI_SERVICE_URL: http://plant-disease-ai:5000
-      AI_SERVICE_ENABLED: "true"
+      - DATABASE_URL=${DATABASE_URL}
+      - PLANT_DISEASE_AI_URL=http://plant-disease-ai:${PLANT_AI_PORT}
+      - SMART_WATERING_AI_URL=http://smart-watering-ai:${WATERING_AI_PORT}
+      - AI_SERVICE_ENABLED=${AI_SERVICE_ENABLED}
+      - PLANT_DISEASE_DETECTION_ENABLED=${PLANT_DISEASE_DETECTION_ENABLED}
+      - SMART_WATERING_ENABLED=${SMART_WATERING_ENABLED}
+      - NODE_ENV=${NODE_ENV}
+      - PORT=${APP_PORT}
+    volumes:
+      - app_logs:/usr/src/app/logs
     labels:
       - app=smart-garden-server
+      - service=main-api
     healthcheck:
-      test:
-        [
-          'CMD-SHELL',
-          'curl -f http://localhost:3000/v1/health/liveness || exit 1',
-        ]
+      test: ["CMD-SHELL", "curl -f http://localhost:${APP_PORT}/v1/health/liveness || exit 1"]
       interval: 30s
-      timeout: 5s
+      timeout: 10s
       retries: 3
-      start_period: 10s
+      start_period: 20s
     networks:
       - smart-garden-network
 
 volumes:
-  # Chỉ giữ lại volume cho AI logs, xóa pgdata vì không cần nữa
-  ai_logs:
+  ai_disease_logs:
+    driver: local
+  ai_watering_logs:
+    driver: local
+  app_logs:
+    driver: local
 
 networks:
   smart-garden-network:
     driver: bridge
+    labels:
+      - project=smart-garden

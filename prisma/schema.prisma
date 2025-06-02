@@ -371,7 +371,6 @@ model WateringSchedule {
 
 model PhotoEvaluation {
   id     Int @id @default(autoincrement())
-  taskId Int
 
   gardenId Int
   garden   Garden @relation(fields: [gardenId], references: [id])

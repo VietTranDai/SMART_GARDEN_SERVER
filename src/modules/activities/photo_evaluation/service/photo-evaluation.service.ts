@@ -6,7 +6,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { promisify } from 'util';
 import axios from 'axios';
-import FormData from 'form-data';
+import * as FormData from 'form-data';
 
 const writeFile = promisify(fs.writeFile);
 const unlink = promisify(fs.unlink);
@@ -15,14 +15,14 @@ const mkdir = promisify(fs.mkdir);
 @Injectable()
 export class PhotoEvaluationService {
   private readonly logger = new Logger(PhotoEvaluationService.name);
-  private readonly uploadPath = 'photo_evaluations';
+  private readonly uploadPath = 'pictures/photo_evaluations';
   private readonly aiServiceUrl: string;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly configService: ConfigService,
   ) {
-    this.aiServiceUrl = this.configService.get<string>('AI_DISEASE_PREDICT', 'http://localhost:5000');
+    this.aiServiceUrl = this.configService.get<string>('PLANT_DISEASE_AI_URL', 'http://plant-disease-ai:5000');
     this.ensureUploadDirectoryExists();
     this.checkAIServiceConnection();
   }
@@ -108,22 +108,24 @@ export class PhotoEvaluationService {
     imageFile: Express.Multer.File,
   ): Promise<PhotoEvaluationResponseDto> {
     try {
-      // Verify garden belongs to gardener
-      await this.verifyGardenAccess(gardenerId, dto.gardenId);
+      // Verify garden belongs to gardener and get garden info
+      const garden = await this.verifyGardenAccessAndGetInfo(gardenerId, dto.gardenId);
 
       // Save image file
       const fileName = await this.saveImageFile(imageFile);
-      const photoUrl = `photo_evaluations/${fileName}`;
+      const photoUrl = `/pictures/photo_evaluations/${fileName}`;
+
+      // Automatically get plant information from garden
+      const plantName = garden.plantName || 'Cây trồng chưa xác định';
+      const plantGrowStage = garden.plantGrowStage || 'Giai đoạn chưa xác định';
 
       // Create photo evaluation record
       const photoEvaluation = await this.prisma.photoEvaluation.create({
         data: {
-          taskId: dto.taskId,
           gardenId: dto.gardenId,
           gardenerId: gardenerId,
-          gardenActivityId: dto.gardenActivityId,
-          plantName: dto.plantName,
-          plantGrowStage: dto.plantGrowStage,
+          plantName: plantName,
+          plantGrowStage: plantGrowStage,
           photoUrl: photoUrl,
           notes: dto.notes,
         },
@@ -138,10 +140,15 @@ export class PhotoEvaluationService {
         },
       });
 
+      // Create activity log for photo evaluation
+      await this.createPhotoEvaluationActivity(gardenerId, garden, plantName, plantGrowStage, dto.notes);
+
       // Asynchronously call AI service for evaluation (don't await to avoid blocking)
-      this.performAIEvaluation(photoEvaluation.id, fileName, dto.plantName).catch((error) => {
+      this.performAIEvaluation(photoEvaluation.id, fileName, plantName).catch((error) => {
         this.logger.error(`AI evaluation failed for photo ${photoEvaluation.id}:`, error);
       });
+
+      this.logger.log(`📸 Photo evaluation created successfully for garden "${garden.name}" - Plant: ${plantName} (${plantGrowStage})`);
 
       return this.convertToResponseDto(photoEvaluation);
     } catch (error) {
@@ -199,7 +206,7 @@ export class PhotoEvaluationService {
     limit: number = 10,
   ): Promise<{ data: PhotoEvaluationResponseDto[]; total: number; page: number; limit: number }> {
     // Verify garden access
-    await this.verifyGardenAccess(gardenerId, gardenId);
+    await this.verifyGardenAccessAndGetInfo(gardenerId, gardenId);
 
     const skip = (page - 1) * limit;
 
@@ -502,7 +509,7 @@ export class PhotoEvaluationService {
   /**
    * Xác minh quyền truy cập vườn
    */
-  private async verifyGardenAccess(gardenerId: number, gardenId: number): Promise<void> {
+  private async verifyGardenAccessAndGetInfo(gardenerId: number, gardenId: number): Promise<any> {
     const garden = await this.prisma.garden.findFirst({
       where: { id: gardenId, gardenerId },
     });
@@ -510,6 +517,8 @@ export class PhotoEvaluationService {
     if (!garden) {
       throw new NotFoundException('Garden not found or access denied');
     }
+
+    return garden;
   }
 
   /**
@@ -548,5 +557,67 @@ export class PhotoEvaluationService {
       unhealthy: evaluated - healthyCount,
       avgConfidence: avgConfidenceResult._avg.confidence || 0,
     };
+  }
+
+  /**
+   * Tạo nhật ký hoạt động cho việc đánh giá ảnh
+   */
+  private async createPhotoEvaluationActivity(
+    gardenerId: number,
+    garden: any,
+    plantName: string,
+    plantGrowStage: string,
+    userNotes?: string,
+  ): Promise<void> {
+    try {
+      const currentTime = new Date();
+      const timeString = currentTime.toLocaleString('vi-VN', {
+        timeZone: 'Asia/Ho_Chi_Minh',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+
+      // Tạo mô tả chi tiết cho hoạt động
+      let activityDetails = `🌱 **Đánh giá sức khỏe cây trồng qua ảnh**\n\n`;
+      activityDetails += `📅 **Thời gian**: ${timeString}\n`;
+      activityDetails += `🏡 **Vườn**: ${garden.name}\n`;
+      activityDetails += `🌿 **Loại cây**: ${plantName}\n`;
+      activityDetails += `🌱 **Giai đoạn phát triển**: ${plantGrowStage}\n\n`;
+      
+      if (userNotes) {
+        activityDetails += `📝 **Ghi chú của người chăm sóc**: ${userNotes}\n\n`;
+      }
+
+      activityDetails += `🔍 **Mục đích**: Chụp ảnh để đánh giá tình trạng sức khỏe của cây\n`;
+      activityDetails += `🤖 **AI sẽ phân tích**: Hệ thống AI đang xử lý ảnh và sẽ cung cấp đánh giá chi tiết\n`;
+      activityDetails += `📊 **Kết quả**: Kết quả đánh giá sẽ được cập nhật trong vài phút\n\n`;
+      activityDetails += `💡 **Lưu ý**: Việc đánh giá định kỳ bằng ảnh giúp phát hiện sớm các vấn đề về sức khỏe cây trồng`;
+
+      // Tạo ghi chú ngắn gọn cho reason
+      const reason = `Đánh giá sức khỏe cây ${plantName} (${plantGrowStage}) bằng phương pháp chụp ảnh`;
+
+      await this.prisma.gardenActivity.create({
+        data: {
+          gardenId: garden.id,
+          gardenerId: gardenerId,
+          name: `Đánh giá ảnh - ${plantName}`,
+          activityType: 'OTHER', // Sử dụng OTHER vì đây là hoạt động đánh giá
+          timestamp: currentTime,
+          plantName: plantName,
+          plantGrowStage: plantGrowStage,
+          details: activityDetails,
+          reason: reason,
+          notes: userNotes || 'Đánh giá sức khỏe cây trồng thông qua ảnh và AI',
+        },
+      });
+
+      this.logger.log(`📋 Activity log created for photo evaluation - Garden: ${garden.name}, Plant: ${plantName}`);
+    } catch (error) {
+      this.logger.error(`Failed to create activity log for photo evaluation: ${error.message}`, error.stack);
+      // Không throw error để không ảnh hưởng đến flow chính
+    }
   }
 } 

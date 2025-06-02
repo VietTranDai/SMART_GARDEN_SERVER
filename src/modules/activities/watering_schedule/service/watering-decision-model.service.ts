@@ -2,12 +2,18 @@ import { Injectable, NotFoundException, ForbiddenException, InternalServerErrorE
 import { PrismaService } from '../../../../prisma/prisma.service';
 import axios from 'axios';
 import { WateringDecisionDto, WateringStatsDto, CreateWateringDecisionDto, SensorDataForRequestModelAIDto } from '../dto/watering-decision-model.dto';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class WateringDecisionModelService {
-  private readonly AI_MODEL_URL = 'http://localhost:5001';
+  private readonly aiServiceUrl: string;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly configService: ConfigService,
+  ) {
+    this.aiServiceUrl = this.configService.get<string>('SMART_WATERING_AI_URL', 'http://smart-watering-ai:5001');
+  }
 
   async getWateringDecisionByGarden(userId: number, gardenId: number): Promise<WateringDecisionDto> {
     try {
@@ -102,7 +108,7 @@ export class WateringDecisionModelService {
 
   async testAIConnection(): Promise<any> {
     try {
-      const response = await axios.get(`${this.AI_MODEL_URL}/health`, {
+      const response = await axios.get(`${this.aiServiceUrl}/health`, {
         timeout: 5000,
       });
       
@@ -212,22 +218,17 @@ export class WateringDecisionModelService {
         'day_of_week': currentTime.getDay() === 0 ? 6 : currentTime.getDay() - 1, // Convert Sunday=0 to Monday=0 format
       };
 
-      console.log('Sending data to AI model:', modelData);
-
-      const response = await axios.post(`${this.AI_MODEL_URL}/watering/decision`, modelData, {
+      const response = await axios.post(`${this.aiServiceUrl}/watering/decision`, modelData, {
         timeout: 10000,
         headers: {
           'Content-Type': 'application/json',
         },
       });
 
-      console.log('AI model response:', response.data);
-
       if (!response.data || response.data.success === false) {
         throw new Error(`AI model error: ${response.data?.error || 'Unknown error'}`);
       }
 
-      // Transform response to match our DTO format
       return {
         decision: response.data.should_water ? 'water_now' : 'no_water',
         confidence: 85.0, // AI model doesn't return confidence, use default

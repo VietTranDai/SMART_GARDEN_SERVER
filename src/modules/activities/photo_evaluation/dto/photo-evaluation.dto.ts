@@ -4,33 +4,16 @@ import { Transform } from 'class-transformer';
 import { PhotoEvaluation, Garden, Gardener, GardenActivity, User } from '@prisma/client';
 
 export class CreatePhotoEvaluationDto {
-  @ApiProperty({ description: 'ID của nhiệm vụ liên quan', example: 1 })
-  @Transform(({ value }) => parseInt(value))
-  @IsInt()
-  taskId: number;
-
   @ApiProperty({ description: 'ID của vườn', example: 1 })
   @Transform(({ value }) => parseInt(value))
   @IsInt()
   gardenId: number;
 
-  @ApiProperty({ description: 'ID của hoạt động vườn (tùy chọn)', example: 1, required: false })
-  @IsOptional()
-  @Transform(({ value }) => value ? parseInt(value) : undefined)
-  @IsInt()
-  gardenActivityId?: number;
-
-  @ApiProperty({ description: 'Tên cây trồng (tùy chọn)', example: 'Cà chua', required: false })
-  @IsOptional()
-  @IsString()
-  plantName?: string;
-
-  @ApiProperty({ description: 'Giai đoạn phát triển của cây (tùy chọn)', example: 'Berries', required: false })
-  @IsOptional()
-  @IsString()
-  plantGrowStage?: string;
-
-  @ApiProperty({ description: 'Ghi chú bổ sung (tùy chọn)', example: 'Cây có vẻ khỏe mạnh', required: false })
+  @ApiProperty({ 
+    description: 'Ghi chú bổ sung (tùy chọn)', 
+    example: 'Cây có vẻ khỏe mạnh, lá xanh tốt', 
+    required: false 
+  })
   @IsOptional()
   @IsString()
   notes?: string;
@@ -59,9 +42,6 @@ export class PhotoEvaluationResponseDto {
   @ApiProperty({ description: 'ID của đánh giá ảnh', example: 1 })
   id: number;
 
-  @ApiProperty({ description: 'ID của nhiệm vụ liên quan', example: 1 })
-  taskId: number;
-
   @ApiProperty({ description: 'ID của vườn', example: 1 })
   gardenId: number;
 
@@ -70,6 +50,8 @@ export class PhotoEvaluationResponseDto {
     id: number;
     name: string;
     description?: string;
+    plantName?: string;
+    plantGrowStage?: string;
   };
 
   @ApiProperty({ description: 'ID của người làm vườn', example: 1 })
@@ -95,13 +77,13 @@ export class PhotoEvaluationResponseDto {
     description: string;
   };
 
-  @ApiProperty({ description: 'Tên cây trồng (tùy chọn)', example: 'Cà chua', required: false })
-  plantName?: string;
+  @ApiProperty({ description: 'Tên cây trồng', example: 'Cà chua' })
+  plantName: string;
 
-  @ApiProperty({ description: 'Giai đoạn phát triển của cây (tùy chọn)', example: 'Berries', required: false })
-  plantGrowStage?: string;
+  @ApiProperty({ description: 'Giai đoạn phát triển của cây', example: 'Berries' })
+  plantGrowStage: string;
 
-  @ApiProperty({ description: 'URL của ảnh đã tải lên', example: 'photo_evaluations/1234567890.jpg' })
+  @ApiProperty({ description: 'URL của ảnh đã tải lên', example: '/pictures/photo_evaluations/1234567890.jpg' })
   photoUrl: string;
 
   @ApiProperty({ description: 'Phản hồi AI (tùy chọn)', example: 'Lá bị vàng, kiểm tra tưới quá nước', required: false })
@@ -158,14 +140,19 @@ export function mapToPhotoEvaluationResponseDto(
     gardenActivity?: GardenActivity;
   },
 ): PhotoEvaluationResponseDto {
+  // Ưu tiên thông tin từ photoEvaluation, nếu không có thì lấy từ garden
+  const plantName = photoEvaluation.plantName || photoEvaluation.garden.plantName || 'Chưa xác định';
+  const plantGrowStage = photoEvaluation.plantGrowStage || photoEvaluation.garden.plantGrowStage || 'Chưa xác định';
+
   return {
     id: photoEvaluation.id,
-    taskId: photoEvaluation.taskId,
     gardenId: photoEvaluation.gardenId,
     garden: {
       id: photoEvaluation.garden.id,
       name: photoEvaluation.garden.name,
       description: photoEvaluation.garden.description || undefined,
+      plantName: photoEvaluation.garden.plantName || undefined,
+      plantGrowStage: photoEvaluation.garden.plantGrowStage || undefined,
     },
     gardenerId: photoEvaluation.gardenerId,
     gardener: {
@@ -182,8 +169,8 @@ export function mapToPhotoEvaluationResponseDto(
       activityType: photoEvaluation.gardenActivity.activityType,
       description: photoEvaluation.gardenActivity.notes || '',
     } : undefined,
-    plantName: photoEvaluation.plantName || undefined,
-    plantGrowStage: photoEvaluation.plantGrowStage || undefined,
+    plantName,
+    plantGrowStage,
     photoUrl: photoEvaluation.photoUrl,
     aiFeedback: photoEvaluation.aiFeedback || undefined,
     confidence: photoEvaluation.confidence || undefined,

@@ -365,7 +365,6 @@ export class GardenService {
       return {
         data: photoEvaluations.map((photo) => ({
           id: photo.id,
-          taskId: photo.taskId,
           photoUrl: photo.photoUrl,
           aiFeedback: photo.aiFeedback,
           confidence: photo.confidence,

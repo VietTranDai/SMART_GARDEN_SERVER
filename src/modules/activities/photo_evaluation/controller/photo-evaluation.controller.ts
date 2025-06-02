@@ -76,48 +76,28 @@ export class PhotoEvaluationController {
           format: 'binary',
           description: 'File ảnh cần đánh giá (tối đa 10MB)',
         },
-        taskId: {
-          type: 'string',
-          description: 'ID của nhiệm vụ liên quan',
-          example: '1',
-        },
         gardenId: {
           type: 'string',
-          description: 'ID của vườn',
+          description: 'ID của vườn (thông tin cây trồng sẽ được lấy tự động từ vườn)',
           example: '1',
-        },
-        gardenActivityId: {
-          type: 'string',
-          description: 'ID của hoạt động vườn (tùy chọn)',
-          example: '1',
-        },
-        plantName: {
-          type: 'string',
-          description: 'Tên cây trồng (tùy chọn)',
-          example: 'Cà chua',
-        },
-        plantGrowStage: {
-          type: 'string',
-          description: 'Giai đoạn phát triển của cây (tùy chọn)',
-          example: 'Berries',
         },
         notes: {
           type: 'string',
-          description: 'Ghi chú bổ sung (tùy chọn)',
-          example: 'Cây có vẻ khỏe mạnh',
+          description: 'Ghi chú bổ sung về tình trạng cây (tùy chọn)',
+          example: 'Cây có vẻ khỏe mạnh, lá xanh tốt',
         },
       },
-      required: ['image', 'taskId', 'gardenId'],
+      required: ['image', 'gardenId'],
     },
   })
   @ApiResponse({
     status: 201,
-    description: 'Đánh giá ảnh được tạo thành công',
+    description: 'Đánh giá ảnh được tạo thành công. Thông tin cây trồng được lấy tự động từ vườn và AI sẽ phân tích ảnh.',
     type: PhotoEvaluationResponseDto,
   })
   @ApiBadRequestResponse({ description: 'Dữ liệu không hợp lệ hoặc thiếu file ảnh' })
   @ApiUnauthorizedResponse({ description: 'Không có quyền truy cập' })
-  @ApiNotFoundResponse({ description: 'Vườn hoặc nhiệm vụ không tồn tại' })
+  @ApiNotFoundResponse({ description: 'Vườn không tồn tại hoặc không có quyền truy cập' })
   @ApiInternalServerErrorResponse({ description: 'Lỗi server nội bộ' })
   async createPhotoEvaluation(
     @GetUser('id') userId: number,
