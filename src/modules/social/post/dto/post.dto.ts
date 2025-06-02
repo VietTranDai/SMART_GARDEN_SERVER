@@ -52,11 +52,17 @@ export class PostDto {
   @ApiPropertyOptional({ description: 'Danh sách bình luận', type: [CommentDto] })
   comments?: CommentDto[];
 
+  @ApiPropertyOptional({ description: 'Số lượng bình luận', example: 5 })
+  commentCount?: number;
+
   @ApiPropertyOptional({ description: 'Danh sách thẻ', type: [TagDto] })
   tags?: TagDto[];
 
   @ApiPropertyOptional({ description: 'Danh sách hình ảnh', type: [PostImageDto] })
   images?: PostImageDto[];
+
+  @ApiPropertyOptional({ description: 'Số lượng hình ảnh', example: 3 })
+  imageCount?: number;
 
   @ApiPropertyOptional({ description: 'Trạng thái vote của người dùng hiện tại', example: 1 })
   userVote?: number;

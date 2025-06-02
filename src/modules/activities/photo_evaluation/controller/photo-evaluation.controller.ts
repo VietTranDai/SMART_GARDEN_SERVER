@@ -11,30 +11,47 @@ import {
   UploadedFile,
   ParseIntPipe,
   UseGuards,
-  Request,
   BadRequestException,
   UsePipes,
   ValidationPipe,
+  InternalServerErrorException,
+  NotFoundException,
+  ForbiddenException,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiResponse, ApiConsumes, ApiBody, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { 
+  ApiTags, 
+  ApiOperation, 
+  ApiResponse, 
+  ApiConsumes, 
+  ApiBody, 
+  ApiBearerAuth, 
+  ApiQuery,
+  ApiBadRequestResponse,
+  ApiUnauthorizedResponse,
+  ApiNotFoundResponse,
+  ApiInternalServerErrorResponse,
+  ApiForbiddenResponse,
+} from '@nestjs/swagger';
 import { PhotoEvaluationService } from '../service/photo-evaluation.service';
 import {
   CreatePhotoEvaluationDto,
   UpdatePhotoEvaluationDto,
   PhotoEvaluationResponseDto,
 } from '../dto/photo-evaluation.dto';
-import { JwtAuthGuard } from '../../../../common/guards';
+import { GetUser } from 'src/common/decorators/get-user.decorator';
 
 @ApiTags('Photo Evaluation')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard)
 @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
 @Controller('photo-evaluations')
 export class PhotoEvaluationController {
   constructor(private readonly photoEvaluationService: PhotoEvaluationService) {}
 
   @Post()
+  @HttpCode(HttpStatus.CREATED)
   @UseInterceptors(FileInterceptor('image', {
     limits: {
       fileSize: 10 * 1024 * 1024, // 10MB
@@ -98,20 +115,28 @@ export class PhotoEvaluationController {
     description: 'Đánh giá ảnh được tạo thành công',
     type: PhotoEvaluationResponseDto,
   })
-  @ApiResponse({ status: 400, description: 'Dữ liệu không hợp lệ' })
-  @ApiResponse({ status: 401, description: 'Không có quyền truy cập' })
-  @ApiResponse({ status: 404, description: 'Vườn không tồn tại' })
+  @ApiBadRequestResponse({ description: 'Dữ liệu không hợp lệ hoặc thiếu file ảnh' })
+  @ApiUnauthorizedResponse({ description: 'Không có quyền truy cập' })
+  @ApiNotFoundResponse({ description: 'Vườn hoặc nhiệm vụ không tồn tại' })
+  @ApiInternalServerErrorResponse({ description: 'Lỗi server nội bộ' })
   async createPhotoEvaluation(
-    @Request() req: any,
+    @GetUser('id') userId: number,
     @Body() createDto: CreatePhotoEvaluationDto,
     @UploadedFile() image: Express.Multer.File,
   ): Promise<PhotoEvaluationResponseDto> {
-    if (!image) {
-      throw new BadRequestException('Image file is required');
-    }
+    try {
+      if (!image) {
+        throw new BadRequestException('Image file is required');
+      }
 
-    const gardenerId = req.user.gardenerId;
-    return this.photoEvaluationService.createPhotoEvaluation(gardenerId, createDto, image);
+      return await this.photoEvaluationService.createPhotoEvaluation(userId, createDto, image);
+    } catch (error) {
+      if (error instanceof BadRequestException || error.status === 404) {
+        throw error;
+      }
+      console.error('Error in createPhotoEvaluation controller:', error);
+      throw new InternalServerErrorException('Failed to create photo evaluation');
+    }
   }
 
   @Get()
@@ -134,13 +159,31 @@ export class PhotoEvaluationController {
       },
     },
   })
+  @ApiBadRequestResponse({ description: 'Tham số phân trang không hợp lệ' })
+  @ApiUnauthorizedResponse({ description: 'Không có quyền truy cập' })
+  @ApiInternalServerErrorResponse({ description: 'Lỗi server nội bộ' })
   async getPhotoEvaluations(
-    @Request() req: any,
+    @GetUser('id') userId: number,
     @Query('page', new ParseIntPipe({ optional: true })) page: number = 1,
     @Query('limit', new ParseIntPipe({ optional: true })) limit: number = 10,
   ) {
-    const gardenerId = req.user.gardenerId;
-    return this.photoEvaluationService.getPhotoEvaluationsByGardener(gardenerId, page, limit);
+    try {
+      if (page < 1) {
+        throw new BadRequestException('Page must be greater than 0');
+      }
+
+      if (limit < 1 || limit > 100) {
+        throw new BadRequestException('Limit must be between 1 and 100');
+      }
+
+      return await this.photoEvaluationService.getPhotoEvaluationsByGardener(userId, page, limit);
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      console.error('Error in getPhotoEvaluations controller:', error);
+      throw new InternalServerErrorException('Failed to fetch photo evaluations');
+    }
   }
 
   @Get('garden/:gardenId')
@@ -163,15 +206,38 @@ export class PhotoEvaluationController {
       },
     },
   })
-  @ApiResponse({ status: 404, description: 'Vườn không tồn tại' })
+  @ApiBadRequestResponse({ description: 'Garden ID hoặc tham số phân trang không hợp lệ' })
+  @ApiUnauthorizedResponse({ description: 'Không có quyền truy cập' })
+  @ApiNotFoundResponse({ description: 'Vườn không tồn tại' })
+  @ApiForbiddenResponse({ description: 'Không có quyền truy cập vườn này' })
+  @ApiInternalServerErrorResponse({ description: 'Lỗi server nội bộ' })
   async getPhotoEvaluationsByGarden(
-    @Request() req: any,
+    @GetUser('id') userId: number,
     @Param('gardenId', ParseIntPipe) gardenId: number,
     @Query('page', new ParseIntPipe({ optional: true })) page: number = 1,
     @Query('limit', new ParseIntPipe({ optional: true })) limit: number = 10,
   ) {
-    const gardenerId = req.user.gardenerId;
-    return this.photoEvaluationService.getPhotoEvaluationsByGarden(gardenerId, gardenId, page, limit);
+    try {
+      if (isNaN(gardenId) || gardenId < 1) {
+        throw new BadRequestException('Invalid garden ID');
+      }
+
+      if (page < 1) {
+        throw new BadRequestException('Page must be greater than 0');
+      }
+
+      if (limit < 1 || limit > 100) {
+        throw new BadRequestException('Limit must be between 1 and 100');
+      }
+
+      return await this.photoEvaluationService.getPhotoEvaluationsByGarden(userId, gardenId, page, limit);
+    } catch (error) {
+      if (error instanceof BadRequestException || error.status === 404 || error.status === 403) {
+        throw error;
+      }
+      console.error('Error in getPhotoEvaluationsByGarden controller:', error);
+      throw new InternalServerErrorException('Failed to fetch photo evaluations by garden');
+    }
   }
 
   @Get('stats')
@@ -190,9 +256,18 @@ export class PhotoEvaluationController {
       },
     },
   })
-  async getPhotoEvaluationStats(@Request() req: any) {
-    const gardenerId = req.user.gardenerId;
-    return this.photoEvaluationService.getPhotoEvaluationStats(gardenerId);
+  @ApiUnauthorizedResponse({ description: 'Không có quyền truy cập' })
+  @ApiInternalServerErrorResponse({ description: 'Lỗi server nội bộ' })
+  async getPhotoEvaluationStats(@GetUser('id') userId: number) {
+    try {
+      return await this.photoEvaluationService.getPhotoEvaluationStats(userId);
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      console.error('Error in getPhotoEvaluationStats controller:', error);
+      throw new InternalServerErrorException('Failed to fetch photo evaluation statistics');
+    }
   }
 
   @Get(':id')
@@ -202,13 +277,28 @@ export class PhotoEvaluationController {
     description: 'Chi tiết đánh giá ảnh',
     type: PhotoEvaluationResponseDto,
   })
-  @ApiResponse({ status: 404, description: 'Đánh giá ảnh không tồn tại' })
+  @ApiBadRequestResponse({ description: 'Photo evaluation ID không hợp lệ' })
+  @ApiUnauthorizedResponse({ description: 'Không có quyền truy cập' })
+  @ApiNotFoundResponse({ description: 'Đánh giá ảnh không tồn tại' })
+  @ApiForbiddenResponse({ description: 'Không có quyền truy cập đánh giá này' })
+  @ApiInternalServerErrorResponse({ description: 'Lỗi server nội bộ' })
   async getPhotoEvaluationById(
-    @Request() req: any,
+    @GetUser('id') userId: number,
     @Param('id', ParseIntPipe) id: number,
   ): Promise<PhotoEvaluationResponseDto> {
-    const gardenerId = req.user.gardenerId;
-    return this.photoEvaluationService.getPhotoEvaluationById(gardenerId, id);
+    try {
+      if (isNaN(id) || id < 1) {
+        throw new BadRequestException('Invalid photo evaluation ID');
+      }
+
+      return await this.photoEvaluationService.getPhotoEvaluationById(userId, id);
+    } catch (error) {
+      if (error instanceof BadRequestException || error.status === 404 || error.status === 403) {
+        throw error;
+      }
+      console.error('Error in getPhotoEvaluationById controller:', error);
+      throw new InternalServerErrorException('Failed to fetch photo evaluation');
+    }
   }
 
   @Put(':id')
@@ -218,33 +308,69 @@ export class PhotoEvaluationController {
     description: 'Đánh giá ảnh được cập nhật thành công',
     type: PhotoEvaluationResponseDto,
   })
-  @ApiResponse({ status: 400, description: 'Dữ liệu không hợp lệ' })
-  @ApiResponse({ status: 404, description: 'Đánh giá ảnh không tồn tại' })
+  @ApiBadRequestResponse({ description: 'Dữ liệu hoặc Photo evaluation ID không hợp lệ' })
+  @ApiUnauthorizedResponse({ description: 'Không có quyền truy cập' })
+  @ApiNotFoundResponse({ description: 'Đánh giá ảnh không tồn tại' })
+  @ApiForbiddenResponse({ description: 'Không có quyền cập nhật đánh giá này' })
+  @ApiInternalServerErrorResponse({ description: 'Lỗi server nội bộ' })
   async updatePhotoEvaluation(
-    @Request() req: any,
+    @GetUser('id') userId: number,
     @Param('id', ParseIntPipe) id: number,
     @Body() updateDto: UpdatePhotoEvaluationDto,
   ): Promise<PhotoEvaluationResponseDto> {
-    const gardenerId = req.user.gardenerId;
-    return this.photoEvaluationService.updatePhotoEvaluation(gardenerId, id, updateDto);
+    try {
+      if (isNaN(id) || id < 1) {
+        throw new BadRequestException('Invalid photo evaluation ID');
+      }
+
+      return await this.photoEvaluationService.updatePhotoEvaluation(userId, id, updateDto);
+    } catch (error) {
+      if (error instanceof BadRequestException || error.status === 404 || error.status === 403) {
+        throw error;
+      }
+      console.error('Error in updatePhotoEvaluation controller:', error);
+      throw new InternalServerErrorException('Failed to update photo evaluation');
+    }
   }
 
   @Delete(':id')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Xóa đánh giá ảnh' })
-  @ApiResponse({ status: 200, description: 'Đánh giá ảnh được xóa thành công' })
-  @ApiResponse({ status: 404, description: 'Đánh giá ảnh không tồn tại' })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Đánh giá ảnh được xóa thành công',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: 'Đánh giá ảnh đã được xóa thành công' }
+      }
+    }
+  })
+  @ApiBadRequestResponse({ description: 'Photo evaluation ID không hợp lệ' })
+  @ApiUnauthorizedResponse({ description: 'Không có quyền truy cập' })
+  @ApiNotFoundResponse({ description: 'Đánh giá ảnh không tồn tại' })
+  @ApiForbiddenResponse({ description: 'Không có quyền xóa đánh giá này' })
+  @ApiInternalServerErrorResponse({ description: 'Lỗi server nội bộ' })
   async deletePhotoEvaluation(
-    @Request() req: any,
+    @GetUser('id') userId: number,
     @Param('id', ParseIntPipe) id: number,
   ): Promise<{ message: string }> {
-    const gardenerId = req.user.gardenerId;
-    await this.photoEvaluationService.deletePhotoEvaluation(gardenerId, id);
-    return { message: 'Đánh giá ảnh đã được xóa thành công' };
+    try {
+      if (isNaN(id) || id < 1) {
+        throw new BadRequestException('Invalid photo evaluation ID');
+      }
+
+      await this.photoEvaluationService.deletePhotoEvaluation(userId, id);
+      return { message: 'Đánh giá ảnh đã được xóa thành công' };
+    } catch (error) {
+      if (error instanceof BadRequestException || error.status === 404 || error.status === 403) {
+        throw error;
+      }
+      console.error('Error in deletePhotoEvaluation controller:', error);
+      throw new InternalServerErrorException('Failed to delete photo evaluation');
+    }
   }
 
-  /**
-   * Test AI service connection
-   */
   @Get('test-ai-service')
   @ApiOperation({ summary: 'Test AI service connection' })
   @ApiResponse({
@@ -259,7 +385,13 @@ export class PhotoEvaluationController {
       },
     },
   })
-  async testAIService(@Request() req: any) {
-    return this.photoEvaluationService.testAIService();
+  @ApiInternalServerErrorResponse({ description: 'Lỗi kết nối AI service' })
+  async testAIService() {
+    try {
+      return await this.photoEvaluationService.testAIService();
+    } catch (error) {
+      console.error('Error in testAIService controller:', error);
+      throw new InternalServerErrorException('Failed to test AI service connection');
+    }
   }
 } 

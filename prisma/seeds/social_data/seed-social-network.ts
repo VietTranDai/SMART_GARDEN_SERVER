@@ -75,9 +75,9 @@ export async function seedSocialNetwork(prisma: PrismaClient): Promise<void> {
 Kết quả: Rau xanh mướt, giòn ngọt, không sâu bệnh! Ai có kinh nghiệm gì khác chia sẻ thêm nhé! 🌿`,
       tags: ['rau-sach', 'de-trong', 'huu-co', 'nang-suat-cao', 'beginner-friendly'],
       images: [
-        'post/post-1-1-20250525T083000Z.png',
-        'post/post-1-2-20250525T083000Z.png',
-        'post/post-1-3-20250525T083000Z.png'
+        'pictures/post/post-1-1-20250525T083000Z.png',
+        'pictures/post/post-1-2-20250525T083000Z.png',
+        'pictures/post/post-1-3-20250525T083000Z.png'
       ],
       createdAt: new Date('2025-05-25T08:30:00Z')
     },
@@ -102,8 +102,8 @@ Kết quả: Rau xanh mướt, giòn ngọt, không sâu bệnh! Ai có kinh ngh
 Từ khi trồng đến nay 2 tháng, cây phát triển vượt mong đợi. Hoa có màu tím nhạt rất đẹp, thơm nhẹ vào buổi sáng sớm! 💜`,
       tags: ['hoa-canh', 'ban-cong', 'de-trong', 'beginner-friendly'],
       images: [
-        'post/post-2-1-20250528T154500Z.png',
-        'post/post-2-2-20250528T154500Z.png'
+        'pictures/post/post-2-1-20250528T154500Z.png',
+        'pictures/post/post-2-2-20250528T154500Z.png'
       ],
       createdAt: new Date('2025-05-28T15:45:00Z')
     },
@@ -133,9 +133,9 @@ Từ khi trồng đến nay 2 tháng, cây phát triển vượt mong đợi. Ho
 Cảm ơn mọi người đã đọc! Ai có thắc mắc gì về trồng cà chua cherry thì hỏi mình nhé! 🤗`,
       tags: ['nang-suat-cao', 'vuon-nho', 'harvest', 'beginner-friendly', 'organic'],
       images: [
-        'post/post-3-1-20250530T091500Z.png',
-        'post/post-3-2-20250530T091500Z.png',
-        'post/post-3-3-20250530T091500Z.png'
+        'pictures/post/post-3-1-20250530T091500Z.png',
+        'pictures/post/post-3-2-20250530T091500Z.png',
+        'pictures/post/post-3-3-20250530T091500Z.png'
       ],
       createdAt: new Date('2025-05-30T09:15:00Z')
     },
@@ -163,8 +163,8 @@ Cảm ơn mọi người đã đọc! Ai có thắc mắc gì về trồng cà c
 Thật kỳ diệu khi chứng kiến sự sống phát triển! Mọi người có ai đang trồng hướng dương không? 🌻💚`,
       tags: ['hoa-canh', 'seedling', 'ban-cong', 'beginner-friendly'],
       images: [
-        'post/post-4-1-20250531T072000Z.png',
-        'post/post-4-2-20250531T072000Z.png'
+        'pictures/post/post-4-1-20250531T072000Z.png',
+        'pictures/post/post-4-2-20250531T072000Z.png'
       ],
       createdAt: new Date('2025-05-31T07:20:00Z')
     },
@@ -195,8 +195,8 @@ Thật kỳ diệu khi chứng kiến sự sống phát triển! Mọi người 
 Ai muốn bắt đầu vườn thảo mộc trong nhà thì bạc hà là lựa chọn số 1! 💚`,
       tags: ['thao-moc', 'trong-nha', 'gia-vi', 'de-trong', 'urban-farming'],
       images: [
-        'post/post-5-1-20250529T143000Z.png',
-        'post/post-5-2-20250529T143000Z.png'
+        'pictures/post/post-5-1-20250529T143000Z.png',
+        'pictures/post/post-5-2-20250529T143000Z.png'
       ],
       createdAt: new Date('2025-05-29T14:30:00Z')
     },
@@ -227,8 +227,8 @@ Phân compost tự làm rẻ, sạch, cây trồng rất thích! Đã tiết ki�
 Ai quan tâm có thể hỏi thêm chi tiết nhé! #CompostTaiNha #TietKiem #XanhSach`,
       tags: ['composting', 'huu-co', 'tiet-kiem-nuoc', 'urban-farming', 'eco-friendly'],
       images: [
-        'post/post-6-1-20250526T160000Z.png',
-        'post/post-6-2-20250526T160000Z.png'
+        'pictures/post/post-6-1-20250526T160000Z.png',
+        'pictures/post/post-6-2-20250526T160000Z.png'
       ],
       createdAt: new Date('2025-05-26T16:00:00Z')
     },
@@ -257,8 +257,8 @@ Thêm phân tan chậm vào bình nước để vừa tưới vừa bón phân!
 Ai quan tâm mình có thể hướng dẫn chi tiết cách lắp đặt nhé! 🛠️`,
       tags: ['tiet-kiem-nuoc', 'urban-farming', 'hydroponic', 'watering'],
       images: [
-        'post/post-7-1-20250527T111500Z.png',
-        'post/post-7-2-20250527T111500Z.png'
+        'pictures/post/post-7-1-20250527T111500Z.png',
+        'pictures/post/post-7-2-20250527T111500Z.png'
       ],
       createdAt: new Date('2025-05-27T11:15:00Z')
     },
@@ -290,9 +290,9 @@ Cuối thu, đầu đông (tháng 10-12) - thời tiết mát mẻ, độ ẩm c
 Hiện tại mình đã có cả vườn hồng từ vài cành giâm ban đầu! 😊`,
       tags: ['hoa-canh', 'companion-planting', 'beginner-friendly', 'seedling'],
       images: [
-        'post/post-8-1-20250524T134500Z.png',
-        'post/post-8-2-20250524T134500Z.png',
-        'post/post-8-3-20250524T134500Z.png'
+        'pictures/post/post-8-1-20250524T134500Z.png',
+        'pictures/post/post-8-2-20250524T134500Z.png',
+        'pictures/post/post-8-3-20250524T134500Z.png'
       ],
       createdAt: new Date('2025-05-24T13:45:00Z')
     },
@@ -329,8 +329,8 @@ Con nhỏ nhà mình thích lắm, mỗi sáng chạy ra hái dâu ăn sáng! �
 Ai muốn thử trồng dâu tây thì inbox mình chia sẻ chi tiết nhé! 🍓`,
       tags: ['container-garden', 'harvest', 'beginner-friendly', 'organic'],
       images: [
-        'post/post-9-1-20250523T100000Z.png',
-        'post/post-9-2-20250523T100000Z.png'
+        'pictures/post/post-9-1-20250523T100000Z.png',
+        'pictures/post/post-9-2-20250523T100000Z.png'
       ],
       createdAt: new Date('2025-05-23T10:00:00Z')
     },
@@ -373,9 +373,9 @@ Hàng xóm ai cũng trầm trồ khen đẹp, nhiều người xin học cách t
 Mọi người có muốn thử tạo vườn cầu vồng riêng không? 🌈`,
       tags: ['san-thuong', 'container-garden', 'harvest', 'nang-suat-cao'],
       images: [
-        'post/post-10-1-20250522T140000Z.png',
-        'post/post-10-2-20250522T140000Z.png',
-        'post/post-10-3-20250522T140000Z.png'
+        'pictures/post/post-10-1-20250522T140000Z.png',
+        'pictures/post/post-10-2-20250522T140000Z.png',
+        'pictures/post/post-10-3-20250522T140000Z.png'
       ],
       createdAt: new Date('2025-05-22T14:00:00Z')
     },
@@ -434,8 +434,8 @@ Mọi người có muốn thử tạo vườn cầu vồng riêng không? 🌈`,
 Ai quan tâm thủy canh thì thử làm theo cách này nhé! Đơn giản mà hiệu quả! 🌿`,
       tags: ['hydroponic', 'urban-farming', 'beginner-friendly', 'tiet-kiem-nuoc'],
       images: [
-        'post/post-11-1-20250521T090000Z.png',
-        'post/post-11-2-20250521T090000Z.png'
+        'pictures/post/post-11-1-20250521T090000Z.png',
+        'pictures/post/post-11-2-20250521T090000Z.png'
       ],
       createdAt: new Date('2025-05-21T09:00:00Z')
     },
@@ -485,8 +485,8 @@ Ngồi ngắm hoa súng mỗi sáng với tách cà phê đã trở thành thói
 Ai muốn có góc thiền trong nhà thì hoa súng là lựa chọn tuyệt vời! 🧘‍♀️`,
       tags: ['hoa-canh', 'trong-nha', 'aquaponic', 'advanced'],
       images: [
-        'post/post-12-1-20250520T160000Z.png',
-        'post/post-12-2-20250520T160000Z.png'
+        'pictures/post/post-12-1-20250520T160000Z.png',
+        'pictures/post/post-12-2-20250520T160000Z.png'
       ],
       createdAt: new Date('2025-05-20T16:00:00Z')
     },
@@ -554,8 +554,8 @@ Ai muốn có góc thiền trong nhà thì hoa súng là lựa chọn tuyệt v�
 Đây là công thức mình research và thử nghiệm 1 năm mới dám chia sẻ! Hiệu quả thật sự bất ngờ! 🌿`,
       tags: ['natural-fertilizer', 'eco-friendly', 'composting', 'organic'],
       images: [
-        'post/post-13-1-20250519T110000Z.png',
-        'post/post-13-2-20250519T110000Z.png'
+        'pictures/post/post-13-1-20250519T110000Z.png',
+        'pictures/post/post-13-2-20250519T110000Z.png'
       ],
       createdAt: new Date('2025-05-19T11:00:00Z')
     },
@@ -657,9 +657,9 @@ Tháng tới mình sẽ:
 Ai quan tâm đến nông nghiệp sạch thì cùng trao đổi nhé! Mình sẵn sàng chia sẻ kinh nghiệm! 🌱`,
       tags: ['organic', 'advanced', 'sustainable', 'disease-prevention'],
       images: [
-        'post/post-14-1-20250518T130000Z.png',
-        'post/post-14-2-20250518T130000Z.png',
-        'post/post-14-3-20250518T130000Z.png'
+        'pictures/post/post-14-1-20250518T130000Z.png',
+        'pictures/post/post-14-2-20250518T130000Z.png',
+        'pictures/post/post-14-3-20250518T130000Z.png'
       ],
       createdAt: new Date('2025-05-18T13:00:00Z')
     },
@@ -768,8 +768,8 @@ Hoa đồng tiền là loài hoa "biết ơn" nhất mình từng trồng! Chăm
 Ai muốn có khu vườn đầy màu sắc mà không tốn công chăm sóc thì hoa đồng tiền là lựa chọn số 1! 🌻`,
       tags: ['hoa-canh', 'beginner-friendly', 'harvest', 'natural-fertilizer'],
       images: [
-        'post/post-15-1-20250517T150000Z.png',
-        'post/post-15-2-20250517T150000Z.png'
+        'pictures/post/post-15-1-20250517T150000Z.png',
+        'pictures/post/post-15-2-20250517T150000Z.png'
       ],
       createdAt: new Date('2025-05-17T15:00:00Z')
     },
@@ -869,9 +869,9 @@ Cá thải → Vi khuẩn phân hủy → Đạm NO3 → Rau hấp thu → Nư�
 Ai quan tâm đến aquaponics thì inbox mình nhé! 🌊`,
       tags: ['aquaponic', 'advanced', 'sustainable', 'nang-suat-cao'],
       images: [
-        'post/post-16-1-20250516T100000Z.png',
-        'post/post-16-2-20250516T100000Z.png',
-        'post/post-16-3-20250516T100000Z.png'
+        'pictures/post/post-16-1-20250516T100000Z.png',
+        'pictures/post/post-16-2-20250516T100000Z.png',
+        'pictures/post/post-16-3-20250516T100000Z.png'
       ],
       createdAt: new Date('2025-05-16T10:00:00Z')
     },
@@ -1017,8 +1017,8 @@ Ai quan tâm đến aquaponics thì inbox mình nhé! 🌊`,
 Ai muốn trồng cây ăn quả trong chậu thì ổi lùn là lựa chọn tuyệt vời! 🌳`,
       tags: ['container-garden', 'harvest', 'advanced', 'plant-care'],
       images: [
-        'post/post-17-1-20250515T140000Z.png',
-        'post/post-17-2-20250515T140000Z.png'
+        'pictures/post/post-17-1-20250515T140000Z.png',
+        'pictures/post/post-17-2-20250515T140000Z.png'
       ],
       createdAt: new Date('2025-05-15T14:00:00Z')
     },
@@ -1191,9 +1191,9 @@ Thích hợp nấu canh chua, lẩu thái
 Trồng nấm tại nhà vừa có thu nhập vừa đảm bảo thực phẩm sạch cho gia đình! 🍄💚`,
       tags: ['indoor-garden', 'advanced', 'harvest', 'sustainable'],
       images: [
-        'post/post-18-1-20250514T110000Z.png',
-        'post/post-18-2-20250514T110000Z.png',
-        'post/post-18-3-20250514T110000Z.png'
+        'pictures/post/post-18-1-20250514T110000Z.png',
+        'pictures/post/post-18-2-20250514T110000Z.png',
+        'pictures/post/post-18-3-20250514T110000Z.png'
       ],
       createdAt: new Date('2025-05-14T11:00:00Z')
     },
@@ -1354,8 +1354,8 @@ Trồng nấm tại nhà vừa có thu nhập vừa đảm bảo thực phẩm s
 Từ một hạt bơ "rác" thành cây xanh tuyệt đẹp! Ai cũng có thể làm được! 🌱💚`,
       tags: ['seedling', 'container-garden', 'beginner-friendly', 'plant-care'],
       images: [
-        'post/post-19-1-20250513T160000Z.png',
-        'post/post-19-2-20250513T160000Z.png'
+        'pictures/post/post-19-1-20250513T160000Z.png',
+        'pictures/post/post-19-2-20250513T160000Z.png'
       ],
       createdAt: new Date('2025-05-13T16:00:00Z')
     },
@@ -1499,9 +1499,9 @@ Từ một hạt bơ "rác" thành cây xanh tuyệt đẹp! Ai cũng có thể 
 Ai muốn có vườn mà nhà chật thì đây là giải pháp tuyệt vời! Vừa đẹp vừa hiệu quả! 🏠🌿`,
       tags: ['vertical-garden', 'urban-farming', 'beginner-friendly', 'tiet-kiem-nuoc'],
       images: [
-        'post/post-20-1-20250512T130000Z.png',
-        'post/post-20-2-20250512T130000Z.png',
-        'post/post-20-3-20250512T130000Z.png'
+        'pictures/post/post-20-1-20250512T130000Z.png',
+        'pictures/post/post-20-2-20250512T130000Z.png',
+        'pictures/post/post-20-3-20250512T130000Z.png'
       ],
       createdAt: new Date('2025-05-12T13:00:00Z')
     }

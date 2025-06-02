@@ -22,12 +22,12 @@ export class PrismaService
           url: config.get<string>('DATABASE_URL'),
         },
       },
-      log: [
-        { level: 'query', emit: 'stdout' },
-        { level: 'info', emit: 'stdout' },
-        { level: 'warn', emit: 'stdout' },
-        { level: 'error', emit: 'stdout' },
-      ],
+      // log: [
+      //   { level: 'query', emit: 'stdout' },
+      //   { level: 'info', emit: 'stdout' },
+      //   { level: 'warn', emit: 'stdout' },
+      //   { level: 'error', emit: 'stdout' },
+      // ],
       // You can enable other PrismaClientOptions here if needed
     });
   }
