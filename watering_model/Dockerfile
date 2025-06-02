@@ -37,11 +37,6 @@ RUN mkdir -p models
 
 COPY models/ ./models/
 
-# Create a non-root user for security
-RUN useradd -m -u 1000 appuser && \
-    chown -R appuser:appuser /app
-USER appuser
-
 # Expose port
 EXPOSE 5001
 
