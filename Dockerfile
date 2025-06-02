@@ -1,14 +1,14 @@
 FROM node:22-alpine
 
-# Install curl for health checks
-RUN apk add --no-cache curl && \
+# Install system dependencies including curl
+RUN apk add --no-cache curl python3 make g++ && \
     adduser -S app
 
 WORKDIR /app
 
-# Install dependencies
+# Install ALL dependencies first (including dev dependencies for build)
 COPY package*.json ./
-RUN npm ci --only=production && npm cache clean --force
+RUN npm ci
 
 # Generate Prisma
 COPY prisma ./prisma/
@@ -19,7 +19,10 @@ COPY . .
 RUN npm run build && \
     rm -rf src/ *.config.* tsconfig*.json nest-cli.json README.md
 
-# Ensure directories exist
+# Remove dev dependencies after build
+RUN npm ci --only=production && npm cache clean --force
+
+# Ensure directories exist and set permissions
 RUN mkdir -p pictures logs && \
     chown -R app /app
 

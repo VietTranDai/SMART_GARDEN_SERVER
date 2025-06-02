@@ -1,10 +1,8 @@
-version: '3.8'
-
 services:
   # Plant Disease Detection AI Service
   plant-disease-ai:
     build: 
-      context: ./predict_disease_model
+      context: ./predict_disease_model  # Cùng cấp với docker-compose.yml
       dockerfile: Dockerfile
     restart: always
     environment:
@@ -14,7 +12,8 @@ services:
       - FLASK_PORT=${PLANT_AI_PORT}
       - FLASK_DEBUG=${FLASK_DEBUG}
     volumes:
-      - ./predict_disease_model/model:/app/model:ro
+      - ./predict_disease_model/static:/app/static:ro
+      - ./predict_disease_model/templates:/app/templates:ro
       - ai_disease_logs:/app/logs
     expose:
       - "${PLANT_AI_PORT}"
@@ -30,10 +29,10 @@ services:
     networks:
       - smart-garden-network
 
-  # Smart Watering System AI Service
+  # Smart Watering System AI Service  
   smart-watering-ai:
     build: 
-      context: ./smart_watering_model
+      context: ./watering_model  # Sử dụng watering_model thay vì smart_watering_model
       dockerfile: Dockerfile
     restart: always
     environment:
@@ -43,7 +42,7 @@ services:
       - HOST=${FLASK_HOST}
       - DEBUG=${FLASK_DEBUG}
     volumes:
-      - ./smart_watering_model/models:/app/models:ro
+      - ./watering_model:/app:ro  # Mount toàn bộ watering_model
       - ai_watering_logs:/app/logs
     expose:
       - "${WATERING_AI_PORT}"
@@ -62,7 +61,7 @@ services:
   # Main NestJS Server
   smart-garden-server:
     build: 
-      context: .
+      context: .  # Thư mục hiện tại (smart_garden_server/)
       dockerfile: Dockerfile
     restart: always
     depends_on:
@@ -71,7 +70,7 @@ services:
       smart-watering-ai:
         condition: service_healthy
     ports:
-      - '${EXTERNAL_PORT}:${APP_PORT}'
+      - '${EXTERNAL_PORT}:${PORT}'
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - PLANT_DISEASE_AI_URL=http://plant-disease-ai:${PLANT_AI_PORT}
@@ -80,14 +79,21 @@ services:
       - PLANT_DISEASE_DETECTION_ENABLED=${PLANT_DISEASE_DETECTION_ENABLED}
       - SMART_WATERING_ENABLED=${SMART_WATERING_ENABLED}
       - NODE_ENV=${NODE_ENV}
-      - PORT=${APP_PORT}
+      - PORT=${PORT}
+      - JWT_ACCESS_TOKEN_SECRET=${JWT_ACCESS_TOKEN_SECRET}
+      - JWT_REFRESH_TOKEN_SECRET=${JWT_REFRESH_TOKEN_SECRET}
+      - JWT_ACCESS_TOKEN_EXPIRES_IN=${JWT_ACCESS_TOKEN_EXPIRES_IN}
+      - JWT_REFRESH_TOKEN_EXPIRES_IN=${JWT_REFRESH_TOKEN_EXPIRES_IN}
+      - GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY}
+      - WEATHER_API_KEY=${WEATHER_API_KEY}
     volumes:
       - app_logs:/usr/src/app/logs
+      - ./pictures:/usr/src/app/pictures  # Mount pictures folder
     labels:
       - app=smart-garden-server
       - service=main-api
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:${APP_PORT}/v1/health/liveness || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:${PORT}/v1/health/liveness || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
