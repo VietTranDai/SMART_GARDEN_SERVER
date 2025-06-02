@@ -16,10 +16,10 @@ import {
   ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
-import { WateringScheduleService } from './watering-schedule.service';
-import { GetUser } from '../../../common/decorators/get-user.decorator';
-import { CreateWateringScheduleDto } from './dto/watering-schedule.dto';
-import { WateringScheduleDto, mapToWateringScheduleDto } from './dto/watering-schedule.dto';
+import { WateringScheduleService } from '../service/watering-schedule.service';
+import { GetUser } from '../../../../common/decorators/get-user.decorator';
+import { CreateWateringScheduleDto } from '../dto/watering-schedule.dto';
+import { WateringScheduleDto, mapToWateringScheduleDto } from '../dto/watering-schedule.dto';
 
 @ApiTags('WateringSchedule')
 @Controller('watering-schedules')

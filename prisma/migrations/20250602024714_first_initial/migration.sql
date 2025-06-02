@@ -8,7 +8,7 @@ CREATE TYPE "GardenType" AS ENUM ('INDOOR', 'OUTDOOR', 'BALCONY', 'ROOFTOP', 'WI
 CREATE TYPE "SensorType" AS ENUM ('HUMIDITY', 'TEMPERATURE', 'LIGHT', 'WATER_LEVEL', 'RAINFALL', 'SOIL_MOISTURE', 'SOIL_PH');
 
 -- CreateEnum
-CREATE TYPE "SensorUnit" AS ENUM ('PERCENT', 'CELSIUS', 'LUX', 'METER', 'MILLIMETER', 'PH');
+CREATE TYPE "SensorUnit" AS ENUM ('PERCENT', 'CELSIUS', 'LUX', 'METER', 'MILLIMETER', 'PH', 'LITER');
 
 -- CreateEnum
 CREATE TYPE "TaskStatus" AS ENUM ('PENDING', 'COMPLETED', 'SKIPPED');
@@ -175,7 +175,6 @@ CREATE TABLE "Task" (
     "status" "TaskStatus" NOT NULL DEFAULT 'PENDING',
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "wateringScheduleId" INTEGER,
     "completedAt" TIMESTAMP(3),
 
     CONSTRAINT "Task_pkey" PRIMARY KEY ("id")
@@ -237,8 +236,10 @@ CREATE TABLE "ActivityEvaluation" (
 CREATE TABLE "WateringSchedule" (
     "id" SERIAL NOT NULL,
     "gardenId" INTEGER NOT NULL,
+    "gardenActivityId" INTEGER,
     "scheduledAt" TIMESTAMP(3) NOT NULL,
     "amount" DOUBLE PRECISION,
+    "reason" TEXT,
     "status" TEXT NOT NULL DEFAULT 'PENDING',
     "notes" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -251,7 +252,9 @@ CREATE TABLE "WateringSchedule" (
 CREATE TABLE "PhotoEvaluation" (
     "id" SERIAL NOT NULL,
     "taskId" INTEGER NOT NULL,
+    "gardenId" INTEGER NOT NULL,
     "gardenerId" INTEGER NOT NULL,
+    "gardenActivityId" INTEGER,
     "plantName" TEXT,
     "plantGrowStage" TEXT,
     "photoUrl" TEXT NOT NULL,
@@ -305,10 +308,10 @@ CREATE TABLE "GrowthStage" (
     "optimalHumidityMax" DOUBLE PRECISION NOT NULL,
     "optimalSoilMoistureMin" DOUBLE PRECISION NOT NULL,
     "optimalSoilMoistureMax" DOUBLE PRECISION NOT NULL,
-    "optimalPHMin" DOUBLE PRECISION,
-    "optimalPHMax" DOUBLE PRECISION,
-    "optimalLightMin" DOUBLE PRECISION,
-    "optimalLightMax" DOUBLE PRECISION,
+    "optimalPHMin" DOUBLE PRECISION NOT NULL,
+    "optimalPHMax" DOUBLE PRECISION NOT NULL,
+    "optimalLightMin" DOUBLE PRECISION NOT NULL,
+    "optimalLightMax" DOUBLE PRECISION NOT NULL,
     "lightRequirement" TEXT,
     "waterRequirement" TEXT,
     "nutrientRequirement" TEXT,
@@ -531,7 +534,8 @@ CREATE TABLE "Vote" (
     "id" SERIAL NOT NULL,
     "gardenerId" INTEGER NOT NULL,
     "targetType" "VoteTargetType" NOT NULL,
-    "targetId" INTEGER NOT NULL,
+    "postId" INTEGER,
+    "commentId" INTEGER,
     "voteValue" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -659,12 +663,6 @@ CREATE INDEX "Comment_parentId_idx" ON "Comment"("parentId");
 CREATE UNIQUE INDEX "Tag_name_key" ON "Tag"("name");
 
 -- CreateIndex
-CREATE INDEX "Vote_targetType_targetId_idx" ON "Vote"("targetType", "targetId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Vote_gardenerId_targetType_targetId_key" ON "Vote"("gardenerId", "targetType", "targetId");
-
--- CreateIndex
 CREATE INDEX "Follow_followerId_idx" ON "Follow"("followerId");
 
 -- CreateIndex
@@ -704,9 +702,6 @@ ALTER TABLE "Task" ADD CONSTRAINT "Task_gardenerId_fkey" FOREIGN KEY ("gardenerI
 ALTER TABLE "Task" ADD CONSTRAINT "Task_gardenId_fkey" FOREIGN KEY ("gardenId") REFERENCES "Garden"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Task" ADD CONSTRAINT "Task_wateringScheduleId_fkey" FOREIGN KEY ("wateringScheduleId") REFERENCES "WateringSchedule"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "GardenActivity" ADD CONSTRAINT "GardenActivity_gardenId_fkey" FOREIGN KEY ("gardenId") REFERENCES "Garden"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
@@ -728,10 +723,16 @@ ALTER TABLE "ActivityEvaluation" ADD CONSTRAINT "ActivityEvaluation_userId_fkey"
 ALTER TABLE "WateringSchedule" ADD CONSTRAINT "WateringSchedule_gardenId_fkey" FOREIGN KEY ("gardenId") REFERENCES "Garden"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "PhotoEvaluation" ADD CONSTRAINT "PhotoEvaluation_taskId_fkey" FOREIGN KEY ("taskId") REFERENCES "Task"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "WateringSchedule" ADD CONSTRAINT "WateringSchedule_gardenActivityId_fkey" FOREIGN KEY ("gardenActivityId") REFERENCES "GardenActivity"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PhotoEvaluation" ADD CONSTRAINT "PhotoEvaluation_gardenId_fkey" FOREIGN KEY ("gardenId") REFERENCES "Garden"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "PhotoEvaluation" ADD CONSTRAINT "PhotoEvaluation_gardenerId_fkey" FOREIGN KEY ("gardenerId") REFERENCES "Gardener"("userId") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "PhotoEvaluation" ADD CONSTRAINT "PhotoEvaluation_gardenActivityId_fkey" FOREIGN KEY ("gardenActivityId") REFERENCES "GardenActivity"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Plant" ADD CONSTRAINT "Plant_plantTypeId_fkey" FOREIGN KEY ("plantTypeId") REFERENCES "PlantType"("id") ON DELETE SET NULL ON UPDATE CASCADE;
@@ -797,10 +798,10 @@ ALTER TABLE "PostTag" ADD CONSTRAINT "PostTag_tagId_fkey" FOREIGN KEY ("tagId") 
 ALTER TABLE "Vote" ADD CONSTRAINT "Vote_gardenerId_fkey" FOREIGN KEY ("gardenerId") REFERENCES "Gardener"("userId") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Vote" ADD CONSTRAINT "Vote_Post_targetId_fkey" FOREIGN KEY ("targetId") REFERENCES "Post"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Vote" ADD CONSTRAINT "Vote_postId_fkey" FOREIGN KEY ("postId") REFERENCES "Post"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Vote" ADD CONSTRAINT "Vote_Comment_targetId_fkey" FOREIGN KEY ("targetId") REFERENCES "Comment"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Vote" ADD CONSTRAINT "Vote_commentId_fkey" FOREIGN KEY ("commentId") REFERENCES "Comment"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "PostImage" ADD CONSTRAINT "PostImage_postId_fkey" FOREIGN KEY ("postId") REFERENCES "Post"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

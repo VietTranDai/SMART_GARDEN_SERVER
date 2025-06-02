@@ -16,7 +16,6 @@ export async function seedSocialNetwork(prisma: PrismaClient): Promise<void> {
     throw new Error('Chưa có garden nào. Vui lòng chạy seedGardens trước.');
   }
 
-  await prisma.$transaction(async (tx) => {
       // 1. Seed Tags
   const tagsData = [
     'rau-sach', 'hoa-canh', 'cay-thuoc', 'gia-vi', 'thao-moc',
@@ -2401,7 +2400,7 @@ for (const followData of validFollows) {
 }
 
 console.log(`✅ Đã seed ${validFollows.length} follow relationships.`);
-  })
+
 
   console.log(`
     🎉 Seed Social Network hoàn thành!

@@ -1,3 +1,7 @@
+# Build và chạy bằng Docker
+docker build -t watering-system .
+docker run -d --name smart-watering-system -p 5001:5001 -v ./models:/app/models watering-system
+
 # Smart Plant Watering System
 
 A machine learning-based system that automatically decides when to water plants and how much water to provide based on environmental sensor data.
@@ -114,3 +118,158 @@ This watering decision service is designed to be integrated into larger IoT syst
 - Support for additional sensors (humidity, rain detection, etc.)
 - Plant-specific watering profiles
 - Seasonal adjustment capabilities
+
+# Watering Decision Model API
+
+## Mô tả
+API tích hợp AI model để đưa ra quyết định tưới nước thông minh dựa trên dữ liệu cảm biến.
+
+## Endpoints
+
+### 1. Lấy quyết định tưới nước cho vườn
+```
+GET /watering-decision/garden/{gardenId}
+```
+
+**Mô tả**: Lấy dữ liệu cảm biến mới nhất của vườn và gửi đến AI model để nhận quyết định tưới nước.
+
+**Parameters**:
+- `gardenId` (path): ID của vườn
+
+**Response**:
+```json
+{
+  "decision": "water_now",
+  "confidence": 85.3,
+  "reasons": ["Độ ẩm đất thấp", "Nhiệt độ cao"],
+  "recommended_amount": 2.5,
+  "sensor_data": {
+    "soil_moisture": 35.5,
+    "air_humidity": 65.2,
+    "temperature": 28.3,
+    "light_intensity": 15000
+  },
+  "timestamp": "2024-01-15T10:30:00Z"
+}
+```
+
+### 2. Tạo quyết định với dữ liệu tùy chỉnh
+```
+POST /watering-decision/garden/{gardenId}/custom
+```
+
+**Request Body**:
+```json
+{
+  "sensorData": {
+    "soil_moisture": 40.0,
+    "air_humidity": 70.0,
+    "temperature": 25.0,
+    "light_intensity": 12000
+  },
+  "notes": "Kiểm tra thủ công"
+}
+```
+
+### 3. Thống kê quyết định tưới nước
+```
+GET /watering-decision/garden/{gardenId}/stats?days=7
+```
+
+**Parameters**:
+- `gardenId` (path): ID của vườn
+- `days` (query, optional): Số ngày thống kê (mặc định: 7)
+
+**Response**:
+```json
+{
+  "gardenId": 1,
+  "totalDecisions": 45,
+  "waterRecommendations": 20,
+  "noWaterRecommendations": 25,
+  "averageConfidence": 78.5,
+  "averageWaterAmount": 2.8,
+  "fromDate": "2024-01-08T00:00:00Z",
+  "toDate": "2024-01-15T23:59:59Z"
+}
+```
+
+### 4. Kiểm tra kết nối AI model
+```
+GET /watering-decision/test-ai
+```
+
+## AI Model Integration
+
+### Model URL
+- Default: `http://localhost:5001`
+- Endpoint: `/watering/decision`
+
+### Model Input Format
+```json
+{
+  "sensor_data": {
+    "soil_moisture": 35.5,
+    "air_humidity": 65.2,
+    "temperature": 28.3,
+    "light_intensity": 15000
+  }
+}
+```
+
+### Model Output Format
+```json
+{
+  "decision": "water_now",
+  "confidence": 85.3,
+  "reasons": ["Độ ẩm đất thấp", "Nhiệt độ cao"],
+  "recommended_amount": 2.5
+}
+```
+
+## Sensor Types Required
+- `SOIL_MOISTURE`: Độ ẩm đất (0-100%)
+- `AIR_HUMIDITY`: Độ ẩm không khí (0-100%)  
+- `TEMPERATURE`: Nhiệt độ (-50 to 70°C)
+- `LIGHT_INTENSITY`: Cường độ ánh sáng (0-200000 lux)
+
+## Error Handling
+- 400: Dữ liệu đầu vào không hợp lệ
+- 403: Không có quyền truy cập vườn
+- 404: Không tìm thấy vườn/dữ liệu cảm biến
+- 500: Lỗi AI model hoặc server nội bộ
+
+## Usage Example
+
+### 1. Khởi động AI Model
+```bash
+cd watering_model
+python app.py
+```
+
+### 2. Gọi API từ frontend
+```javascript
+// Lấy quyết định tưới nước
+const response = await fetch('/api/watering-decision/garden/1', {
+  headers: { 'Authorization': `Bearer ${token}` }
+});
+const decision = await response.json();
+
+if (decision.decision === 'water_now') {
+  console.log(`Cần tưới ${decision.recommended_amount} lít`);
+  console.log('Lý do:', decision.reasons.join(', '));
+}
+```
+
+### 3. Tự động tạo lịch tưới
+```javascript
+// Kết hợp với watering schedule API
+const decision = await getWateringDecision(gardenId);
+if (decision.decision === 'water_now') {
+  await createWateringSchedule(gardenId, {
+    scheduledAt: new Date(),
+    amount: decision.recommended_amount,
+    notes: `AI: ${decision.reasons.join(', ')}`
+  });
+}
+```

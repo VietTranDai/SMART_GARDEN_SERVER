@@ -1,8 +1,7 @@
 import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
-import { CreateWateringScheduleDto } from './dto/watering-schedule.dto';
-import { TaskStatus } from '@prisma/client';
 import { subDays, addDays, startOfDay, endOfDay } from 'date-fns';
-import { PrismaService } from '../../../prisma/prisma.service';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { CreateWateringScheduleDto } from '../dto/watering-schedule.dto';
 
 @Injectable()
 export class WateringScheduleService {

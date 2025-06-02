@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Watering System Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation Header -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-seedling"></i>
+                <span>Smart Watering System</span>
+            </div>
+            <div class="nav-info">
+                <span class="user-info">
+                    <i class="fas fa-user"></i>
+                    Welcome, VietTranDai
+                </span>
+                <span class="time-info">
+                    <i class="fas fa-clock"></i>
+                    <span id="current-time"></span>
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Dashboard -->
+    <div class="dashboard">
+        <!-- System Status Cards -->
+        <div class="status-grid">
+            <div class="status-card" id="system-status">
+                <div class="status-header">
+                    <i class="fas fa-server"></i>
+                    <h3>System Status</h3>
+                </div>
+                <div class="status-content">
+                    <div class="status-indicator" id="status-dot"></div>
+                    <span id="status-text" class="status-text">Checking...</span>
+                </div>
+                <div class="status-details" id="status-details">Click Health Check to verify system status</div>
+            </div>
+
+            <div class="status-card">
+                <div class="status-header">
+                    <i class="fas fa-brain"></i>
+                    <h3>AI Models</h3>
+                </div>
+                <div class="status-content">
+                    <div class="model-status">
+                        <div class="model-item">
+                            <span class="model-label">Decision Model:</span>
+                            <span id="decision-model-status" class="model-value">Loading...</span>
+                        </div>
+                        <div class="model-item">
+                            <span class="model-label">Amount Model:</span>
+                            <span id="amount-model-status" class="model-value">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="status-card">
+                <div class="status-header">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>Last Decision</h3>
+                </div>
+                <div class="status-content">
+                    <div id="last-decision" class="last-decision">
+                        <span class="decision-result">No decisions yet</span>
+                        <small class="decision-time">Run a test to see results</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <button class="action-btn primary" onclick="checkHealth()">
+                    <i class="fas fa-heartbeat"></i>
+                    <span>Health Check</span>
+                </button>
+                <button class="action-btn secondary" onclick="fillRandomData()">
+                    <i class="fas fa-dice"></i>
+                    <span>Random Data</span>
+                </button>
+                <button class="action-btn danger" onclick="clearAll()">
+                    <i class="fas fa-eraser"></i>
+                    <span>Clear All</span>
+                </button>
+            </div>
+
+            <!-- API Testing Section -->
+            <div class="api-section">
+                <div class="section-header">
+                    <h2><i class="fas fa-flask"></i> API Testing Dashboard</h2>
+                    <div class="section-tabs">
+                        <button class="tab-btn active" onclick="switchTab('health')">
+                            <i class="fas fa-heartbeat"></i>
+                            Health Check
+                        </button>
+                        <button class="tab-btn" onclick="switchTab('decision')">
+                            <i class="fas fa-tint"></i>
+                            Watering Decision
+                        </button>
+                        <button class="tab-btn" onclick="switchTab('history')">
+                            <i class="fas fa-history"></i>
+                            History
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Health Check Tab -->
+                <div class="tab-content active" id="health-tab">
+                    <div class="endpoint-card">
+                        <div class="endpoint-header">
+                            <div class="endpoint-info">
+                                <span class="method get">GET</span>
+                                <span class="endpoint-url">/health</span>
+                            </div>
+                            <div class="endpoint-actions">
+                                <button class="test-btn" onclick="checkHealth()">
+                                    <i class="fas fa-play"></i>
+                                    Test Endpoint
+                                </button>
+                            </div>
+                        </div>
+                        <div class="endpoint-description">
+                            <div class="description-content">
+                                <i class="fas fa-info-circle"></i>
+                                <p>Check the health status of the watering system service and verify that AI models are loaded correctly.</p>
+                            </div>
+                        </div>
+                        <div class="loading-overlay" id="health-loading">
+                            <div class="spinner"></div>
+                            <span>Checking service health...</span>
+                        </div>
+                        <div class="result-container">
+                            <div class="result-header">
+                                <span class="result-title">
+                                    <i class="fas fa-terminal"></i>
+                                    Response
+                                </span>
+                                <div class="result-actions">
+                                    <button class="copy-btn" onclick="copyResult('health-result')" title="Copy to clipboard">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="health-result" class="result-content info">
+                                Click "Test Endpoint" to check service health
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Watering Decision Tab -->
+                <div class="tab-content" id="decision-tab">
+                    <div class="endpoint-card">
+                        <div class="endpoint-header">
+                            <div class="endpoint-info">
+                                <span class="method post">POST</span>
+                                <span class="endpoint-url">/watering/decision</span>
+                            </div>
+                            <div class="endpoint-actions">
+                                <button class="test-btn" onclick="getWateringDecision()">
+                                    <i class="fas fa-play"></i>
+                                    Test Endpoint
+                                </button>
+                            </div>
+                        </div>
+                        <div class="endpoint-description">
+                            <div class="description-content">
+                                <i class="fas fa-brain"></i>
+                                <p>Get intelligent watering recommendations based on real-time sensor data and environmental conditions.</p>
+                            </div>
+                        </div>
+
+                        <!-- Sensor Data Form -->
+                        <div class="form-container">
+                            <div class="form-header">
+                                <h3><i class="fas fa-sliders-h"></i> Sensor Data Configuration</h3>
+                                <p class="form-subtitle">Configure your sensor readings to get AI-powered watering recommendations</p>
+                            </div>
+                            
+                            <form id="decision-form">
+                                <div class="form-grid">
+                                    <!-- Soil Moisture -->
+                                    <div class="form-section">
+                                        <div class="section-header-icon">
+                                            <i class="fas fa-seedling"></i>
+                                            <h4>Soil Conditions</h4>
+                                        </div>
+                                        <div class="input-group">
+                                            <label for="soil1">Soil Moisture Sensor 1 (%)</label>
+                                            <div class="input-wrapper">
+                                                <input type="number" id="soil1" name="soil_moisture_1(%)" 
+                                                       step="0.1" min="0" max="100" value="35.0" required>
+                                                <div class="input-slider">
+                                                    <input type="range" min="0" max="100" value="35" 
+                                                           oninput="updateInput('soil1', this.value)">
+                                                </div>
+                                                <div class="input-info">0% (Dry) - 100% (Saturated)</div>
+                                            </div>
+                                        </div>
+                                        <div class="input-group">
+                                            <label for="soil2">Soil Moisture Sensor 2 (%)</label>
+                                            <div class="input-wrapper">
+                                                <input type="number" id="soil2" name="soil_moisture_2(%)" 
+                                                       step="0.1" min="0" max="100" value="35.0" required>
+                                                <div class="input-slider">
+                                                    <input type="range" min="0" max="100" value="35" 
+                                                           oninput="updateInput('soil2', this.value)">
+                                                </div>
+                                                <div class="input-info">0% (Dry) - 100% (Saturated)</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Environmental -->
+                                    <div class="form-section">
+                                        <div class="section-header-icon">
+                                            <i class="fas fa-thermometer-half"></i>
+                                            <h4>Environmental</h4>
+                                        </div>
+                                        <div class="input-group">
+                                            <label for="temp">Temperature (°C)</label>
+                                            <div class="input-wrapper">
+                                                <input type="number" id="temp" name="temperature(°C)" 
+                                                       step="0.1" min="-10" max="50" value="25.0" required>
+                                                <div class="input-slider">
+                                                    <input type="range" min="-10" max="50" value="25" 
+                                                           oninput="updateInput('temp', this.value)">
+                                                </div>
+                                                <div class="input-info">-10°C (Freezing) - 50°C (Very Hot)</div>
+                                            </div>
+                                        </div>
+                                        <div class="input-group">
+                                            <label for="light">Light Level (lux)</label>
+                                            <div class="input-wrapper">
+                                                <input type="number" id="light" name="light_level(lux)" 
+                                                       step="1" min="0" max="10000" value="1500" required>
+                                                <div class="input-slider">
+                                                    <input type="range" min="0" max="10000" value="1500" 
+                                                           oninput="updateInput('light', this.value)">
+                                                </div>
+                                                <div class="input-info">0 (Dark) - 10000 (Bright Sunlight)</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- System Status -->
+                                    <div class="form-section">
+                                        <div class="section-header-icon">
+                                            <i class="fas fa-cog"></i>
+                                            <h4>System Status</h4>
+                                        </div>
+                                        <div class="input-group">
+                                            <label for="water">Water Tank Level (%)</label>
+                                            <div class="input-wrapper">
+                                                <input type="number" id="water" name="water_level(%)" 
+                                                       step="0.1" min="0" max="100" value="80.0" required>
+                                                <div class="input-slider">
+                                                    <input type="range" min="0" max="100" value="80" 
+                                                           oninput="updateInput('water', this.value)">
+                                                </div>
+                                                <div class="input-info">0% (Empty) - 100% (Full)</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Time Settings -->
+                                    <div class="form-section">
+                                        <div class="section-header-icon">
+                                            <i class="fas fa-clock"></i>
+                                            <h4>Time Settings</h4>
+                                        </div>
+                                        <div class="input-group">
+                                            <label for="hour">Hour (0-23)</label>
+                                            <div class="input-wrapper">
+                                                <input type="number" id="hour" name="hour" 
+                                                       min="0" max="23" value="10" required>
+                                                <div class="input-slider">
+                                                    <input type="range" min="0" max="23" value="10" 
+                                                           oninput="updateInput('hour', this.value)">
+                                                </div>
+                                                <div class="input-info">0 (Midnight) - 23 (11 PM)</div>
+                                            </div>
+                                        </div>
+                                        <div class="input-group">
+                                            <label for="day">Day of Week</label>
+                                            <div class="select-wrapper">
+                                                <select id="day" name="day_of_week" required>
+                                                    <option value="0">Monday</option>
+                                                    <option value="1">Tuesday</option>
+                                                    <option value="2" selected>Wednesday</option>
+                                                    <option value="3">Thursday</option>
+                                                    <option value="4">Friday</option>
+                                                    <option value="5">Saturday</option>
+                                                    <option value="6">Sunday</option>
+                                                </select>
+                                                <i class="fas fa-chevron-down select-icon"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Preset Scenarios -->
+                                <div class="preset-scenarios">
+                                    <div class="scenarios-header">
+                                        <h4><i class="fas fa-magic"></i> Quick Scenarios</h4>
+                                        <p>Load predefined sensor configurations for common conditions</p>
+                                    </div>
+                                    <div class="scenario-buttons">
+                                        <button type="button" class="scenario-btn dry" onclick="loadScenario('dry')">
+                                            <i class="fas fa-sun"></i>
+                                            <span class="scenario-title">Dry Conditions</span>
+                                            <span class="scenario-desc">Low moisture, high temperature</span>
+                                        </button>
+                                        <button type="button" class="scenario-btn wet" onclick="loadScenario('wet')">
+                                            <i class="fas fa-cloud-rain"></i>
+                                            <span class="scenario-title">Wet Conditions</span>
+                                            <span class="scenario-desc">High moisture, cool weather</span>
+                                        </button>
+                                        <button type="button" class="scenario-btn hot" onclick="loadScenario('hot')">
+                                            <i class="fas fa-fire"></i>
+                                            <span class="scenario-title">Hot Weather</span>
+                                            <span class="scenario-desc">High temperature, bright sun</span>
+                                        </button>
+                                        <button type="button" class="scenario-btn night" onclick="loadScenario('night')">
+                                            <i class="fas fa-moon"></i>
+                                            <span class="scenario-title">Night Time</span>
+                                            <span class="scenario-desc">No light, cooler conditions</span>
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="loading-overlay" id="decision-loading">
+                            <div class="spinner"></div>
+                            <span>Processing sensor data...</span>
+                        </div>
+
+                        <div class="result-container">
+                            <div class="result-header">
+                                <span class="result-title">
+                                    <i class="fas fa-brain"></i>
+                                    AI Decision Result
+                                </span>
+                                <div class="result-actions">
+                                    <button class="copy-btn" onclick="copyResult('decision-result')" title="Copy to clipboard">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="decision-result" class="result-content info">
+                                Configure sensor data and click "Test Endpoint" to get watering recommendations
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- History Tab -->
+                <div class="tab-content" id="history-tab">
+                    <div class="endpoint-card">
+                        <div class="endpoint-header">
+                            <div class="endpoint-info">
+                                <h3><i class="fas fa-history"></i> Request History</h3>
+                            </div>
+                            <div class="endpoint-actions">
+                                <button class="test-btn danger" onclick="clearHistory()">
+                                    <i class="fas fa-trash"></i>
+                                    Clear History
+                                </button>
+                            </div>
+                        </div>
+                        <div class="history-container">
+                            <div id="history-list" class="history-list">
+                                <div class="empty-history">
+                                    <i class="fas fa-inbox"></i>
+                                    <h4>No API requests made yet</h4>
+                                    <p>Start testing endpoints to see request history here</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-left">
+                <p>&copy; 2025 Smart Watering System. Built with ❤️ for VietTranDai</p>
+            </div>
+            <div class="footer-right">
+                <p>Last updated: <span id="last-updated"></span></p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

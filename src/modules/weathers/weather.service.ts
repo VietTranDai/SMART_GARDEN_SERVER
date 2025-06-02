@@ -40,6 +40,50 @@ interface WeatherServiceCache {
   dailyForecast: Record<number, GenericCacheEntry<DailyForecast[]>>;
 }
 
+// Define types for batch operations (without Prisma connect objects)
+interface HourlyForecastBatch {
+  gardenId: number;
+  forecastFor: Date;
+  forecastedAt: Date;
+  temp: number;
+  feelsLike: number;
+  pressure: number;
+  humidity: number;
+  clouds: number;
+  visibility: number;
+  pop: number;
+  windSpeed: number;
+  windDeg: number;
+  windGust: number | null;
+  rain1h: number | null;
+  snow1h: number | null;
+  weatherMain: WeatherMain;
+  weatherDesc: string;
+  iconCode: string;
+}
+
+interface DailyForecastBatch {
+  gardenId: number;
+  forecastFor: Date;
+  forecastedAt: Date;
+  tempDay: number;
+  tempMin: number;
+  tempMax: number;
+  tempNight: number;
+  feelsLikeDay: number;
+  pressure: number;
+  humidity: number;
+  clouds: number;
+  pop: number;
+  windSpeed: number;
+  windDeg: number;
+  windGust: number | null;
+  rain: number | null;
+  weatherMain: WeatherMain;
+  weatherDesc: string;
+  iconCode: string;
+}
+
 @Injectable()
 export class WeatherService implements OnModuleInit {
   private readonly logger = new Logger(WeatherService.name);
@@ -158,6 +202,62 @@ export class WeatherService implements OnModuleInit {
     };
   }
 
+  private processHourlyBatch(
+    garden: Garden,
+    list: HourlyForecastApiResponse['list'],
+  ): HourlyForecastBatch[] {
+    const now = new Date();
+    return list.map((h) => ({
+      gardenId: garden.id,
+      forecastFor: new Date(h.dt * 1000),
+      forecastedAt: now,
+      temp: h.main.temp,
+      feelsLike: h.main.feels_like,
+      pressure: h.main.pressure,
+      humidity: h.main.humidity,
+      clouds: h.clouds.all,
+      visibility: h.visibility,
+      pop: h.pop,
+      windSpeed: h.wind.speed,
+      windDeg: h.wind.deg,
+      windGust: h.wind.gust ?? null,
+      rain1h: h.rain?.['1h'] ?? null,
+      snow1h: h.snow?.['1h'] ?? null,
+      weatherMain: mapWeatherCodeToEnum(h.weather[0].id),
+      weatherDesc: h.weather[0].description,
+      iconCode: h.weather[0].icon,
+    }));
+  }
+
+  private processDailyBatch(
+    garden: Garden,
+    list: DailyForecastApiResponse['list'],
+  ): DailyForecastBatch[] {
+    const now = new Date();
+    return list.map((d) => ({
+      gardenId: garden.id,
+      forecastFor: new Date(d.dt * 1000),
+      forecastedAt: now,
+      tempDay: d.temp.day,
+      tempMin: d.temp.min,
+      tempMax: d.temp.max,
+      tempNight: d.temp.night,
+      feelsLikeDay: d.feels_like.day,
+      pressure: d.pressure,
+      humidity: d.humidity,
+      clouds: d.clouds,
+      pop: d.pop,
+      windSpeed: d.speed,
+      windDeg: d.deg,
+      windGust: d.gust ?? null,
+      rain: d.rain ?? null,
+      weatherMain: mapWeatherCodeToEnum(d.weather[0].id),
+      weatherDesc: d.weather[0].description,
+      iconCode: d.weather[0].icon,
+    }));
+  }
+
+  // Keep original methods for backward compatibility (if needed elsewhere)
   private processHourly(
     garden: Garden,
     list: HourlyForecastApiResponse['list'],
@@ -252,53 +352,85 @@ export class WeatherService implements OnModuleInit {
   }
 
   /**
-   * Update weather for one garden.
+   * Update weather for one garden using efficient batch operations.
    * Returns true on success, false otherwise.
    */
   public async updateWeatherForGarden(garden: Garden): Promise<boolean> {
     if (!garden.lat || !garden.lng) return false;
+    
+    const startTime = Date.now();
+    this.logger.debug(`Starting weather update for garden ${garden.id}`);
+    
     try {
+      // Fetch all weather data in parallel
       const [current, hourly, daily] = await Promise.all([
         this.fetchCurrent(garden.lat, garden.lng),
         this.fetchHourly(garden.lat, garden.lng),
         this.fetchDaily(garden.lat, garden.lng),
       ]);
 
+      // Process all data for batch operations
       const obs = this.processCurrent(garden, current);
-      const hf = this.processHourly(garden, hourly.list);
-      const df = this.processDaily(garden, daily.list);
+      const hf = this.processHourlyBatch(garden, hourly.list);
+      const df = this.processDailyBatch(garden, daily.list);
 
+      this.logger.debug(
+        `Garden ${garden.id}: Processing ${hf.length} hourly + ${df.length} daily forecasts using batch operations`,
+      );
+
+      // Execute efficient batch transaction
       await this.prisma.$transaction(async (tx) => {
+        // Create weather observation first
         await tx.weatherObservation.create({ data: obs });
-        for (const entry of hf) {
-          await tx.hourlyForecast.upsert({
+        
+        // Delete existing forecasts for the same time periods
+        const hourlyForecastTimes = hf.map(entry => entry.forecastFor);
+        const dailyForecastTimes = df.map(entry => entry.forecastFor);
+
+        // Batch delete existing forecasts
+        await Promise.all([
+          tx.hourlyForecast.deleteMany({
             where: {
-              gardenId_forecastFor: {
-                gardenId: garden.id,
-                forecastFor: entry.forecastFor,
-              },
+              gardenId: garden.id,
+              forecastFor: { in: hourlyForecastTimes },
             },
-            update: entry,
-            create: entry,
-          });
-        }
-        for (const entry of df) {
-          await tx.dailyForecast.upsert({
+          }),
+          tx.dailyForecast.deleteMany({
             where: {
-              gardenId_forecastFor: {
-                gardenId: garden.id,
-                forecastFor: entry.forecastFor,
-              },
+              gardenId: garden.id,
+              forecastFor: { in: dailyForecastTimes },
             },
-            update: entry,
-            create: entry,
-          });
-        }
+          }),
+        ]);
+
+        // Batch create new forecasts - much more efficient than individual upserts
+        await Promise.all([
+          tx.hourlyForecast.createMany({ 
+            data: hf,
+            skipDuplicates: true, // Extra safety
+          }),
+          tx.dailyForecast.createMany({ 
+            data: df,
+            skipDuplicates: true, // Extra safety
+          }),
+        ]);
+      }, {
+        timeout: 30000, // Increase timeout to 30 seconds for safety
+        maxWait: 35000, // Maximum wait time
       });
+
+      const duration = Date.now() - startTime;
+      this.logger.debug(
+        `Garden ${garden.id} weather update completed successfully in ${duration}ms using batch operations`,
+      );
 
       return true;
     } catch (error) {
-      this.logger.error(`Garden ${garden.id} update failed`, error);
+      const duration = Date.now() - startTime;
+      this.logger.error(
+        `Garden ${garden.id} update failed after ${duration}ms`,
+        error,
+      );
       await this.handleFailure(garden.id, (error as Error).message);
       return false;
     }
@@ -307,9 +439,13 @@ export class WeatherService implements OnModuleInit {
   /** Schedule update for all active gardens */
   public async updateAllActiveGardens(): Promise<void> {
     this.logger.log('Starting weather update for all ACTIVE gardens');
+    const startTime = Date.now();
+    
     const gardens = await this.prisma.garden.findMany({
       where: { status: 'ACTIVE', lat: { not: null }, lng: { not: null } },
     });
+
+    this.logger.log(`Found ${gardens.length} active gardens to update`);
 
     const results = await Promise.allSettled(
       gardens.map((g) => this.updateWeatherForGarden(g)),
@@ -319,9 +455,21 @@ export class WeatherService implements OnModuleInit {
       (r) => r.status === 'fulfilled' && (r as any).value === true,
     ).length;
     const failed = results.length - success;
+    const duration = Date.now() - startTime;
+    
     this.logger.log(
-      `Weather update done — Success: ${success}, Failed: ${failed}`,
+      `Weather update completed in ${duration}ms — Success: ${success}, Failed: ${failed}`,
     );
+
+    // Log failed gardens for debugging
+    if (failed > 0) {
+      const failedIndexes = results
+        .map((r, i) => (r.status === 'rejected' || !(r as any).value ? i : -1))
+        .filter(i => i !== -1);
+      this.logger.warn(
+        `Failed garden IDs: ${failedIndexes.map(i => gardens[i].id).join(', ')}`,
+      );
+    }
   }
 
   private async handleFailure(gardenId: number, msg: string) {

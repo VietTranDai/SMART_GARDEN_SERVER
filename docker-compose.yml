@@ -1,26 +1,6 @@
 version: '3.8'
 
 services:
-  smart-garden-db:
-    image: postgres:16
-    restart: always
-    environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: smartgardendb
-    ports:
-      - '15444:5432'
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U user -d smartgardendb']
-      interval: 10s
-      retries: 5
-    labels:
-      - app=smart-garden-db
-    networks:
-      - smart-garden-network
-
   # Plant Disease Detection AI Service
   plant-disease-ai:
     build: 
@@ -53,14 +33,14 @@ services:
     build: .
     restart: always
     depends_on:
-      smart-garden-db:
-        condition: service_healthy
+      # Chỉ phụ thuộc vào AI service vì database đã online
       plant-disease-ai:
         condition: service_healthy
     ports:
       - '3456:3000'
     environment:
-      DATABASE_URL: postgresql://user:postgres@smart-garden-db:5432/smartgardendb?schema=public
+      # Sử dụng database online
+      DATABASE_URL: "postgresql://avnadmin:AVNS_sATWAKCDBSQXKCkvsnN@pg-39c47927-trandaiviet.e.aivencloud.com:19306/defaultdb?sslmode=require"
       # AI Service URL for internal communication
       AI_SERVICE_URL: http://plant-disease-ai:5000
       AI_SERVICE_ENABLED: "true"
@@ -80,7 +60,7 @@ services:
       - smart-garden-network
 
 volumes:
-  pgdata:
+  # Chỉ giữ lại volume cho AI logs, xóa pgdata vì không cần nữa
   ai_logs:
 
 networks:

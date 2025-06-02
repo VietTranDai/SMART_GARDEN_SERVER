@@ -2,7 +2,6 @@ import { Injectable, NotFoundException, BadRequestException, Logger } from '@nes
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../../../prisma/prisma.service';
 import { CreatePhotoEvaluationDto, UpdatePhotoEvaluationDto, PhotoEvaluationResponseDto, AIEvaluationDto, mapToPhotoEvaluationResponseDto } from '../dto/photo-evaluation.dto';
-import { PhotoEvaluation } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
 import { promisify } from 'util';
