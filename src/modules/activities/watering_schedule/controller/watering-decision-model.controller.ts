@@ -9,6 +9,11 @@ import {
   HttpCode,
   HttpStatus,
   BadRequestException,
+  UsePipes,
+  ValidationPipe,
+  InternalServerErrorException,
+  NotFoundException,
+  ForbiddenException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -25,23 +30,25 @@ import {
 import { GetUser } from 'src/common/decorators/get-user.decorator';
 import { WateringDecisionModelService } from '../service/watering-decision-model.service';
 import { 
-    CreateWateringDecisionDto,
+  WateringDecisionRequestDto,
   WateringDecisionDto, 
   WateringStatsDto, 
 } from '../dto/watering-decision-model.dto';
 
 @ApiTags('Watering Decision Model')
 @ApiBearerAuth()
+@UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
 @Controller('watering-decision')
 export class WateringDecisionModelController {
   constructor(
     private readonly wateringDecisionService: WateringDecisionModelService,
   ) {}
 
-  @Get('garden/:gardenId')
+  @Post('garden/:gardenId')
+  @HttpCode(HttpStatus.OK)
   @ApiOperation({ 
     summary: 'Lấy quyết định tưới nước cho vườn từ AI model',
-    description: 'Lấy dữ liệu cảm biến mới nhất của vườn và gửi đến AI model để nhận quyết định tưới nước'
+    description: 'Lấy dữ liệu cảm biến mới nhất từ database và gửi đến AI model để nhận quyết định tưới nước. Có thể chỉ định thời gian dự định tưới nước hoặc dùng thời gian hiện tại.'
   })
   @ApiParam({ name: 'gardenId', description: 'ID của vườn', type: 'number' })
   @ApiOkResponse({ description: 'Quyết định tưới nước thành công', type: WateringDecisionDto })
@@ -52,35 +59,23 @@ export class WateringDecisionModelController {
   async getWateringDecision(
     @GetUser('id') userId: number,
     @Param('gardenId', ParseIntPipe) gardenId: number,
+    @Body() requestDto: WateringDecisionRequestDto = {},
   ): Promise<WateringDecisionDto> {
-    if (isNaN(gardenId) || gardenId < 1) {
-      throw new BadRequestException('Garden ID không hợp lệ');
+    try {
+      if (isNaN(gardenId) || gardenId < 1) {
+        throw new BadRequestException('Garden ID không hợp lệ');
+      }
+
+      return await this.wateringDecisionService.getWateringDecision(userId, gardenId, requestDto);
+    } catch (error) {
+      if (error instanceof BadRequestException || 
+          error instanceof NotFoundException ||
+          error instanceof ForbiddenException) {
+        throw error;
+      }
+      console.error('Error in getWateringDecision controller:', error);
+      throw new InternalServerErrorException('Failed to get watering decision');
     }
-
-    return this.wateringDecisionService.getWateringDecisionByGarden(userId, gardenId);
-  }
-
-  @Post('garden/:gardenId/custom')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ 
-    summary: 'Tạo quyết định tưới nước với dữ liệu cảm biến tùy chỉnh',
-    description: 'Gửi dữ liệu cảm biến tùy chỉnh đến AI model để nhận quyết định tưới nước'
-  })
-  @ApiParam({ name: 'gardenId', description: 'ID của vườn', type: 'number' })
-  @ApiOkResponse({ description: 'Quyết định tưới nước thành công', type: WateringDecisionDto })
-  @ApiBadRequestResponse({ description: 'Dữ liệu đầu vào không hợp lệ' })
-  @ApiForbiddenResponse({ description: 'Không có quyền truy cập vườn này' })
-  @ApiInternalServerErrorResponse({ description: 'Lỗi server nội bộ hoặc AI model' })
-  async createCustomWateringDecision(
-    @GetUser('id') userId: number,
-    @Param('gardenId', ParseIntPipe) gardenId: number,
-    @Body() createDto: CreateWateringDecisionDto,
-  ): Promise<WateringDecisionDto> {
-    if (isNaN(gardenId) || gardenId < 1) {
-      throw new BadRequestException('Garden ID không hợp lệ');
-    }
-
-    return this.wateringDecisionService.createCustomWateringDecision(userId, gardenId, createDto);
   }
 
   @Get('garden/:gardenId/stats')
@@ -99,15 +94,24 @@ export class WateringDecisionModelController {
     @Param('gardenId', ParseIntPipe) gardenId: number,
     @Query('days', new ParseIntPipe({ optional: true })) days: number = 7,
   ): Promise<WateringStatsDto> {
-    if (isNaN(gardenId) || gardenId < 1) {
-      throw new BadRequestException('Garden ID không hợp lệ');
-    }
+    try {
+      if (isNaN(gardenId) || gardenId < 1) {
+        throw new BadRequestException('Garden ID không hợp lệ');
+      }
 
-    if (days < 1 || days > 365) {
-      throw new BadRequestException('Số ngày phải từ 1 đến 365');
-    }
+      if (days < 1 || days > 365) {
+        throw new BadRequestException('Số ngày phải từ 1 đến 365');
+      }
 
-    return this.wateringDecisionService.getWateringStatsByGarden(userId, gardenId, days);
+      return await this.wateringDecisionService.getWateringStatsByGarden(userId, gardenId, days);
+    } catch (error) {
+      if (error instanceof BadRequestException || 
+          error instanceof ForbiddenException) {
+        throw error;
+      }
+      console.error('Error in getWateringStats controller:', error);
+      throw new InternalServerErrorException('Failed to fetch watering statistics');
+    }
   }
 
   @Get('test-ai')
@@ -118,6 +122,11 @@ export class WateringDecisionModelController {
   @ApiOkResponse({ description: 'AI model hoạt động bình thường' })
   @ApiInternalServerErrorResponse({ description: 'AI model không phản hồi' })
   async testAIConnection() {
-    return this.wateringDecisionService.testAIConnection();
+    try {
+      return await this.wateringDecisionService.testAIConnection();
+    } catch (error) {
+      console.error('Error in testAIConnection controller:', error);
+      throw new InternalServerErrorException('Failed to test AI connection');
+    }
   }
 }

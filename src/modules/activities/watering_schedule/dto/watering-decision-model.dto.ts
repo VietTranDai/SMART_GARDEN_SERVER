@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsOptional, IsDateString } from 'class-validator';
 
 export interface WateringDecisionDto {
   decision: string;
@@ -93,5 +94,24 @@ export class CreateWateringDecisionDto {
   sensorData: SensorDataForRequestModelAIDto;
 
   @ApiPropertyOptional({ description: 'Ghi chú bổ sung', example: 'Kiểm tra thủ công' })
+  notes?: string;
+}
+
+export class WateringDecisionRequestDto {
+  @ApiPropertyOptional({ 
+    description: 'Thời gian dự định tưới nước (ISO 8601 format). Nếu không truyền sẽ dùng thời gian hiện tại',
+    example: '2024-01-15T14:30:00.000Z',
+    type: String,
+    format: 'date-time'
+  })
+  @IsOptional()
+  @IsDateString()
+  wateringTime?: string;
+
+  @ApiPropertyOptional({ 
+    description: 'Ghi chú bổ sung cho quyết định tưới nước',
+    example: 'Kiểm tra tưới nước buổi chiều'
+  })
+  @IsOptional()
   notes?: string;
 } 

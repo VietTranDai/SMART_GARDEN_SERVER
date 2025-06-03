@@ -560,6 +560,100 @@ export class PhotoEvaluationService {
   }
 
   /**
+   * Lấy thống kê đánh giá ảnh cho một vườn cụ thể
+   */
+  async getPhotoEvaluationStatsByGarden(
+    gardenerId: number,
+    gardenId: number,
+  ): Promise<{
+    gardenId: number;
+    gardenName: string;
+    total: number;
+    evaluated: number;
+    healthy: number;
+    unhealthy: number;
+    avgConfidence: number;
+    recentActivity: string | null;
+    plantInfo: {
+      plantName: string;
+      plantGrowStage: string;
+    };
+  }> {
+    try {
+      // Verify garden access and get garden info
+      const garden = await this.verifyGardenAccessAndGetInfo(gardenerId, gardenId);
+
+      this.logger.log(`📊 Calculating photo evaluation stats for garden "${garden.name}" (ID: ${gardenId})`);
+
+      // Get stats in parallel for better performance
+      const [total, evaluated, healthyCount, avgConfidenceResult, recentEvaluation] = await Promise.all([
+        // Total photo evaluations for this garden
+        this.prisma.photoEvaluation.count({
+          where: { gardenerId, gardenId },
+        }),
+        
+        // Evaluated (has AI feedback)
+        this.prisma.photoEvaluation.count({
+          where: { gardenerId, gardenId, evaluatedAt: { not: null } },
+        }),
+        
+        // Healthy plants count
+        this.prisma.photoEvaluation.count({
+          where: {
+            gardenerId,
+            gardenId,
+            aiFeedback: { contains: 'khỏe mạnh' },
+          },
+        }),
+        
+        // Average confidence
+        this.prisma.photoEvaluation.aggregate({
+          where: { gardenerId, gardenId, confidence: { not: null } },
+          _avg: { confidence: true },
+        }),
+        
+        // Most recent evaluation
+        this.prisma.photoEvaluation.findFirst({
+          where: { gardenerId, gardenId },
+          orderBy: { createdAt: 'desc' },
+          select: { createdAt: true },
+        }),
+      ]);
+
+      const stats = {
+        gardenId: garden.id,
+        gardenName: garden.name,
+        total,
+        evaluated,
+        healthy: healthyCount,
+        unhealthy: evaluated - healthyCount,
+        avgConfidence: avgConfidenceResult._avg.confidence || 0,
+        recentActivity: recentEvaluation 
+          ? recentEvaluation.createdAt.toLocaleString('vi-VN', {
+              timeZone: 'Asia/Ho_Chi_Minh',
+              day: '2-digit',
+              month: '2-digit', 
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
+            })
+          : null,
+        plantInfo: {
+          plantName: garden.plantName || 'Chưa xác định',
+          plantGrowStage: garden.plantGrowStage || 'Chưa xác định',
+        },
+      };
+
+      this.logger.log(`✅ Photo evaluation stats calculated for garden "${garden.name}": ${total} total, ${evaluated} evaluated, ${healthyCount} healthy`);
+
+      return stats;
+    } catch (error) {
+      this.logger.error(`Error calculating photo evaluation stats for garden ${gardenId}: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
+  /**
    * Tạo nhật ký hoạt động cho việc đánh giá ảnh
    */
   private async createPhotoEvaluationActivity(

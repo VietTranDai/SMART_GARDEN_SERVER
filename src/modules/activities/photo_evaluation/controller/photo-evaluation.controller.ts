@@ -250,6 +250,56 @@ export class PhotoEvaluationController {
     }
   }
 
+  @Get('garden/:gardenId/stats')
+  @ApiOperation({ summary: 'Lấy thống kê đánh giá ảnh cho một vườn cụ thể' })
+  @ApiResponse({
+    status: 200,
+    description: 'Thống kê đánh giá ảnh theo vườn',
+    schema: {
+      type: 'object',
+      properties: {
+        gardenId: { type: 'number', description: 'ID của vườn' },
+        gardenName: { type: 'string', description: 'Tên vườn' },
+        total: { type: 'number', description: 'Tổng số đánh giá trong vườn' },
+        evaluated: { type: 'number', description: 'Số đánh giá đã được AI phân tích' },
+        healthy: { type: 'number', description: 'Số đánh giá có kết quả khỏe mạnh' },
+        unhealthy: { type: 'number', description: 'Số đánh giá có vấn đề' },
+        avgConfidence: { type: 'number', description: 'Độ tin cậy trung bình' },
+        recentActivity: { type: 'string', description: 'Thời gian đánh giá gần nhất' },
+        plantInfo: {
+          type: 'object',
+          properties: {
+            plantName: { type: 'string', description: 'Tên cây trồng' },
+            plantGrowStage: { type: 'string', description: 'Giai đoạn phát triển' },
+          },
+        },
+      },
+    },
+  })
+  @ApiBadRequestResponse({ description: 'Garden ID không hợp lệ' })
+  @ApiUnauthorizedResponse({ description: 'Không có quyền truy cập' })
+  @ApiNotFoundResponse({ description: 'Vườn không tồn tại hoặc không có quyền truy cập' })
+  @ApiForbiddenResponse({ description: 'Không có quyền truy cập vườn này' })
+  @ApiInternalServerErrorResponse({ description: 'Lỗi server nội bộ' })
+  async getPhotoEvaluationStatsByGarden(
+    @GetUser('id') userId: number,
+    @Param('gardenId', ParseIntPipe) gardenId: number,
+  ) {
+    try {
+      if (isNaN(gardenId) || gardenId < 1) {
+        throw new BadRequestException('Invalid garden ID');
+      }
+
+      return await this.photoEvaluationService.getPhotoEvaluationStatsByGarden(userId, gardenId);
+    } catch (error) {
+      if (error instanceof BadRequestException || error.status === 404 || error.status === 403) {
+        throw error;
+      }
+      console.error('Error in getPhotoEvaluationStatsByGarden controller:', error);
+      throw new InternalServerErrorException('Failed to fetch photo evaluation statistics by garden');
+    }
+  }
+
   @Get(':id')
   @ApiOperation({ summary: 'Lấy chi tiết đánh giá ảnh theo ID' })
   @ApiResponse({
