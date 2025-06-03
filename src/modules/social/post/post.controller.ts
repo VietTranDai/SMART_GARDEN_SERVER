@@ -34,6 +34,7 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { PostDto } from './dto/post.dto';
 import { SearchPostDto } from './dto/search-post.dto';
 import { GetUser } from '../../../common/decorators/get-user.decorator';
+import { mapToCommentDto } from '../comment/dto/comment.dto';
 
 @ApiTags('Posts')
 @ApiBearerAuth()
@@ -207,7 +208,8 @@ export class PostController {
       if (isNaN(postId) || postId < 1) {
         throw new BadRequestException('Invalid post ID');
       }
-      return await this.postService.getCommentsByPostId(postId);
+      const comments = await this.postService.getCommentsByPostId(postId);
+      return comments.map(mapToCommentDto);
     } catch (error) {
       if (error instanceof BadRequestException || error.status === 404) {
         throw error;
