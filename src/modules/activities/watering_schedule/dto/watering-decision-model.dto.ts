@@ -21,11 +21,6 @@ export interface WateringStatsDto {
   toDate: Date;
 }
 
-export interface CreateWateringDecisionDto {
-  sensorData: SensorDataForRequestModelAIDto;
-  notes?: string;
-}
-
 export class SensorDataForRequestModelAIDto {
   @ApiProperty({ description: 'Độ ẩm đất (%)', example: 35.5 })
   soil_moisture: number;
@@ -87,14 +82,6 @@ export class WateringStatsDto {
 
   @ApiProperty({ description: 'Thời gian kết thúc thống kê', type: String, format: 'date-time' })
   toDate: Date;
-}
-
-export class CreateWateringDecisionDto {
-  @ApiProperty({ description: 'Dữ liệu cảm biến', type: SensorDataForRequestModelAIDto })
-  sensorData: SensorDataForRequestModelAIDto;
-
-  @ApiPropertyOptional({ description: 'Ghi chú bổ sung', example: 'Kiểm tra thủ công' })
-  notes?: string;
 }
 
 export class WateringDecisionRequestDto {

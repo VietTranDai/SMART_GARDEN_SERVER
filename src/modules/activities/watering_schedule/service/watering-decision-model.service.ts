@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, ForbiddenException, InternalServerErrorException, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../../../../prisma/prisma.service';
 import axios from 'axios';
-import { WateringDecisionDto, WateringStatsDto, CreateWateringDecisionDto, SensorDataForRequestModelAIDto, WateringDecisionRequestDto } from '../dto/watering-decision-model.dto';
+import { WateringDecisionDto, WateringStatsDto, SensorDataForRequestModelAIDto, WateringDecisionRequestDto } from '../dto/watering-decision-model.dto';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()
@@ -83,41 +83,6 @@ export class WateringDecisionModelService {
     }
   }
 
-  async createCustomWateringDecision(
-    userId: number, 
-    gardenId: number, 
-    createDto: CreateWateringDecisionDto
-  ): Promise<WateringDecisionDto> {
-    try {
-      // Kiểm tra quyền truy cập vườn
-      await this.ensureGardenOwnership(gardenId, userId);
-
-      // Validate sensor data
-      this.validateSensorData(createDto.sensorData);
-
-      // Extend with default water level for AI model
-      const extendedSensorData: SensorDataForRequestModelAIDto = {
-        ...createDto.sensorData,
-        water_level: 80.0, // Default for custom data
-      };
-
-      // Gọi AI model với thời gian hiện tại
-      const decision = await this.callAIModel(extendedSensorData, new Date());
-
-      return {
-        ...decision,
-        sensor_data: createDto.sensorData,
-        timestamp: new Date(),
-      };
-    } catch (error) {
-      if (error instanceof BadRequestException || 
-          error instanceof ForbiddenException) {
-        throw error;
-      }
-      console.error('Error creating custom watering decision:', error);
-      throw new InternalServerErrorException('Lỗi khi tạo quyết định tưới nước tùy chỉnh');
-    }
-  }
 
   async getWateringStatsByGarden(userId: number, gardenId: number, days: number): Promise<WateringStatsDto> {
     try {
@@ -214,29 +179,6 @@ export class WateringDecisionModelService {
     };
   }
 
-  private validateSensorData(sensorData: SensorDataForRequestModelAIDto): void {
-    const { soil_moisture, air_humidity, temperature, light_intensity, water_level } = sensorData;
-
-    if (soil_moisture < 0 || soil_moisture > 100) {
-      throw new BadRequestException('Độ ẩm đất phải từ 0 đến 100%');
-    }
-    
-    if (air_humidity < 0 || air_humidity > 100) {
-      throw new BadRequestException('Độ ẩm không khí phải từ 0 đến 100%');
-    }
-    
-    if (temperature < -50 || temperature > 70) {
-      throw new BadRequestException('Nhiệt độ phải từ -50 đến 70°C');
-    }
-    
-    if (light_intensity < 0 || light_intensity > 200000) {
-      throw new BadRequestException('Cường độ ánh sáng không hợp lệ');
-    }
-
-    if (water_level < 0 || water_level > 100) {
-      throw new BadRequestException('Mức nước trong bể phải từ 0 đến 100%');
-    }
-  }
 
   private async callAIModel(sensorData: SensorDataForRequestModelAIDto, wateringTime: Date): Promise<Omit<WateringDecisionDto, 'sensor_data' | 'timestamp'>> {
     try {
@@ -369,12 +311,56 @@ export class WateringDecisionModelService {
         activityDetails += `\n📝 **Ghi chú của người dùng**: ${userNotes}\n`;
       }
 
-      activityDetails += `\n💡 **Lưu ý**: Quyết định được đưa ra dựa trên dữ liệu cảm biến thời gian thực và mô hình AI được huấn luyện`;
+      // Thêm thông tin dự báo thời tiết nếu có
+      const weatherInfo = await this.getWeatherInfoForActivity(garden.id);
+      if (weatherInfo) {
+        activityDetails += `\n🌤️ **Thông tin thời tiết**:\n`;
+        activityDetails += `• 🌡️ Nhiệt độ hiện tại: ${weatherInfo.temperature}°C\n`;
+        activityDetails += `• 💨 Độ ẩm: ${weatherInfo.humidity}%\n`;
+        activityDetails += `• ☁️ Mây: ${weatherInfo.clouds}%\n`;
+        if (weatherInfo.rain) {
+          activityDetails += `• 🌧️ Lượng mưa dự báo: ${weatherInfo.rain}mm\n`;
+        }
+      }
+
+      // Thêm khuyến nghị cho người dùng
+      activityDetails += `\n💡 **Khuyến nghị cho người chăm sóc**:\n`;
+      if (decision.decision === 'water_now') {
+        activityDetails += `• ✅ Thực hiện tưới nước theo lượng đề xuất\n`;
+        activityDetails += `• ⏰ Tưới vào sáng sớm (6-8h) hoặc chiều mát (17-19h)\n`;
+        activityDetails += `• 🔍 Quan sát phản ứng của cây sau khi tưới\n`;
+        
+        // Tự động tạo lịch tưới nếu AI đề xuất
+        await this.createWateringScheduleIfNeeded(garden.id, decision, userNotes);
+        activityDetails += `• 📅 Đã tự động thêm vào lịch tưới\n`;
+      } else {
+        activityDetails += `• ⏸️ Tạm hoãn việc tưới nước\n`;
+        activityDetails += `• 👀 Tiếp tục theo dõi độ ẩm đất\n`;
+        activityDetails += `• 🔄 Kiểm tra lại sau 6-12 giờ\n`;
+      }
+
+      activityDetails += `\n🔬 **Chi tiết kỹ thuật**:\n`;
+      activityDetails += `• 🤖 Mô hình AI: Smart Watering Decision Model\n`;
+      activityDetails += `• 📊 Thuật toán: Machine Learning với Random Forest\n`;
+      activityDetails += `• 🎯 Độ chính xác: ~${decision.confidence}%\n`;
+      activityDetails += `• 🕐 Thời gian xử lý: ${new Date().toISOString()}\n`;
+
+      activityDetails += `\n📈 **Lịch sử và xu hướng**:\n`;
+      const recentDecisions = await this.getRecentWateringDecisions(garden.id);
+      if (recentDecisions.length > 0) {
+        const wateringCount = recentDecisions.filter(d => d.includes('Tưới nước')).length;
+        const skipCount = recentDecisions.length - wateringCount;
+        activityDetails += `• 📊 7 ngày qua: ${wateringCount} lần tưới, ${skipCount} lần bỏ qua\n`;
+        activityDetails += `• 📈 Xu hướng: ${this.analyzeTrend(recentDecisions)}\n`;
+      }
+
+      activityDetails += `\n💚 **Lưu ý**: Quyết định được đưa ra dựa trên dữ liệu cảm biến thời gian thực, dự báo thời tiết và đặc điểm sinh trưởng của cây trồng`;
 
       // Tạo ghi chú ngắn gọn cho reason
-      const reason = `AI khuyến nghị ${decision.decision === 'water_now' ? 'tưới nước' : 'không tưới nước'} dựa trên dữ liệu cảm biến (độ tin cậy: ${decision.confidence}%)`;
+      const reason = `AI ${decision.decision === 'water_now' ? 'khuyến nghị tưới nước' : 'không khuyến nghị tưới nước'} dựa trên phân tích ${Object.keys(sensorData).length} thông số cảm biến (độ tin cậy: ${decision.confidence}%)`;
 
-      await this.prisma.gardenActivity.create({
+      // Tạo activity record
+      const activity = await this.prisma.gardenActivity.create({
         data: {
           gardenId: garden.id,
           gardenerId: gardenerId,
@@ -383,16 +369,165 @@ export class WateringDecisionModelService {
           timestamp: currentTime,
           plantName: garden.plantName || 'Chưa xác định',
           plantGrowStage: garden.plantGrowStage || 'Chưa xác định',
+          // Lưu trữ dữ liệu cảm biến vào activity
+          humidity: sensorData.air_humidity,
+          temperature: sensorData.temperature,
+          lightIntensity: sensorData.light_intensity,
+          waterLevel: sensorData.water_level,
+          soilMoisture: sensorData.soil_moisture,
           details: activityDetails,
           reason: reason,
-          notes: userNotes || 'Quyết định tưới nước tự động bằng AI',
+          notes: userNotes || `AI quyết định ${decision.decision === 'water_now' ? 'tưới' : 'không tưới'} nước tự động`,
         },
       });
 
-      this.logger.log(`📋 Activity log created for watering decision - Garden: ${garden.name}, Decision: ${decision.decision}`);
+      this.logger.log(`📋 Comprehensive activity log created - Garden: ${garden.name}, Decision: ${decision.decision}, Activity ID: ${activity.id}`);
     } catch (error) {
-      this.logger.error(`Failed to create activity log for watering decision: ${error.message}`, error.stack);
+      this.logger.error(`Failed to create comprehensive activity log: ${error.message}`, error.stack);
       // Không throw error để không ảnh hưởng đến flow chính
+    }
+  }
+
+  /**
+   * Lấy thông tin thời tiết cho activity
+   */
+  private async getWeatherInfoForActivity(gardenId: number): Promise<any> {
+    try {
+      const latestWeather = await this.prisma.weatherObservation.findFirst({
+        where: { gardenId },
+        orderBy: { observedAt: 'desc' },
+      });
+
+      if (latestWeather) {
+        return {
+          temperature: latestWeather.temp,
+          humidity: latestWeather.humidity,
+          clouds: latestWeather.clouds,
+          rain: latestWeather.rain1h,
+        };
+      }
+
+      // Fallback to forecast if no observation
+      const forecast = await this.prisma.hourlyForecast.findFirst({
+        where: { 
+          gardenId,
+          forecastFor: { gte: new Date() },
+        },
+        orderBy: { forecastFor: 'asc' },
+      });
+
+      if (forecast) {
+        return {
+          temperature: forecast.temp,
+          humidity: forecast.humidity,
+          clouds: forecast.clouds,
+          rain: forecast.rain1h,
+        };
+      }
+
+      return null;
+    } catch (error) {
+      this.logger.warn(`Could not fetch weather info: ${error.message}`);
+      return null;
+    }
+  }
+
+  /**
+   * Lấy các quyết định tưới nước gần đây
+   */
+  private async getRecentWateringDecisions(gardenId: number): Promise<string[]> {
+    try {
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+      const recentActivities = await this.prisma.gardenActivity.findMany({
+        where: {
+          gardenId,
+          activityType: 'WATERING',
+          timestamp: { gte: sevenDaysAgo },
+        },
+        orderBy: { timestamp: 'desc' },
+        take: 10,
+      });
+
+      return recentActivities.map(activity => activity.name);
+    } catch (error) {
+      this.logger.warn(`Could not fetch recent decisions: ${error.message}`);
+      return [];
+    }
+  }
+
+  /**
+   * Phân tích xu hướng quyết định
+   */
+  private analyzeTrend(decisions: string[]): string {
+    if (decisions.length < 3) return 'Chưa đủ dữ liệu để phân tích';
+
+    const recentWatering = decisions.slice(0, 3).filter(d => d.includes('Tưới nước')).length;
+    const olderWatering = decisions.slice(3, 6).filter(d => d.includes('Tưới nước')).length;
+
+    if (recentWatering > olderWatering) {
+      return 'Tăng tần suất tưới nước (có thể do thời tiết khô hoặc cây phát triển mạnh)';
+    } else if (recentWatering < olderWatering) {
+      return 'Giảm tần suất tưới nước (có thể do thời tiết ẩm hoặc cây ổn định)';
+    } else {
+      return 'Duy trì tần suất tưới nước ổn định';
+    }
+  }
+
+  /**
+   * Tự động tạo lịch tưới nếu AI đề xuất
+   */
+  private async createWateringScheduleIfNeeded(
+    gardenId: number, 
+    decision: any, 
+    userNotes?: string
+  ): Promise<void> {
+    try {
+      if (decision.decision !== 'water_now') return;
+
+      // Tạo lịch tưới cho 2 thời điểm tối ưu: sáng mai và chiều mai
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      const morningTime = new Date(tomorrow);
+      morningTime.setHours(6, 30, 0, 0); // 6:30 sáng
+
+      const eveningTime = new Date(tomorrow);
+      eveningTime.setHours(18, 0, 0, 0); // 6:00 chiều
+
+      // Chọn thời gian phù hợp nhất dựa trên thời điểm hiện tại
+      const now = new Date();
+      const scheduleTime = now.getHours() < 12 ? morningTime : eveningTime;
+
+      // Kiểm tra xem đã có lịch tưới chưa
+      const existingSchedule = await this.prisma.wateringSchedule.findFirst({
+        where: {
+          gardenId,
+          scheduledAt: {
+            gte: new Date(scheduleTime.getTime() - 3 * 60 * 60 * 1000), // 3 hours before
+            lte: new Date(scheduleTime.getTime() + 3 * 60 * 60 * 1000), // 3 hours after
+          },
+          status: 'PENDING',
+        },
+      });
+
+      if (!existingSchedule) {
+        await this.prisma.wateringSchedule.create({
+          data: {
+            gardenId,
+            scheduledAt: scheduleTime,
+            amount: decision.recommended_amount || 2.0,
+            reason: `AI tự động tạo lịch - ${decision.reasons?.join(', ') || 'Cây cần tưới nước'}`,
+            notes: `Lịch tự động từ AI (${decision.confidence}% tin cậy)` + (userNotes ? ` - ${userNotes}` : ''),
+            status: 'PENDING',
+          },
+        });
+
+        this.logger.log(`📅 Auto-created watering schedule for ${scheduleTime.toLocaleString('vi-VN')}`);
+      }
+    } catch (error) {
+      this.logger.warn(`Could not create automatic watering schedule: ${error.message}`);
     }
   }
 }

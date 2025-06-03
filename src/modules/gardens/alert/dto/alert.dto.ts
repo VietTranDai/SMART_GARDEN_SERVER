@@ -9,16 +9,19 @@ export class AlertDto {
   @ApiPropertyOptional({ description: 'ID của garden (nếu có)', example: 10 })
   gardenId?: number;
 
+  @ApiPropertyOptional({ description: 'Tên của garden', example: 'Vườn Rau Nhà Tôi' })
+  gardenName?: string;
+
   @ApiProperty({ description: 'ID của user tạo alert', example: 5 })
   userId: number;
 
   @ApiProperty({ description: 'Loại alert', enum: AlertType })
   type: AlertType;
 
-  @ApiProperty({ description: 'Nội dung thông báo', example: 'Temperature too high' })
+  @ApiProperty({ description: 'Nội dung thông báo', example: 'Nhiệt độ quá cao trong vườn' })
   message: string;
 
-  @ApiPropertyOptional({ description: 'Gợi ý xử lý', example: 'Turn on the fan' })
+  @ApiPropertyOptional({ description: 'Gợi ý xử lý', example: 'Bật quạt làm mát và tưới nước cho cây' })
   suggestion?: string;
 
   @ApiProperty({ description: 'Trạng thái của alert', enum: AlertStatus })
@@ -34,10 +37,11 @@ export class AlertDto {
   updatedAt: Date;
 }
 
-export function mapToAlertDto(alert: Alert): AlertDto {
+export function mapToAlertDto(alert: Alert & { garden?: { name: string } | null }): AlertDto {
   return {
     id: alert.id,
     gardenId: alert.gardenId ?? undefined,
+    gardenName: alert.garden?.name ?? undefined,
     userId: alert.userId,
     type: alert.type,
     message: alert.message,
@@ -49,6 +53,6 @@ export function mapToAlertDto(alert: Alert): AlertDto {
   };
 }
 
-export function mapToAlertDtoList(alerts: Alert[]): AlertDto[] {
+export function mapToAlertDtoList(alerts: (Alert & { garden?: { name: string } | null })[]): AlertDto[] {
   return alerts.map(mapToAlertDto);
 }

@@ -58,7 +58,7 @@ export class AlertController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get alert by ID của chính user' })
+  @ApiOperation({ summary: 'Get alert by ID' })
   @ApiParam({ name: 'id', description: 'Alert ID' })
   @ApiResponse({ status: 200, type: AlertDto })
   @ApiResponse({ status: 403, description: 'Forbidden' })
