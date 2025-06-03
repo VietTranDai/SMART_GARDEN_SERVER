@@ -8,6 +8,7 @@ import {
   Query,
   Delete,
   HttpCode,
+  BadRequestException,
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
@@ -88,8 +89,13 @@ export class WateringScheduleController {
     @Param('gardenId', ParseIntPipe) gardenId: number,
     @Body() dto: CreateWateringScheduleDto,
   ): Promise<WateringScheduleDto> {
-    const result = await this.wateringService.create(userId, gardenId, dto);
-    return mapToWateringScheduleDto(result);
+    try {
+      const result = await this.wateringService.create(userId, gardenId, dto);
+      return mapToWateringScheduleDto(result);
+    } catch (error) {
+      console.log(error);
+      throw new BadRequestException(error.message);
+    }
   }
 
   @Post('gardens/:gardenId/auto')

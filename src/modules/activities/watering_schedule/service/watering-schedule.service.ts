@@ -88,13 +88,79 @@ export class WateringScheduleService {
 
   async create(userId: number, gardenId: number, dto: CreateWateringScheduleDto) {
     await this.ensureOwnership(gardenId, userId);
-    return this.prisma.wateringSchedule.create({
-      data: {
-        gardenId,
-        scheduledAt: new Date(dto.scheduledAt),
-        amount: dto.amount,
-      },
-    });
+    
+    // Debug logging to understand what we're receiving
+    this.logger.log(`📝 Creating schedule with data: ${JSON.stringify({
+      scheduledAt: dto.scheduledAt,
+      scheduledAtType: typeof dto.scheduledAt,
+      amount: dto.amount,
+      notes: dto.notes
+    })}`);
+    
+    // Validate and ensure scheduledAt is a valid Date
+    let scheduledDate: Date;
+    try {
+      if (dto.scheduledAt instanceof Date) {
+        scheduledDate = dto.scheduledAt;
+        this.logger.log(`📅 scheduledAt is already a Date object: ${scheduledDate.toISOString()}`);
+      } else if (typeof dto.scheduledAt === 'string') {
+        scheduledDate = new Date(dto.scheduledAt);
+        this.logger.log(`📅 Converted string to Date: ${dto.scheduledAt} -> ${scheduledDate.toISOString()}`);
+      } else {
+        this.logger.error(`❌ Invalid scheduledAt type: ${typeof dto.scheduledAt}, value: ${dto.scheduledAt}`);
+        throw new BadRequestException('Thời gian tưới không hợp lệ. Vui lòng sử dụng định dạng ISO 8601 (ví dụ: 2025-06-03T10:25:00.000Z)');
+      }
+      
+      // Check if the date is valid
+      if (isNaN(scheduledDate.getTime())) {
+        this.logger.error(`❌ Invalid date object: ${scheduledDate}`);
+        throw new BadRequestException('Thời gian tưới không hợp lệ. Vui lòng sử dụng định dạng ISO 8601 (ví dụ: 2025-06-03T10:25:00.000Z)');
+      }
+      
+      // Check if the date is not in the past (with 5 minute buffer)
+      const now = new Date();
+      const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
+      if (isBefore(scheduledDate, fiveMinutesAgo)) {
+        throw new BadRequestException('Thời gian tưới không thể ở quá khứ');
+      }
+      
+      // Check if the date is not too far in the future (max 1 year)
+      const oneYearFromNow = addDays(now, 365);
+      if (isAfter(scheduledDate, oneYearFromNow)) {
+        throw new BadRequestException('Thời gian tưới không thể quá 1 năm trong tương lai');
+      }
+      
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      this.logger.error(`Invalid date format for scheduledAt: ${dto.scheduledAt}`, error.stack);
+      throw new BadRequestException('Thời gian tưới không hợp lệ. Vui lòng sử dụng định dạng ISO 8601 (ví dụ: 2025-06-03T10:25:00.000Z)');
+    }
+
+    // Validate amount if provided
+    if (dto.amount !== undefined && dto.amount !== null) {
+      if (dto.amount < 0.1 || dto.amount > 20) {
+        throw new BadRequestException('Lượng nước phải trong khoảng 0.1 - 20 lít');
+      }
+    }
+
+    this.logger.log(`✅ All validations passed, creating schedule with scheduledAt: ${scheduledDate.toISOString()}`);
+
+    try {
+      return await this.prisma.wateringSchedule.create({
+        data: {
+          gardenId,
+          scheduledAt: scheduledDate,
+          amount: dto.amount,
+          status: 'PENDING',
+          notes: dto.notes,
+        },
+      });
+    } catch (error) {
+      this.logger.error(`Error creating watering schedule: ${error.message}`, error.stack);
+      throw new BadRequestException('Không thể tạo lịch tưới. Vui lòng kiểm tra lại thông tin.');
+    }
   }
 
   /**

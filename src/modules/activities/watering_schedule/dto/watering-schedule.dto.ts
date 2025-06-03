@@ -1,5 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { WateringSchedule } from '@prisma/client';
+import { IsDateString, IsOptional, IsNumber, Min, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class WateringScheduleDto {
   @ApiProperty({ description: 'ID lịch tưới', example: 1 })
@@ -31,16 +33,34 @@ export class WateringScheduleDto {
 }
 
 export class CreateWateringScheduleDto {
-  @ApiProperty({ description: 'ID vườn', example: 10 })
-  gardenId: number;
+  @ApiProperty({ 
+    description: 'Thời gian tưới theo lịch', 
+    type: String, 
+    format: 'date-time',
+    example: '2025-06-03T10:25:00.000Z'
+  })
+  @IsDateString({}, { message: 'scheduledAt phải là định dạng ngày tháng hợp lệ (ISO 8601)' })
+  scheduledAt: string | Date;
 
-  @ApiProperty({ description: 'Thời gian tưới theo lịch', type: String, format: 'date-time' })
-  scheduledAt: Date;
-
-  @ApiPropertyOptional({ description: 'Lượng nước tưới (lít)', example: 5.0 })
+  @ApiPropertyOptional({ 
+    description: 'Lượng nước tưới (lít)', 
+    example: 5.0,
+    minimum: 0.1,
+    maximum: 20.0
+  })
+  @IsOptional()
+  @IsNumber({}, { message: 'amount phải là số' })
+  @Min(0.1, { message: 'Lượng nước phải ít nhất 0.1 lít' })
+  @Type(() => Number)
   amount?: number;
 
-  @ApiPropertyOptional({ description: 'Ghi chú bổ sung', example: 'Tưới trước khi trời mưa' })
+  @ApiPropertyOptional({ 
+    description: 'Ghi chú bổ sung', 
+    example: 'Tưới trước khi trời mưa',
+    maxLength: 500
+  })
+  @IsOptional()
+  @IsString({ message: 'notes phải là chuỗi văn bản' })
   notes?: string;
 }
 

@@ -11,6 +11,10 @@ import { HealthMonitorService } from './service/health-monitor.service';
   controllers: [
     HealthSchedulerController
   ],
+  providers: [
+    HealthSchedulerService,
+    HealthMonitorService
+  ],
   exports: [
     HealthSchedulerService,
     HealthMonitorService
