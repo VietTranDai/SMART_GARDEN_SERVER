@@ -80,8 +80,8 @@ COPY --from=builder --chown=nestjs:nodejs /usr/src/app/package*.json ./
 # Copy Prisma files (needed for runtime)
 COPY --from=builder --chown=nestjs:nodejs /usr/src/app/prisma ./prisma/
 
-# Copy and set up pictures directory
 COPY --chown=nestjs:nodejs pictures ./pictures/
+
 RUN mkdir -p pictures/photo_evaluations pictures/post pictures/avatars pictures/gardens && \
     chmod -R 755 pictures
 
